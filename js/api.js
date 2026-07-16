@@ -106,3 +106,40 @@ async function apiPut(endpoint, body) {
 async function apiDelete(endpoint) {
   return apiFetch(endpoint, { method: 'DELETE' });
 }
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+
+function formatPrice(value) {
+  return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function lowestVariantPrice(product) {
+  if (!product.variants || !product.variants.length) return null;
+  return Math.min(...product.variants.map((v) => Number(v.price)));
+}
+
+function productImagePlaceholder() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
+}
+
+function buildProductCard(product, rootPath = '') {
+  const price = lowestVariantPrice(product);
+  const priceLabel = price === null ? 'Indisponível' : `A partir de ${formatPrice(price)}`;
+  return `
+    <article class="product-card fade-in">
+      <a href="${rootPath}product.html?id=${product.id}" class="product-card-image">${productImagePlaceholder()}</a>
+      <div class="product-card-body">
+        <span class="product-card-category">${escapeHtml(product.categoryName || '')}</span>
+        <h3 class="product-card-name">${escapeHtml(product.name)}</h3>
+        <span class="product-card-price">${priceLabel}</span>
+        <div class="product-card-link">
+          <a class="btn btn-secondary btn-sm btn-block" href="${rootPath}product.html?id=${product.id}">Ver detalhes</a>
+        </div>
+      </div>
+    </article>
+  `;
+}

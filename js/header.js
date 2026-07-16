@@ -63,12 +63,6 @@ function buildHeaderMarkup() {
   `;
 }
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str ?? '';
-  return div.innerHTML;
-}
-
 async function loadHeaderCategories() {
   const list = document.querySelector('[data-category-list]');
   if (!list) return;
