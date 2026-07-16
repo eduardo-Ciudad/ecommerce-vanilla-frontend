@@ -158,3 +158,25 @@ function initAuthPage() {
 }
 
 document.addEventListener('DOMContentLoaded', initAuthPage);
+
+function initAdminShell() {
+  const sidebar = document.querySelector('[data-admin-sidebar]');
+  if (!sidebar) return;
+
+  const toggle = document.querySelector('[data-admin-menu-toggle]');
+  if (toggle) {
+    toggle.addEventListener('click', () => sidebar.classList.toggle('is-open'));
+  }
+
+  const logoutBtn = document.querySelector('[data-admin-logout]');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', logout);
+  }
+
+  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  sidebar.querySelectorAll('.admin-nav a').forEach((link) => {
+    link.classList.toggle('is-active', link.getAttribute('href') === currentPage);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initAdminShell);
