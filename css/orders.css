@@ -1,0 +1,89 @@
+.orders-page {
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-3xl);
+}
+
+.orders-page h1 {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-lg);
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.order-card {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.order-card-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  text-align: left;
+  flex-wrap: wrap;
+}
+
+.order-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 140px;
+}
+
+.order-card-number {
+  font-weight: 600;
+  font-family: var(--font-heading);
+}
+
+.order-card-date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.order-card-total {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.order-card-chevron {
+  transition: transform var(--transition);
+  color: var(--color-text-muted);
+}
+
+.order-card.is-open .order-card-chevron {
+  transform: rotate(180deg);
+}
+
+.order-item-list {
+  display: none;
+  border-top: 1px solid var(--color-border-light);
+  padding: var(--space-md);
+}
+
+.order-card.is-open .order-item-list {
+  display: block;
+  animation: fadeIn 0.2s ease both;
+}
+
+.order-item-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-light);
+}
+
+@media (min-width: 640px) {
+  .order-card-header {
+    flex-wrap: nowrap;
+  }
+}
