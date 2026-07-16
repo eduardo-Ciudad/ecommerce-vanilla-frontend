@@ -227,6 +227,10 @@
   position: relative;
 }
 
+.header-mobile-search .form-control {
+  padding-left: 2.5rem;
+}
+
 @media (min-width: 768px) {
   .header-search { display: block; }
   .header-mobile-search { display: none; }
@@ -480,6 +484,16 @@
 
 .form-group.has-error .form-error {
   display: block;
+}
+
+.form-group--tight {
+  margin-bottom: 0;
+}
+
+.modal-subtitle {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
 }
 
 /* ===== Product card ===== */

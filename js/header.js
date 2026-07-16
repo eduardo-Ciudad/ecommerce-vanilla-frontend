@@ -53,7 +53,7 @@ function buildHeaderMarkup() {
       <div class="header-mobile-search">
         <form data-search-form-mobile>
           ${ICONS.search}
-          <input type="search" name="q" placeholder="Buscar produtos..." aria-label="Buscar produtos" class="form-control" style="padding-left:2.5rem" />
+          <input type="search" name="q" placeholder="Buscar produtos..." aria-label="Buscar produtos" class="form-control" />
         </form>
       </div>
       <nav class="header-category-nav">

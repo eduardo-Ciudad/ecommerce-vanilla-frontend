@@ -181,6 +181,16 @@
   color: var(--color-text-light);
 }
 
+.dashboard-card-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-light);
+}
+
+.admin-section-title {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-md);
+}
+
 @media (min-width: 640px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -193,6 +203,14 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   overflow-x: auto;
+}
+
+.admin-table-wrapper--spaced {
+  margin-bottom: var(--space-xl);
+}
+
+.admin-table-wrapper--padded {
+  padding: var(--space-lg);
 }
 
 .admin-table {

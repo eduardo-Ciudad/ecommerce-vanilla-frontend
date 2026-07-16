@@ -12,7 +12,7 @@ function dashboardCard(icon, value, label, note) {
       <div>
         <div class="dashboard-card-value">${value}</div>
         <div class="dashboard-card-label">${label}</div>
-        ${note ? `<div class="dashboard-card-label" style="font-size: var(--font-size-xs)">${note}</div>` : ''}
+        ${note ? `<div class="dashboard-card-note">${note}</div>` : ''}
       </div>
     </div>
   `;

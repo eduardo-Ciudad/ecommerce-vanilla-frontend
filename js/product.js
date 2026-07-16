@@ -79,7 +79,7 @@ function wireProductInteractions(product) {
           `
         )
         .join('')
-    : '<p class="empty-state" style="padding:0">Sem variações cadastradas.</p>';
+    : '<p class="empty-state empty-state--inline">Sem variações cadastradas.</p>';
 
   function selectVariant(variant) {
     selectedVariant = variant;

@@ -38,7 +38,7 @@
         identificador do pedido.
       </p>
 
-      <div class="admin-table-wrapper" style="margin-bottom: var(--space-xl)">
+      <div class="admin-table-wrapper admin-table-wrapper--spaced">
         <table class="admin-table">
           <thead>
             <tr>
@@ -50,19 +50,19 @@
             </tr>
           </thead>
           <tbody data-admin-orders-tbody>
-            <tr><td colspan="5"><div class="skeleton" style="height: 1.5rem"></div></td></tr>
+            <tr><td colspan="5"><div class="skeleton skeleton-row"></div></td></tr>
           </tbody>
         </table>
       </div>
 
-      <div class="admin-table-wrapper" style="padding: var(--space-lg)">
-        <h2 style="font-size: var(--font-size-lg); margin-bottom: var(--space-md)">Atualizar status por ID</h2>
+      <div class="admin-table-wrapper admin-table-wrapper--padded">
+        <h2 class="admin-section-title">Atualizar status por ID</h2>
         <form class="variant-manage-form" data-update-status-form>
-          <div class="form-group" style="margin-bottom:0">
+          <div class="form-group form-group--tight">
             <label for="order-id-input">ID do Pedido</label>
             <input class="form-control" id="order-id-input" type="text" placeholder="uuid do pedido" required />
           </div>
-          <div class="form-group" style="margin-bottom:0">
+          <div class="form-group form-group--tight">
             <label for="order-status-select">Novo Status</label>
             <select class="form-control" id="order-status-select">
               <option value="PENDING">Pendente</option>

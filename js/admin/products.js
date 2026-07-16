@@ -161,7 +161,7 @@ function openVariantsModal(productId) {
     const listEl = content.querySelector('[data-variant-list]');
     listEl.innerHTML = product.variants.length
       ? product.variants.map((v) => variantRow(productId, v)).join('')
-      : '<p class="empty-state" style="padding: var(--space-md) 0">Nenhuma variação cadastrada.</p>';
+      : '<p class="empty-state empty-state--spacious">Nenhuma variação cadastrada.</p>';
 
     listEl.querySelectorAll('[data-edit-variant]').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -175,7 +175,7 @@ function openVariantsModal(productId) {
   }
 
   content.innerHTML = `
-    <h3 style="font-size: var(--font-size-sm); margin-bottom: var(--space-sm)">Variações de ${escapeHtml(product.name)}</h3>
+    <h3 class="modal-subtitle">Variações de ${escapeHtml(product.name)}</h3>
     <div class="variant-manage-list" data-variant-list></div>
     <button class="btn btn-secondary btn-block" type="button" data-add-variant-btn>+ Adicionar Variação</button>
   `;
