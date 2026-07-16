@@ -39,3 +39,122 @@ function redirectAfterLogin(user) {
   }
   window.location.href = redirect ? decodeURIComponent(redirect) : 'index.html';
 }
+
+function setFieldError(input, message) {
+  const group = input.closest('.form-group');
+  group.classList.toggle('has-error', !!message);
+  group.querySelector('.form-error').textContent = message || '';
+}
+
+function clearFormErrors(form) {
+  form.querySelectorAll('.form-group').forEach((group) => {
+    group.classList.remove('has-error');
+    group.querySelector('.form-error').textContent = '';
+  });
+}
+
+function setFormLoading(form, loading) {
+  const button = form.querySelector('button[type="submit"]');
+  button.disabled = loading;
+  button.querySelector('.btn-label').innerHTML = loading
+    ? '<span class="spinner"></span>'
+    : form.dataset.form === 'login'
+      ? 'Entrar'
+      : 'Criar Conta';
+}
+
+function switchAuthTab(tabName) {
+  document.querySelectorAll('.auth-tab').forEach((tab) => {
+    tab.classList.toggle('is-active', tab.dataset.tab === tabName);
+  });
+  document.querySelectorAll('.auth-form').forEach((form) => {
+    form.classList.toggle('is-active', form.dataset.form === tabName);
+  });
+}
+
+function initAuthPage() {
+  const loginForm = document.querySelector('[data-form="login"]');
+  const registerForm = document.querySelector('[data-form="register"]');
+  if (!loginForm || !registerForm) return;
+
+  document.querySelectorAll('.auth-tab').forEach((tab) => {
+    tab.addEventListener('click', () => switchAuthTab(tab.dataset.tab));
+  });
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('tab') === 'register') switchAuthTab('register');
+
+  loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearFormErrors(loginForm);
+
+    const email = loginForm.email.value.trim();
+    const password = loginForm.password.value;
+    let hasError = false;
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFieldError(loginForm.email, 'Informe um email válido');
+      hasError = true;
+    }
+    if (!password) {
+      setFieldError(loginForm.password, 'Informe sua senha');
+      hasError = true;
+    }
+    if (hasError) return;
+
+    setFormLoading(loginForm, true);
+    try {
+      const user = await login(email, password);
+      showToast('Login realizado com sucesso!', 'success');
+      redirectAfterLogin(user);
+    } catch (error) {
+      showToast(error.message || 'Não foi possível entrar', 'error');
+    } finally {
+      setFormLoading(loginForm, false);
+    }
+  });
+
+  registerForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearFormErrors(registerForm);
+
+    const name = registerForm.name.value.trim();
+    const email = registerForm.email.value.trim();
+    const password = registerForm.password.value;
+    const confirmPassword = registerForm.confirmPassword.value;
+    let hasError = false;
+
+    if (!name) {
+      setFieldError(registerForm.name, 'Informe seu nome');
+      hasError = true;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFieldError(registerForm.email, 'Informe um email válido');
+      hasError = true;
+    }
+    if (password.length < 6) {
+      setFieldError(registerForm.password, 'A senha deve ter no mínimo 6 caracteres');
+      hasError = true;
+    }
+    if (confirmPassword !== password) {
+      setFieldError(registerForm.confirmPassword, 'As senhas não coincidem');
+      hasError = true;
+    }
+    if (hasError) return;
+
+    setFormLoading(registerForm, true);
+    try {
+      await register(name, email, password);
+      showToast('Conta criada! Agora é só entrar.', 'success');
+      registerForm.reset();
+      switchAuthTab('login');
+      document.getElementById('login-email').value = email;
+    } catch (error) {
+      showToast(error.message || 'Não foi possível criar a conta', 'error');
+    } finally {
+      setFormLoading(registerForm, false);
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initAuthPage);
