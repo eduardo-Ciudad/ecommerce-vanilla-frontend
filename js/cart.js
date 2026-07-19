@@ -139,20 +139,19 @@ async function handleCheckout() {
   button.innerHTML = '<span class="spinner"></span>';
 
   try {
-    await apiPost('/orders', {});
+    const order = await apiPost('/orders', {});
     setCartCount(0);
-    openModal({
-      title: 'Pedido realizado!',
-      content: '<p>Seu pedido foi confirmado com sucesso. Você pode acompanhar o status em Meus Pedidos.</p>',
-      confirmLabel: 'Ver meus pedidos',
-      cancelLabel: 'Fechar',
-      onConfirm: () => {
-        window.location.href = 'orders.html';
-      },
-    });
+
+    const payment = await apiPost(`/payments/checkout/${order.id}`, {});
+
+    if (payment && payment.checkoutUrl) {
+      window.location.href = payment.checkoutUrl;
+    } else {
+      showToast('Pedido criado! Redirecionando para pagamento...', 'info');
+      window.location.href = 'orders.html';
+    }
   } catch (error) {
     showToast(error.message || 'Não foi possível finalizar o pedido', 'error');
-  } finally {
     button.disabled = false;
     button.textContent = originalText;
   }
