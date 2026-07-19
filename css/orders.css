@@ -54,6 +54,17 @@
   color: var(--color-primary);
 }
 
+.order-card-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.order-card-pay-row {
+  padding: 0 var(--space-md) var(--space-md);
+}
+
 .order-card-chevron {
   transition: transform var(--transition);
   color: var(--color-text-muted);

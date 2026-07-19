@@ -157,6 +157,20 @@ function lowestVariantPrice(product) {
   return Math.min(...product.variants.map((v) => Number(v.price)));
 }
 
+const PAYMENT_STATUS_LABELS = {
+  approved: 'Pago',
+  pending: 'Aguardando pagamento',
+  rejected: 'Pagamento recusado',
+  in_process: 'Processando pagamento',
+};
+
+const PAYMENT_STATUS_BADGE_CLASS = {
+  approved: 'badge-paid',
+  pending: 'badge-pending',
+  rejected: 'badge-cancelled',
+  in_process: 'badge-pending',
+};
+
 function productImagePlaceholder() {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
 }

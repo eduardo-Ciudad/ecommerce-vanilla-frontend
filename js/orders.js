@@ -45,6 +45,16 @@ function renderOrderCard(order) {
   const statusLabel = ORDER_STATUS_LABELS[order.status] || order.status;
   const badgeClass = ORDER_STATUS_BADGE_CLASS[order.status] || '';
 
+  const paymentBadge = order.paymentStatus
+    ? `<span class="badge ${PAYMENT_STATUS_BADGE_CLASS[order.paymentStatus] || ''}">${PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}</span>`
+    : '';
+
+  // Fica fora do <button> do acordeão: um <a> não pode ser aninhado dentro de um
+  // elemento interativo sem quebrar o toggle e a navegação do link.
+  const payNowRow = order.status === 'PENDING' && order.checkoutUrl
+    ? `<div class="order-card-pay-row"><a href="${order.checkoutUrl}" class="btn btn-primary btn-sm" target="_blank" rel="noopener">Pagar agora</a></div>`
+    : '';
+
   return `
     <li class="order-card" data-order-id="${order.id}">
       <button class="order-card-header" type="button" data-order-toggle>
@@ -52,10 +62,14 @@ function renderOrderCard(order) {
           <span class="order-card-number">Pedido #${order.id.slice(0, 8)}</span>
           <span class="order-card-date">${formatOrderDate(order.createdAt)}</span>
         </div>
-        <span class="badge ${badgeClass}">${statusLabel}</span>
+        <div class="order-card-badges">
+          <span class="badge ${badgeClass}">${statusLabel}</span>
+          ${paymentBadge}
+        </div>
         <span class="order-card-total">${formatPrice(order.total)}</span>
         <svg class="order-card-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
       </button>
+      ${payNowRow}
       <ul class="order-item-list" data-order-items>
         ${order.items.map(renderOrderItem).join('')}
       </ul>
@@ -71,8 +85,32 @@ function wireOrderAccordions() {
   });
 }
 
+function checkPaymentReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get('status');
+
+  if (!status) return;
+
+  // Limpa os query params do Mercado Pago da URL
+  history.replaceState(null, '', 'orders.html');
+
+  switch (status) {
+    case 'approved':
+      showToast('Pagamento aprovado com sucesso!', 'success');
+      break;
+    case 'pending':
+      showToast('Pagamento pendente. Aguardando confirmação.', 'warning');
+      break;
+    case 'failure':
+      showToast('Pagamento não foi aprovado. Tente novamente.', 'error');
+      break;
+  }
+}
+
 async function initOrdersPage() {
   if (!requireAuth()) return;
+
+  checkPaymentReturn();
 
   const root = document.querySelector('[data-orders-root]');
   try {
