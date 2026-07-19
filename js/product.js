@@ -22,7 +22,11 @@ function renderProduct(product) {
   const root = document.querySelector('[data-product-root]');
   root.innerHTML = `
     <div class="product-detail fade-in">
-      <div class="product-image">${productImagePlaceholder()}</div>
+      <div class="product-image">${
+        product.imageUrl
+          ? `<img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" />`
+          : productImagePlaceholder()
+      }</div>
       <div class="product-info">
         <span class="badge product-category-badge">${escapeHtml(product.categoryName || '')}</span>
         <h1>${escapeHtml(product.name)}</h1>

@@ -164,9 +164,12 @@ function productImagePlaceholder() {
 function buildProductCard(product, rootPath = '') {
   const price = lowestVariantPrice(product);
   const priceLabel = price === null ? 'Indisponível' : `A partir de ${formatPrice(price)}`;
+  const imageContent = product.imageUrl
+    ? `<img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" loading="lazy" />`
+    : productImagePlaceholder();
   return `
     <article class="product-card fade-in">
-      <a href="${rootPath}product.html?id=${product.id}" class="product-card-image">${productImagePlaceholder()}</a>
+      <a href="${rootPath}product.html?id=${product.id}" class="product-card-image">${imageContent}</a>
       <div class="product-card-body">
         <span class="product-card-category">${escapeHtml(product.categoryName || '')}</span>
         <h3 class="product-card-name">${escapeHtml(product.name)}</h3>
