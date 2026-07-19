@@ -18,7 +18,7 @@ function renderAdminOrdersTable(orders) {
   const tbody = document.querySelector('[data-admin-orders-tbody]');
 
   if (!orders.length) {
-    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Nenhum pedido encontrado nesta conta.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Nenhum pedido encontrado nesta conta.</div></td></tr>';
     return;
   }
 
@@ -29,6 +29,11 @@ function renderAdminOrdersTable(orders) {
           <td>${order.id.slice(0, 8)}...</td>
           <td>${new Date(order.createdAt).toLocaleDateString('pt-BR')}</td>
           <td><span class="badge ${ADMIN_ORDER_STATUS_BADGE_CLASS[order.status] || ''}">${ADMIN_ORDER_STATUS_LABELS[order.status] || order.status}</span></td>
+          <td>
+            ${order.paymentStatus
+              ? `<span class="badge ${PAYMENT_STATUS_BADGE_CLASS[order.paymentStatus] || ''}">${PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}</span>`
+              : '<span class="badge badge-pending">Não iniciado</span>'}
+          </td>
           <td>${formatPrice(order.total)}</td>
           <td>${order.items.length}</td>
         </tr>
@@ -43,7 +48,7 @@ async function loadAdminOrders() {
     const orders = await apiGet('/orders');
     renderAdminOrdersTable(orders);
   } catch (error) {
-    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Não foi possível carregar os pedidos.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Não foi possível carregar os pedidos.</div></td></tr>';
     showToast(error.message || 'Erro ao carregar pedidos', 'error');
   }
 }
