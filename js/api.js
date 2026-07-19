@@ -107,6 +107,41 @@ async function apiDelete(endpoint) {
   return apiFetch(endpoint, { method: 'DELETE' });
 }
 
+async function apiUploadFile(endpoint, file) {
+  const token = getAccessToken();
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const config = {
+    method: 'POST',
+    headers: {},
+    body: formData,
+  };
+
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Não setar Content-Type — o browser seta automaticamente com boundary
+  let response = await fetch(`${API_BASE}${endpoint}`, config);
+
+  if (response.status === 401 && token) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      config.headers['Authorization'] = `Bearer ${getAccessToken()}`;
+      response = await fetch(`${API_BASE}${endpoint}`, config);
+    }
+  }
+
+  if (!response.ok) {
+    const message = await parseErrorMessage(response);
+    throw new ApiError(message, response.status);
+  }
+
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
+}
+
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str ?? '';
