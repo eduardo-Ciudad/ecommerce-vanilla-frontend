@@ -271,6 +271,61 @@
   height: 16px;
 }
 
+.admin-product-thumb {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.admin-product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-product-thumb svg {
+  width: 20px;
+  height: 20px;
+}
+
+.admin-product-thumb-upload {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--color-white);
+  font-size: 0.9rem;
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.admin-product-thumb:hover .admin-product-thumb-upload,
+.admin-product-thumb-upload:focus-visible {
+  opacity: 1;
+}
+
+.product-image-preview {
+  display: block;
+  width: 100%;
+  max-width: 160px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-sm);
+}
+
 .variant-manage-list {
   display: flex;
   flex-direction: column;

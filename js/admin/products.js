@@ -1,11 +1,54 @@
 let productsCache = [];
 let productCategoriesCache = [];
 
+const MAX_PRODUCT_IMAGE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_PRODUCT_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+function validateProductImageFile(file) {
+  if (!ALLOWED_PRODUCT_IMAGE_TYPES.includes(file.type)) {
+    return 'Formato inválido. Envie um arquivo JPEG, PNG ou WebP.';
+  }
+  if (file.size > MAX_PRODUCT_IMAGE_SIZE) {
+    return 'Arquivo muito grande. O tamanho máximo é 5MB.';
+  }
+  return null;
+}
+
+function triggerImageUpload(productId) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = ALLOWED_PRODUCT_IMAGE_TYPES.join(',');
+  input.style.display = 'none';
+
+  input.addEventListener('change', async () => {
+    const file = input.files[0];
+    input.remove();
+    if (!file) return;
+
+    const validationError = validateProductImageFile(file);
+    if (validationError) {
+      showToast(validationError, 'error');
+      return;
+    }
+
+    try {
+      await apiUploadFile(`/products/${productId}/image`, file);
+      showToast('Imagem atualizada com sucesso', 'success');
+      await loadProducts();
+    } catch (error) {
+      showToast(error.message || 'Não foi possível enviar a imagem', 'error');
+    }
+  });
+
+  document.body.appendChild(input);
+  input.click();
+}
+
 function renderProductsTable() {
   const tbody = document.querySelector('[data-products-tbody]');
 
   if (!productsCache.length) {
-    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">Nenhum produto cadastrado.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Nenhum produto cadastrado.</div></td></tr>';
     return;
   }
 
@@ -13,6 +56,14 @@ function renderProductsTable() {
     .map(
       (product) => `
         <tr data-product-row="${product.id}">
+          <td>
+            <div class="admin-product-thumb">
+              ${product.imageUrl
+                ? `<img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" />`
+                : productImagePlaceholder()}
+              <button class="admin-product-thumb-upload" type="button" data-upload-image="${product.id}" title="Alterar imagem" aria-label="Alterar imagem do produto">📷</button>
+            </div>
+          </td>
           <td>${escapeHtml(product.name)}</td>
           <td>${escapeHtml(product.categoryName || '-')}</td>
           <td><span class="badge ${product.active ? 'badge-active' : 'badge-inactive'}">${product.active ? 'Ativo' : 'Inativo'}</span></td>
@@ -43,6 +94,9 @@ function renderProductsTable() {
   tbody.querySelectorAll('[data-delete-product]').forEach((btn) => {
     btn.addEventListener('click', () => confirmDeleteProduct(btn.dataset.deleteProduct));
   });
+  tbody.querySelectorAll('[data-upload-image]').forEach((btn) => {
+    btn.addEventListener('click', () => triggerImageUpload(btn.dataset.uploadImage));
+  });
 }
 
 function categoryOptions(selectedId) {
@@ -72,6 +126,13 @@ function openProductModal(product) {
       <label for="product-description">Descrição</label>
       <textarea class="form-control" id="product-description" rows="3">${product ? escapeHtml(product.description || '') : ''}</textarea>
     </div>
+    <div class="form-group">
+      <label for="product-image">Imagem do produto</label>
+      ${product?.imageUrl ? `<img class="product-image-preview" src="${product.imageUrl}" alt="Imagem atual de ${escapeHtml(product.name)}" />` : ''}
+      <input class="form-control" id="product-image" type="file" accept="${ALLOWED_PRODUCT_IMAGE_TYPES.join(',')}" />
+      <p class="form-hint">JPEG, PNG ou WebP. Máximo 5MB.</p>
+      <p class="form-error"></p>
+    </div>
   `;
 
   openModal({
@@ -82,9 +143,11 @@ function openProductModal(product) {
       const nameInput = content.querySelector('#product-name');
       const categoryInput = content.querySelector('#product-category');
       const descriptionInput = content.querySelector('#product-description');
+      const imageInput = content.querySelector('#product-image');
 
       const name = nameInput.value.trim();
       const categoryId = categoryInput.value;
+      const imageFile = imageInput.files[0] || null;
       let hasError = false;
 
       if (!name) {
@@ -97,18 +160,32 @@ function openProductModal(product) {
         categoryInput.closest('.form-group').querySelector('.form-error').textContent = 'Selecione uma categoria';
         hasError = true;
       }
+      if (imageFile) {
+        const imageError = validateProductImageFile(imageFile);
+        if (imageError) {
+          imageInput.closest('.form-group').classList.add('has-error');
+          imageInput.closest('.form-group').querySelector('.form-error').textContent = imageError;
+          hasError = true;
+        }
+      }
       if (hasError) return;
 
       const payload = { categoryId, name, description: descriptionInput.value.trim() };
 
       try {
+        let productId = product?.id;
         if (isEdit) {
-          await apiPut(`/products/${product.id}`, payload);
-          showToast('Produto atualizado com sucesso', 'success');
+          await apiPut(`/products/${productId}`, payload);
         } else {
-          await apiPost('/products', payload);
-          showToast('Produto criado com sucesso', 'success');
+          const created = await apiPost('/products', payload);
+          productId = created.id;
         }
+
+        if (imageFile) {
+          await apiUploadFile(`/products/${productId}/image`, imageFile);
+        }
+
+        showToast(isEdit ? 'Produto atualizado com sucesso' : 'Produto criado com sucesso', 'success');
         closeModal();
         await loadProducts();
       } catch (error) {
@@ -282,7 +359,7 @@ async function loadProducts() {
     productsCache = await apiGet('/products');
     renderProductsTable();
   } catch (error) {
-    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">Não foi possível carregar os produtos.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Não foi possível carregar os produtos.</div></td></tr>';
     showToast(error.message || 'Erro ao carregar produtos', 'error');
   }
 }
