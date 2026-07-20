@@ -135,25 +135,18 @@ function wireCartItemEvents() {
 async function handleCheckout() {
   const button = document.querySelector('[data-checkout-btn]');
   button.disabled = true;
-  const originalText = button.textContent;
   button.innerHTML = '<span class="spinner"></span>';
 
   try {
     const order = await apiPost('/orders', {});
     setCartCount(0);
 
-    const payment = await apiPost(`/payments/checkout/${order.id}`, {});
-
-    if (payment && payment.checkoutUrl) {
-      window.location.href = payment.checkoutUrl;
-    } else {
-      showToast('Pedido criado! Redirecionando para pagamento...', 'info');
-      window.location.href = 'orders.html';
-    }
+    // Redireciona pra página de checkout com o orderId
+    window.location.href = `checkout.html?orderId=${order.id}`;
   } catch (error) {
     showToast(error.message || 'Não foi possível finalizar o pedido', 'error');
     button.disabled = false;
-    button.textContent = originalText;
+    button.textContent = 'Finalizar Pedido';
   }
 }
 
