@@ -478,6 +478,12 @@
   display: none;
 }
 
+.form-hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-xs);
+}
+
 .form-group.has-error .form-control {
   border-color: var(--color-error);
 }
