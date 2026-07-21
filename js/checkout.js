@@ -1,4 +1,4 @@
-const MP_PUBLIC_KEY = 'APP_USR-b8bd2a22-221e-4f4d-9bfe-eedd23d1299d';
+const MP_PUBLIC_KEY = 'TEST-b5bead85-7a42-49c2-af4b-59cc3efea9cb';
 
 const STATUS_DETAIL_MESSAGES = {
   accredited: 'Pagamento aprovado!',
