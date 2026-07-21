@@ -51,8 +51,8 @@ function renderOrderCard(order) {
 
   // Fica fora do <button> do acordeão: um <a> não pode ser aninhado dentro de um
   // elemento interativo sem quebrar o toggle e a navegação do link.
-  const payNowRow = order.status === 'PENDING' && order.checkoutUrl
-    ? `<div class="order-card-pay-row"><a href="${order.checkoutUrl}" class="btn btn-primary btn-sm" target="_blank" rel="noopener">Pagar agora</a></div>`
+  const payNowRow = order.status === 'PENDING' && !order.paymentStatus
+    ? `<div class="order-card-pay-row"><a href="checkout.html?orderId=${order.id}" class="btn btn-primary btn-sm">Pagar agora</a></div>`
     : '';
 
   return `
@@ -85,32 +85,8 @@ function wireOrderAccordions() {
   });
 }
 
-function checkPaymentReturn() {
-  const params = new URLSearchParams(window.location.search);
-  const status = params.get('status');
-
-  if (!status) return;
-
-  // Limpa os query params do Mercado Pago da URL
-  history.replaceState(null, '', 'orders.html');
-
-  switch (status) {
-    case 'approved':
-      showToast('Pagamento aprovado com sucesso!', 'success');
-      break;
-    case 'pending':
-      showToast('Pagamento pendente. Aguardando confirmação.', 'warning');
-      break;
-    case 'failure':
-      showToast('Pagamento não foi aprovado. Tente novamente.', 'error');
-      break;
-  }
-}
-
 async function initOrdersPage() {
   if (!requireAuth()) return;
-
-  checkPaymentReturn();
 
   const root = document.querySelector('[data-orders-root]');
   try {
