@@ -5,16 +5,20 @@ const DASHBOARD_ICONS = {
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>',
 };
 
-function dashboardCard(icon, value, label, note) {
+function dashboardCard(icon, value, label, note, href) {
+  const tag = href ? 'a' : 'div';
+  const hrefAttr = href ? ` href="${href}"` : '';
+  const clickableClass = href ? ' dashboard-card--clickable' : '';
+
   return `
-    <div class="dashboard-card fade-in">
+    <${tag} class="dashboard-card${clickableClass} fade-in"${hrefAttr}>
       <span class="dashboard-card-icon">${DASHBOARD_ICONS[icon]}</span>
       <div>
         <div class="dashboard-card-value">${value}</div>
         <div class="dashboard-card-label">${label}</div>
         ${note ? `<div class="dashboard-card-note">${note}</div>` : ''}
       </div>
-    </div>
+    </${tag}>
   `;
 }
 
@@ -34,8 +38,8 @@ async function initDashboard() {
     const finishedCount = orders.filter((o) => o.status === 'DELIVERED').length;
 
     grid.innerHTML = [
-      dashboardCard('box', products.length, 'Total de Produtos'),
-      dashboardCard('tag', categories.length, 'Total de Categorias'),
+      dashboardCard('box', products.length, 'Total de Produtos', null, 'products.html'),
+      dashboardCard('tag', categories.length, 'Total de Categorias', null, 'categories.html'),
       dashboardCard('clock', pendingCount, 'Pedidos Pendentes', 'Apenas pedidos da conta admin — a API não expõe listagem global'),
       dashboardCard('check', finishedCount, 'Pedidos Entregues', 'Apenas pedidos da conta admin — a API não expõe listagem global'),
     ].join('');

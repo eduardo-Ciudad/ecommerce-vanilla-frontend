@@ -153,6 +153,16 @@
   gap: var(--space-md);
 }
 
+.dashboard-card--clickable {
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.dashboard-card--clickable:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+
 .dashboard-card-icon {
   width: 52px;
   height: 52px;
