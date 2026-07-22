@@ -16,7 +16,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
   box-shadow: var(--shadow-md);
 }
 
@@ -316,9 +315,13 @@
   border-radius: 0;
   background: rgba(0, 0, 0, 0.45);
   color: var(--color-white);
-  font-size: 0.9rem;
   opacity: 0;
   transition: var(--transition);
+}
+
+.admin-product-thumb-upload svg {
+  width: 18px;
+  height: 18px;
 }
 
 .admin-product-thumb:hover .admin-product-thumb-upload,

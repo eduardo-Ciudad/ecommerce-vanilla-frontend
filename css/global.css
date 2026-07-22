@@ -271,8 +271,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .empty-state-icon {
-  font-size: 3rem;
   margin-bottom: var(--space-md);
+}
+
+.empty-state-icon svg {
+  width: 48px;
+  height: 48px;
 }
 
 .empty-state p {

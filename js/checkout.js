@@ -20,25 +20,25 @@ const STATUS_DETAIL_MESSAGES = {
 
 const PAYMENT_RESULT_CONTENT = {
   approved: {
-    icon: '✓',
+    icon: ICONS.check,
     modifierClass: 'checkout-result-icon--success',
     title: 'Pagamento aprovado!',
     message: 'Seu pedido foi confirmado.',
   },
   rejected: {
-    icon: '✕',
+    icon: ICONS.x,
     modifierClass: 'checkout-result-icon--error',
     title: 'Pagamento recusado',
     message: 'Não foi possível processar o pagamento.',
   },
   pending: {
-    icon: '⏳',
+    icon: ICONS.clock,
     modifierClass: 'checkout-result-icon--pending',
     title: 'Pagamento em processamento',
     message: 'Você receberá a confirmação em breve.',
   },
   in_process: {
-    icon: '⏳',
+    icon: ICONS.clock,
     modifierClass: 'checkout-result-icon--pending',
     title: 'Pagamento em processamento',
     message: 'Você receberá a confirmação em breve.',
@@ -54,7 +54,7 @@ function getOrderId() {
 function renderCheckoutError(message) {
   document.querySelector('[data-checkout-root]').innerHTML = `
     <div class="empty-state">
-      <div class="empty-state-icon">😕</div>
+      <div class="empty-state-icon">${ICONS.frown}</div>
       <p>${escapeHtml(message)}</p>
       <a class="btn btn-primary" href="cart.html">Voltar ao carrinho</a>
     </div>
@@ -87,8 +87,8 @@ function renderCheckout(order) {
 
       <section class="checkout-payment" data-checkout-payment>
         <div class="payment-tabs">
-          <button class="payment-tab is-active" type="button" data-payment-tab="card">💳 Cartão de Crédito</button>
-          <button class="payment-tab" type="button" data-payment-tab="pix">📱 Pix</button>
+          <button class="payment-tab is-active" type="button" data-payment-tab="card"><span class="payment-tab-icon">${ICONS.creditCard}</span> Cartão de Crédito</button>
+          <button class="payment-tab" type="button" data-payment-tab="pix"><span class="payment-tab-icon">${ICONS.smartphone}</span> Pix</button>
         </div>
 
         <div class="payment-panel is-active" data-payment-panel="card">

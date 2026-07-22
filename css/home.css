@@ -110,8 +110,9 @@
   transform: translateY(-4px);
 }
 
-.category-card-icon {
-  font-size: 2rem;
+.category-card-icon svg {
+  width: 32px;
+  height: 32px;
 }
 
 .cat-color-0 { background: var(--color-primary-light); color: var(--color-primary-dark); }

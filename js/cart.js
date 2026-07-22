@@ -3,7 +3,7 @@ let currentCart = null;
 function renderEmptyCart() {
   document.querySelector('[data-cart-root]').innerHTML = `
     <div class="empty-state">
-      <div class="empty-state-icon">🛒</div>
+      <div class="empty-state-icon">${ICONS.shoppingCart}</div>
       <p>Seu carrinho está vazio.</p>
       <a class="btn btn-primary" href="shop.html">Continuar comprando</a>
     </div>

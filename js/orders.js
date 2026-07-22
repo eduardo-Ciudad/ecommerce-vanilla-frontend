@@ -25,7 +25,7 @@ function formatOrderDate(isoString) {
 function renderEmptyOrders() {
   document.querySelector('[data-orders-root]').innerHTML = `
     <div class="empty-state">
-      <div class="empty-state-icon">📦</div>
+      <div class="empty-state-icon">${ICONS.package}</div>
       <p>Você ainda não fez nenhum pedido.</p>
       <a class="btn btn-primary" href="shop.html">Ir às compras</a>
     </div>

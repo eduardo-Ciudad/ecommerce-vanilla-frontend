@@ -9,7 +9,7 @@ function getProductId() {
 function renderProductError(message) {
   document.querySelector('[data-product-root]').innerHTML = `
     <div class="empty-state">
-      <div class="empty-state-icon">😕</div>
+      <div class="empty-state-icon">${ICONS.frown}</div>
       <p>${escapeHtml(message)}</p>
       <a class="btn btn-primary" href="shop.html">Voltar para a loja</a>
     </div>

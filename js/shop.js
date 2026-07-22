@@ -79,7 +79,7 @@ function renderFilteredProducts() {
   if (!filtered.length) {
     grid.innerHTML = `
       <div class="empty-state empty-state--full-row">
-        <div class="empty-state-icon">🔍</div>
+        <div class="empty-state-icon">${ICONS.search}</div>
         <p>Nenhum produto encontrado.</p>
         <a class="btn btn-primary" href="shop.html">Ver todos os produtos</a>
       </div>

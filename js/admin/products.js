@@ -3,6 +3,7 @@ let productCategoriesCache = [];
 
 const MAX_PRODUCT_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_PRODUCT_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const CAMERA_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4a2 2 0 011.76 1.05l.49.9A2 2 0 0018 7h2a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2h2a2 2 0 001.76-1.05l.48-.9A2 2 0 0110 4z"/><circle cx="12" cy="13" r="3"/></svg>';
 
 function validateProductImageFile(file) {
   if (!ALLOWED_PRODUCT_IMAGE_TYPES.includes(file.type)) {
@@ -61,7 +62,7 @@ function renderProductsTable() {
               ${product.imageUrl
                 ? `<img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" />`
                 : productImagePlaceholder()}
-              <button class="admin-product-thumb-upload" type="button" data-upload-image="${product.id}" title="Alterar imagem" aria-label="Alterar imagem do produto">📷</button>
+              <button class="admin-product-thumb-upload" type="button" data-upload-image="${product.id}" title="Alterar imagem" aria-label="Alterar imagem do produto">${CAMERA_ICON}</button>
             </div>
           </td>
           <td>${escapeHtml(product.name)}</td>
