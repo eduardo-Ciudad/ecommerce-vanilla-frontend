@@ -185,9 +185,18 @@ function openProductModal(product) {
           await apiUploadFile(`/products/${productId}/image`, imageFile);
         }
 
-        showToast(isEdit ? 'Produto atualizado com sucesso' : 'Produto criado com sucesso', 'success');
-        closeModal();
-        await loadProducts();
+        if (isEdit) {
+          showToast('Produto atualizado com sucesso', 'success');
+          closeModal();
+          await loadProducts();
+        } else {
+          showToast('Produto criado com sucesso! Agora adicione uma variação para começar a vender.', 'success');
+          closeModal();
+          await loadProducts();
+          // Fluxo direto: pula a listagem de variações e abre o form de
+          // criação já vinculado ao produto recém-criado.
+          openVariantFormModal(productId, null);
+        }
       } catch (error) {
         showToast(error.message || 'Não foi possível salvar o produto', 'error');
       }
@@ -269,6 +278,7 @@ function openVariantsModal(productId) {
 
 function openVariantFormModal(productId, variant) {
   const isEdit = !!variant;
+  const product = productsCache.find((p) => p.id === productId);
   const content = document.createElement('div');
   content.innerHTML = `
     <div class="form-group">
@@ -289,8 +299,14 @@ function openVariantFormModal(productId, variant) {
     </div>
   `;
 
+  const modalTitle = isEdit
+    ? 'Editar Variação'
+    : product
+      ? `Nova Variação — ${product.name}`
+      : 'Nova Variação';
+
   openModal({
-    title: isEdit ? 'Editar Variação' : 'Nova Variação',
+    title: modalTitle,
     content,
     confirmLabel: isEdit ? 'Salvar' : 'Adicionar',
     onConfirm: async () => {
