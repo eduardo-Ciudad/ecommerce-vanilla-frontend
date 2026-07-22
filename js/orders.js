@@ -56,7 +56,7 @@ function renderOrderCard(order) {
     : '';
 
   return `
-    <li class="order-card" data-order-id="${order.id}">
+    <li class="order-card fade-in" data-order-id="${order.id}">
       <button class="order-card-header" type="button" data-order-toggle>
         <div class="order-card-main">
           <span class="order-card-number">Pedido #${order.id.slice(0, 8)}</span>
@@ -97,7 +97,7 @@ async function initOrdersPage() {
     }
 
     const sorted = [...orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    root.innerHTML = `<ul class="orders-list fade-in">${sorted.map(renderOrderCard).join('')}</ul>`;
+    root.innerHTML = `<ul class="orders-list stagger-fade">${sorted.map(renderOrderCard).join('')}</ul>`;
     wireOrderAccordions();
   } catch (error) {
     root.innerHTML = '<p class="empty-state">Não foi possível carregar seus pedidos.</p>';

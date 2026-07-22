@@ -15,7 +15,7 @@ function renderCategoriesTable() {
   tbody.innerHTML = categoriesCache
     .map(
       (category) => `
-        <tr data-category-row="${category.id}">
+        <tr class="fade-in" data-category-row="${category.id}">
           <td>${escapeHtml(category.name)}</td>
           <td>${formatAdminDate(category.createdAt)}</td>
           <td>

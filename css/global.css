@@ -252,6 +252,18 @@ h1, h2, h3, h4, h5, h6 {
   animation: fadeIn 0.3s ease both;
 }
 
+/* Escalona a entrada dos filhos diretos (cards, linhas de tabela) para que
+   apareçam em sequência em vez de todos de uma vez. */
+.stagger-fade > *:nth-child(1) { animation-delay: 0.03s; }
+.stagger-fade > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger-fade > *:nth-child(3) { animation-delay: 0.09s; }
+.stagger-fade > *:nth-child(4) { animation-delay: 0.12s; }
+.stagger-fade > *:nth-child(5) { animation-delay: 0.15s; }
+.stagger-fade > *:nth-child(6) { animation-delay: 0.18s; }
+.stagger-fade > *:nth-child(7) { animation-delay: 0.21s; }
+.stagger-fade > *:nth-child(8) { animation-delay: 0.24s; }
+.stagger-fade > *:nth-child(n+9) { animation-delay: 0.27s; }
+
 .skeleton {
   background: linear-gradient(90deg, var(--color-border-light) 25%, var(--color-border) 50%, var(--color-border-light) 75%);
   background-size: 200% 100%;

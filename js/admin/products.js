@@ -56,7 +56,7 @@ function renderProductsTable() {
   tbody.innerHTML = productsCache
     .map(
       (product) => `
-        <tr data-product-row="${product.id}">
+        <tr class="fade-in" data-product-row="${product.id}">
           <td>
             <div class="admin-product-thumb">
               ${product.imageUrl

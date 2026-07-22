@@ -245,6 +245,10 @@
   letter-spacing: 0.03em;
 }
 
+.admin-table tbody tr {
+  transition: var(--transition);
+}
+
 .admin-table tbody tr:hover {
   background: var(--color-bg);
 }
