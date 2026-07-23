@@ -81,7 +81,7 @@
         banner.innerHTML =
             '<div class="cookie-consent-card">' +
             '  <p class="cookie-consent-text">' +
-            '    🍪 Usamos cookies para melhorar sua experiência na MiniModa. Cookies essenciais são necessários para o funcionamento da loja. Você pode aceitar todos ou apenas os essenciais. ' +
+            '    🍪 Usamos cookies para melhorar sua experiência na GabiKids. Cookies essenciais são necessários para o funcionamento da loja. Você pode aceitar todos ou apenas os essenciais. ' +
             '    <a href="' + rootPath + 'politica-de-cookies.html">Saiba mais</a>' +
             '  </p>' +
             '  <div class="cookie-consent-actions">' +
