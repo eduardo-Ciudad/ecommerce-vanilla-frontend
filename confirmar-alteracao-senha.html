@@ -3,47 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Meus Pedidos | GabiKids</title>
-  <meta name="description" content="Acompanhe o histórico e o status dos seus pedidos na GabiKids." />
+  <title>Confirmar Alteração de Senha | GabiKids</title>
+  <meta name="description" content="Confirme a alteração de senha da sua conta GabiKids." />
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/global.css" />
   <link rel="stylesheet" href="css/components.css" />
-  <link rel="stylesheet" href="css/orders.css" />
+  <link rel="stylesheet" href="css/checkout.css" />
 </head>
 <body>
   <div id="header-root"></div>
 
-  <main class="container orders-page">
-    <h1>Meus Pedidos</h1>
+  <main class="container checkout-page">
+    <h1>Confirmar Alteração de Senha</h1>
 
-    <div data-orders-root>
-      <div class="skeleton skeleton-block-md"></div>
-      <div class="skeleton skeleton-block-md"></div>
-    </div>
-
-    <section class="security-section">
-      <h2>Segurança</h2>
-      <div class="security-card">
-        <p class="security-card-intro">
-          Altere sua senha de acesso. Por segurança, você receberá um email para confirmar a alteração antes que ela
-          entre em vigor.
-        </p>
-        <form data-form="change-password" novalidate>
-          <div class="form-group">
-            <label for="current-password">Senha atual</label>
-            <input class="form-control" type="password" id="current-password" name="currentPassword" required autocomplete="current-password" />
-            <p class="form-error"></p>
-          </div>
-          <div class="form-group">
-            <label for="new-password">Nova senha</label>
-            <input class="form-control" type="password" id="new-password" name="newPassword" required autocomplete="new-password" />
-            <p class="form-error"></p>
-          </div>
-          <button class="btn btn-primary" type="submit">
-            <span class="btn-label">Alterar senha</span>
-          </button>
-        </form>
-      </div>
+    <section class="checkout-result" data-confirm-result>
+      <div class="checkout-result-icon checkout-result-icon--pending"><span class="spinner"></span></div>
+      <h2>Confirmando alteração...</h2>
+      <p>Aguarde um instante enquanto validamos seu link de confirmação.</p>
     </section>
   </main>
 
@@ -88,6 +64,6 @@
   <script src="js/modal.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/header.js"></script>
-  <script src="js/orders.js"></script>
+  <script src="js/confirmar-alteracao-senha.js"></script>
 </body>
 </html>

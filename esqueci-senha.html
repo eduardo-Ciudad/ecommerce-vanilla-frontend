@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Entrar ou Criar Conta | GabiKids</title>
-  <meta name="description" content="Entre na sua conta GabiKids ou crie uma conta nova para comprar moda infantil com estilo." />
+  <title>Esqueci Minha Senha | GabiKids</title>
+  <meta name="description" content="Recupere o acesso à sua conta GabiKids: enviaremos um link de redefinição de senha para o seu email." />
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/global.css" />
   <link rel="stylesheet" href="css/components.css" />
@@ -15,53 +15,21 @@
 
   <main class="auth-page">
     <div class="auth-card fade-in">
-      <div class="auth-tabs">
-        <button class="auth-tab is-active" data-tab="login" type="button">Entrar</button>
-        <button class="auth-tab" data-tab="register" type="button">Criar Conta</button>
-      </div>
+      <h1>Esqueci minha senha</h1>
+      <p class="auth-card-subtitle">Informe o email da sua conta e enviaremos um link para você criar uma nova senha.</p>
 
-      <form class="auth-form is-active" data-form="login" novalidate>
+      <form data-form="forgot-password" novalidate>
         <div class="form-group">
-          <label for="login-email">Email</label>
-          <input class="form-control" type="email" id="login-email" name="email" required autocomplete="email" />
-          <p class="form-error"></p>
-        </div>
-        <div class="form-group">
-          <label for="login-password">Senha</label>
-          <input class="form-control" type="password" id="login-password" name="password" required autocomplete="current-password" />
+          <label for="forgot-email">Email</label>
+          <input class="form-control" type="email" id="forgot-email" name="email" required autocomplete="email" />
           <p class="form-error"></p>
         </div>
         <button class="btn btn-primary btn-block" type="submit">
-          <span class="btn-label">Entrar</span>
+          <span class="btn-label">Enviar link de redefinição</span>
         </button>
-        <a class="auth-back-link" href="esqueci-senha.html">Esqueci minha senha</a>
       </form>
 
-      <form class="auth-form" data-form="register" novalidate>
-        <div class="form-group">
-          <label for="register-name">Nome</label>
-          <input class="form-control" type="text" id="register-name" name="name" required autocomplete="name" />
-          <p class="form-error"></p>
-        </div>
-        <div class="form-group">
-          <label for="register-email">Email</label>
-          <input class="form-control" type="email" id="register-email" name="email" required autocomplete="email" />
-          <p class="form-error"></p>
-        </div>
-        <div class="form-group">
-          <label for="register-password">Senha</label>
-          <input class="form-control" type="password" id="register-password" name="password" required autocomplete="new-password" />
-          <p class="form-error"></p>
-        </div>
-        <div class="form-group">
-          <label for="register-confirm">Confirmar Senha</label>
-          <input class="form-control" type="password" id="register-confirm" name="confirmPassword" required autocomplete="new-password" />
-          <p class="form-error"></p>
-        </div>
-        <button class="btn btn-primary btn-block" type="submit">
-          <span class="btn-label">Criar Conta</span>
-        </button>
-      </form>
+      <a class="auth-back-link" href="auth.html">&larr; Voltar para o login</a>
     </div>
   </main>
 
@@ -106,5 +74,6 @@
   <script src="js/modal.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/header.js"></script>
+  <script src="js/esqueci-senha.js"></script>
 </body>
 </html>

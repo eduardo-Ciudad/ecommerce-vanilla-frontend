@@ -85,8 +85,52 @@ function wireOrderAccordions() {
   });
 }
 
+function initChangePasswordForm() {
+  const form = document.querySelector('[data-form="change-password"]');
+  if (!form) return;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearFormErrors(form);
+
+    const currentPassword = form.currentPassword.value;
+    const newPassword = form.newPassword.value;
+    let hasError = false;
+
+    if (!currentPassword) {
+      setFieldError(form.currentPassword, 'Informe sua senha atual');
+      hasError = true;
+    }
+    if (newPassword.length < 6) {
+      setFieldError(form.newPassword, 'A nova senha deve ter no mínimo 6 caracteres');
+      hasError = true;
+    }
+    if (hasError) return;
+
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true;
+    button.querySelector('.btn-label').innerHTML = '<span class="spinner"></span>';
+
+    try {
+      const data = await apiPost('/auth/change-password', { currentPassword, newPassword });
+      showToast(
+        data?.message || 'Enviamos um email para confirmar a alteração de senha. Ela só será trocada após a confirmação.',
+        'success'
+      );
+      form.reset();
+    } catch (error) {
+      showToast(error.message || 'Não foi possível iniciar a alteração de senha', 'error');
+    } finally {
+      button.disabled = false;
+      button.querySelector('.btn-label').textContent = 'Alterar senha';
+    }
+  });
+}
+
 async function initOrdersPage() {
   if (!requireAuth()) return;
+
+  initChangePasswordForm();
 
   const root = document.querySelector('[data-orders-root]');
   try {

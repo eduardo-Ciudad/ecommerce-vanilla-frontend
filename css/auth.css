@@ -52,3 +52,33 @@
 .auth-form button[type="submit"] {
   margin-top: var(--space-sm);
 }
+
+.auth-card h1 {
+  font-size: var(--font-size-xl);
+  text-align: center;
+  margin-bottom: var(--space-sm);
+}
+
+.auth-card-subtitle {
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-xl);
+}
+
+.auth-card form button[type="submit"] {
+  margin-top: var(--space-sm);
+}
+
+.auth-back-link {
+  display: block;
+  text-align: center;
+  margin-top: var(--space-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-light);
+  transition: var(--transition);
+}
+
+.auth-back-link:hover {
+  color: var(--color-primary);
+}

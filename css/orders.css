@@ -98,3 +98,26 @@
     flex-wrap: nowrap;
   }
 }
+
+.security-section {
+  margin-top: var(--space-2xl);
+}
+
+.security-section h2 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-md);
+}
+
+.security-card {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-lg);
+  max-width: 420px;
+}
+
+.security-card-intro {
+  color: var(--color-text-light);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-lg);
+}
