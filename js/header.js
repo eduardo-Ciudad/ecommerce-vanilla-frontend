@@ -44,7 +44,7 @@ function buildHeaderMarkup() {
     <div class="topbar">Frete grátis para compras acima de R$ 199</div>
     <header class="site-header" data-site-header>
       <div class="header-main">
-        <a class="header-logo" href="${headerLink('index.html')}"><span>Mini</span>Moda</a>
+        <a class="header-logo" href="${headerLink('index.html')}"><span>Gabi</span>Kids</a>
         <form class="header-search" data-search-form>
           ${ICONS.search}
           <input type="search" name="q" placeholder="Buscar produtos..." aria-label="Buscar produtos" />
