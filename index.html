@@ -14,38 +14,61 @@
   <div id="header-root"></div>
 
   <main>
+    <!-- HERO -->
     <section class="hero">
-      <div class="container hero-inner">
-        <h1 class="fade-in">Vista seu pequeno com estilo</h1>
-        <p class="fade-in">Moda infantil com qualidade e carinho para todas as estações</p>
-        <a class="btn btn-primary fade-in" href="shop.html">Ver coleção</a>
+      <div class="hero-inner">
+        <div class="hero-content">
+          <span class="hero-eyebrow fade-in">Verão 2026</span>
+          <h1 class="hero-title fade-in">Pequenos <em>looks,</em><br />grandes <em>momentos.</em></h1>
+          <p class="hero-subtitle fade-in">Peças que acompanham cada fase com conforto e personalidade.</p>
+          <div class="hero-actions fade-in">
+            <a class="btn btn-primary btn-storefront" href="shop.html">Explorar</a>
+            <a class="btn btn-secondary btn-storefront" href="shop.html">Novidades</a>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <span class="hero-visual-ring hero-visual-ring--outer"></span>
+          <span class="hero-visual-ring hero-visual-ring--inner"></span>
+          <svg class="hero-visual-illustration" viewBox="0 0 220 320" fill="none">
+            <path d="M138 22 108 5 78 22a27 27 0 00-54 0l4 24a7 7 0 007 6h11v190c0 7.5 6 13.5 13.5 13.5h77c7.5 0 13.5-6 13.5-13.5V52h11a7 7 0 007-6l4-24a27 27 0 00-54 0z" fill="var(--color-primary-surface)" stroke="var(--color-primary)" stroke-width="2"/>
+          </svg>
+          <span class="hero-watermark">GabiKids</span>
+        </div>
       </div>
     </section>
 
+    <!-- TRUST BADGES -->
     <section class="trust-badges">
-      <div class="container trust-badges-grid">
+      <div class="trust-badges-grid">
         <div class="trust-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7.5" cy="18.5" r="1.5"/><circle cx="17.5" cy="18.5" r="1.5"/></svg>
-          <span>Frete Grátis acima de R$199</span>
+          <span class="trust-badge-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7.5" cy="18.5" r="1.5"/><circle cx="17.5" cy="18.5" r="1.5"/></svg></span>
+          <div><div class="trust-badge-title">Frete Grátis</div><div class="trust-badge-subtitle">Acima de R$199</div></div>
         </div>
         <div class="trust-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 014-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg>
-          <span>Troca Fácil em 30 dias</span>
+          <span class="trust-badge-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 014-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg></span>
+          <div><div class="trust-badge-title">Troca Fácil</div><div class="trust-badge-subtitle">Em até 30 dias</div></div>
         </div>
         <div class="trust-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/></svg>
-          <span>Pagamento Seguro</span>
+          <span class="trust-badge-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/></svg></span>
+          <div><div class="trust-badge-title">Pagamento Seguro</div><div class="trust-badge-subtitle">PIX e Cartão</div></div>
         </div>
         <div class="trust-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.5 8.5 0 01-12.4 7.6L3 20l1-5.5A8.5 8.5 0 1121 11.5z"/></svg>
-          <span>Atendimento via WhatsApp</span>
+          <span class="trust-badge-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.5 8.5 0 01-12.4 7.6L3 20l1-5.5A8.5 8.5 0 1121 11.5z"/></svg></span>
+          <div><div class="trust-badge-title">WhatsApp</div><div class="trust-badge-subtitle">Atendimento rápido</div></div>
         </div>
       </div>
     </section>
 
-    <section class="section">
-      <div class="container">
-        <h2 class="section-title">Compre por Categoria</h2>
+    <!-- CATEGORIAS -->
+    <section class="home-section home-section--tint">
+      <div class="home-section-inner">
+        <div class="section-header-row">
+          <div>
+            <div class="section-eyebrow">Explore</div>
+            <h2 class="section-heading">Compre por Categoria</h2>
+          </div>
+          <a class="section-link" href="shop.html">Ver todas →</a>
+        </div>
         <div class="category-grid stagger-fade" data-category-grid>
           <div class="skeleton category-card-skeleton"></div>
           <div class="skeleton category-card-skeleton"></div>
@@ -55,10 +78,16 @@
       </div>
     </section>
 
-    <section class="section">
-      <div class="container">
-        <h2 class="section-title">Mais Vendidos</h2>
-        <p class="section-subtitle">Os queridinhos da semana!</p>
+    <!-- MAIS VENDIDOS -->
+    <section class="home-section home-section--white">
+      <div class="home-section-inner">
+        <div class="section-header-row">
+          <div>
+            <div class="section-eyebrow">Destaques</div>
+            <h2 class="section-heading">Mais Vendidos</h2>
+          </div>
+          <a class="section-link" href="shop.html">Ver todos →</a>
+        </div>
         <div class="product-grid stagger-fade" data-product-grid>
           <div class="skeleton product-card-skeleton"></div>
           <div class="skeleton product-card-skeleton"></div>
@@ -68,18 +97,91 @@
       </div>
     </section>
 
-    <section class="promo-banner">
-      <div class="container">
-        <p>Novidades toda semana! Fique de olho nas nossas coleções.</p>
+    <!-- COLLECTION BANNER -->
+    <section class="collection-banner">
+      <div class="collection-banner-grid">
+        <div class="collection-banner-content">
+          <span class="collection-banner-eyebrow">Coleção Especial</span>
+          <h2 class="collection-banner-title">Inverno<br /><em>Aconchego</em></h2>
+          <p class="collection-banner-text">Peças quentinhas e confortáveis para os dias frios. Tecidos macios e estampas exclusivas.</p>
+          <a class="btn collection-banner-cta" href="shop.html">Ver Coleção</a>
+        </div>
+        <div class="collection-banner-media" aria-hidden="true">
+          <svg width="140" height="140" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1">
+            <path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19" stroke-linecap="round"/>
+          </svg>
+        </div>
       </div>
     </section>
 
-    <section class="newsletter">
-      <div class="container newsletter-inner">
-        <h2>Receba nossas novidades</h2>
+    <!-- DEPOIMENTOS -->
+    <section class="home-section home-section--tint">
+      <div class="home-section-inner">
+        <div class="testimonials-header">
+          <div class="section-eyebrow">Depoimentos</div>
+          <h2 class="section-heading">O que dizem nossas mamães</h2>
+        </div>
+        <div class="testimonials-grid">
+          <article class="testimonial-card">
+            <div class="testimonial-stars" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <p class="testimonial-quote">"A qualidade das roupas é incrível! Minha filha ama os vestidos e o tecido é super macio. Compro sempre."</p>
+            <div class="testimonial-author">
+              <span class="testimonial-avatar">AM</span>
+              <div>
+                <div class="testimonial-name">Ana Maria</div>
+                <div class="testimonial-role">Mãe da Sofia, 4 anos</div>
+              </div>
+            </div>
+          </article>
+          <article class="testimonial-card">
+            <div class="testimonial-stars" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <p class="testimonial-quote">"Entrega rápida e embalagem linda. Parece presente! O atendimento pelo WhatsApp é excelente."</p>
+            <div class="testimonial-author">
+              <span class="testimonial-avatar testimonial-avatar--blue">CS</span>
+              <div>
+                <div class="testimonial-name">Carla Santos</div>
+                <div class="testimonial-role">Mãe do Pedro, 2 anos</div>
+              </div>
+            </div>
+          </article>
+          <article class="testimonial-card">
+            <div class="testimonial-stars" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <p class="testimonial-quote">"Já comprei mais de 10 peças. Os conjuntos são lindos e resistentes, mesmo depois de muitas lavagens."</p>
+            <div class="testimonial-author">
+              <span class="testimonial-avatar testimonial-avatar--green">JO</span>
+              <div>
+                <div class="testimonial-name">Juliana Oliveira</div>
+                <div class="testimonial-role">Mãe da Laura, 6 anos</div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEWSLETTER -->
+    <section class="home-section newsletter">
+      <div class="newsletter-inner">
+        <div class="section-eyebrow">Newsletter</div>
+        <h2 class="newsletter-title">Receba nossas novidades</h2>
+        <p class="newsletter-subtitle">Cadastre-se e ganhe 10% de desconto na primeira compra.</p>
         <form class="newsletter-form" data-newsletter-form>
           <input type="email" class="form-control" placeholder="Seu melhor email" required />
-          <button class="btn btn-primary" type="submit">Inscrever-se</button>
+          <button class="btn btn-primary btn-storefront" type="submit">Inscrever-se</button>
         </form>
       </div>
     </section>
@@ -87,9 +189,14 @@
 
   <footer class="site-footer">
     <div class="footer-grid">
-      <div class="footer-col">
-        <h4>Sobre a GabiKids</h4>
+      <div class="footer-col footer-col-brand">
+        <div class="header-logo"><span>Gabi</span>Kids</div>
         <p>Moda infantil com qualidade e carinho para vestir cada fase da infância com estilo e conforto.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9h3V6h-3a3 3 0 00-3 3v2H8v3h3v6h3v-6h3l1-3h-4V9a1 1 0 011-1z"/></svg></a>
+          <a href="#" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 01-12.4 7.6L3 20l1-5.5A8.5 8.5 0 1121 11.5z"/></svg></a>
+        </div>
       </div>
       <div class="footer-col">
         <h4>Navegação</h4>
@@ -99,22 +206,15 @@
       </div>
       <div class="footer-col">
         <h4>Atendimento</h4>
-        <p>contato@gabikids.com.br</p>
-        <p>(11) 4000-0000</p>
+        <span>contato@gabikids.com.br</span>
+        <span>(11) 4000-0000</span>
+        <span>Seg a Sex, 9h às 18h</span>
       </div>
       <div class="footer-col">
         <h4>Legal</h4>
         <a href="politica-de-cookies.html">Política de Cookies</a>
         <a href="politica-de-privacidade.html">Política de Privacidade</a>
         <a href="termos-de-uso.html">Termos de Uso</a>
-      </div>
-      <div class="footer-col">
-        <h4>Redes Sociais</h4>
-        <div class="footer-social">
-          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
-          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9h3V6h-3a3 3 0 00-3 3v2H8v3h3v6h3v-6h3l1-3h-4V9a1 1 0 011-1z"/></svg></a>
-          <a href="#" aria-label="WhatsApp"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 01-12.4 7.6L3 20l1-5.5A8.5 8.5 0 1121 11.5z"/></svg></a>
-        </div>
       </div>
     </div>
     <div class="footer-bottom">© 2026 GabiKids. Todos os direitos reservados.</div>
