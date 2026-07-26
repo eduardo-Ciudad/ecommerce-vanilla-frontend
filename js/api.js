@@ -176,22 +176,52 @@ function productImagePlaceholder() {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
 }
 
+function totalVariantStock(product) {
+  if (!product.variants || !product.variants.length) return 0;
+  return product.variants.reduce((total, v) => total + Number(v.stock || 0), 0);
+}
+
+function productCardBadge(product) {
+  const NEW_WINDOW_DAYS = 14;
+  const LOW_STOCK_THRESHOLD = 5;
+
+  if (product.createdAt) {
+    const ageDays = (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+    if (ageDays <= NEW_WINDOW_DAYS) {
+      return '<span class="product-card-badge">Novo</span>';
+    }
+  }
+
+  const stock = totalVariantStock(product);
+  if (stock > 0 && stock <= LOW_STOCK_THRESHOLD) {
+    return '<span class="product-card-badge product-card-badge--stock">Últimas un.</span>';
+  }
+
+  return '';
+}
+
 function buildProductCard(product, rootPath = '') {
   const price = lowestVariantPrice(product);
   const priceLabel = price === null ? 'Indisponível' : `A partir de ${formatPrice(price)}`;
+  const installmentLabel = price !== null ? `ou 3x de ${formatPrice(price / 3)}` : '';
   const imageContent = product.imageUrl
     ? `<img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" loading="lazy" />`
     : productImagePlaceholder();
+
   return `
     <article class="product-card fade-in">
-      <a href="${rootPath}product.html?id=${product.id}" class="product-card-image">${imageContent}</a>
+      <a href="${rootPath}product.html?id=${product.id}" class="product-card-image">
+        ${productCardBadge(product)}
+        <span class="product-card-wishlist" aria-hidden="true">${ICONS.heart}</span>
+        ${imageContent}
+      </a>
       <div class="product-card-body">
         <span class="product-card-category">${escapeHtml(product.categoryName || '')}</span>
-        <h3 class="product-card-name">${escapeHtml(product.name)}</h3>
+        <a href="${rootPath}product.html?id=${product.id}">
+          <h3 class="product-card-name">${escapeHtml(product.name)}</h3>
+        </a>
         <span class="product-card-price">${priceLabel}</span>
-        <div class="product-card-link">
-          <a class="btn btn-secondary btn-sm btn-block" href="${rootPath}product.html?id=${product.id}">Ver detalhes</a>
-        </div>
+        ${installmentLabel ? `<span class="product-card-installment">${installmentLabel}</span>` : ''}
       </div>
     </article>
   `;
