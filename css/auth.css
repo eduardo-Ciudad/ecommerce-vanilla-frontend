@@ -259,3 +259,9 @@
 .auth-back-link:hover {
   color: var(--color-primary);
 }
+
+.auth-split-brand-image {
+  max-height: 420px;
+  width: auto;
+  object-fit: contain;
+}
