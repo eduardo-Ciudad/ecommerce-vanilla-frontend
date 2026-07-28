@@ -60,7 +60,7 @@ function renderProductsTable() {
           <td>
             <div class="admin-product-thumb">
               ${product.imageUrl
-                ? `<img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" />`
+                ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" />`
                 : productImagePlaceholder()}
               <button class="admin-product-thumb-upload" type="button" data-upload-image="${product.id}" title="Alterar imagem" aria-label="Alterar imagem do produto">${CAMERA_ICON}</button>
             </div>
@@ -129,7 +129,7 @@ function openProductModal(product) {
     </div>
     <div class="form-group">
       <label for="product-image">Imagem do produto</label>
-      ${product?.imageUrl ? `<img class="product-image-preview" src="${product.imageUrl}" alt="Imagem atual de ${escapeHtml(product.name)}" />` : ''}
+      ${product?.imageUrl ? `<img class="product-image-preview" src="${escapeHtml(product.imageUrl)}" alt="Imagem atual de ${escapeHtml(product.name)}" />` : ''}
       <input class="form-control" id="product-image" type="file" accept="${ALLOWED_PRODUCT_IMAGE_TYPES.join(',')}" />
       <p class="form-hint">JPEG, PNG ou WebP. Máximo 5MB.</p>
       <p class="form-error"></p>

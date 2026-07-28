@@ -29,6 +29,10 @@ function requireAdmin() {
   return true;
 }
 
+function isSafeRedirect(path) {
+  return typeof path === 'string' && /^[a-zA-Z0-9/_-]+\.html([?#].*)?$/.test(path) && !path.startsWith('//');
+}
+
 function redirectAfterLogin(user) {
   const params = new URLSearchParams(window.location.search);
   const redirect = params.get('redirect');
@@ -37,7 +41,8 @@ function redirectAfterLogin(user) {
     window.location.href = 'admin/index.html';
     return;
   }
-  window.location.href = redirect ? decodeURIComponent(redirect) : 'index.html';
+  const decoded = redirect ? decodeURIComponent(redirect) : null;
+  window.location.href = decoded && isSafeRedirect(decoded) ? decoded : 'index.html';
 }
 
 function setFieldError(input, message) {

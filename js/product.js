@@ -24,7 +24,7 @@ function renderProduct(product) {
     <div class="product-detail fade-in">
       <div class="product-image">${
         product.imageUrl
-          ? `<img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" />`
+          ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" />`
           : productImagePlaceholder()
       }</div>
       <div class="product-info">

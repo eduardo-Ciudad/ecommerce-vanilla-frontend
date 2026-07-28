@@ -227,8 +227,16 @@ function renderPixResult(result, order) {
 
 function startPixPolling(orderId) {
   if (pixPollInterval) clearInterval(pixPollInterval);
+  let attempts = 0;
+  const maxAttempts = 60;
 
   pixPollInterval = setInterval(async () => {
+    attempts += 1;
+    if (attempts > maxAttempts) {
+      clearInterval(pixPollInterval);
+      showToast('O QR Code Pix expirou. Gere um novo código para continuar.', 'warning');
+      return;
+    }
     try {
       const orders = await apiGet('/orders');
       const updated = orders.find((o) => o.id === orderId);
@@ -236,9 +244,7 @@ function startPixPolling(orderId) {
         clearInterval(pixPollInterval);
         showPaymentResult({ status: 'approved' });
       }
-    } catch {
-      /* ignora falhas de polling — tenta de novo no próximo tick */
-    }
+    } catch { /* ignora falhas de polling — tenta de novo no próximo tick */ }
   }, 5000);
 }
 

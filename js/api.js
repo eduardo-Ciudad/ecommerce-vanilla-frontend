@@ -1,4 +1,3 @@
-//const API_BASE = 'http://localhost:8080';
 const API_BASE = 'https://gabikids.duckdns.org';
 
 class ApiError extends Error {
@@ -205,7 +204,7 @@ function buildProductCard(product, rootPath = '') {
   const priceLabel = price === null ? 'Indisponível' : `A partir de ${formatPrice(price)}`;
   const installmentLabel = price !== null ? `ou 3x de ${formatPrice(price / 3)}` : '';
   const imageContent = product.imageUrl
-    ? `<img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" loading="lazy" />`
+    ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" />`
     : productImagePlaceholder();
 
   return `
