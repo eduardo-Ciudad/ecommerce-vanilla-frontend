@@ -1,5 +1,3 @@
-const MP_PUBLIC_KEY = 'TEST-b5bead85-7a42-49c2-af4b-59cc3efea9cb';
-
 const STATUS_DETAIL_MESSAGES = {
   accredited: 'Pagamento aprovado!',
   pending_contingency: 'Pagamento em processamento.',
