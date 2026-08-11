@@ -32,6 +32,7 @@ function buildHeaderMarkup() {
         </button>
         <div class="user-menu-dropdown">
           <a href="${headerLink('orders.html')}">Meus Pedidos</a>
+          <a href="${headerLink('enderecos.html')}">Meus Endereços</a>
           <button data-action="logout">Sair</button>
         </div>
       </div>
