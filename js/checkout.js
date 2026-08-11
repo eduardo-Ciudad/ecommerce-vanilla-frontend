@@ -62,16 +62,6 @@ function renderCheckoutError(message) {
   `;
 }
 
-function renderNoAddressState() {
-  document.querySelector('[data-checkout-root]').innerHTML = `
-    <div class="empty-state">
-      <div class="empty-state-icon">${ICONS.frown}</div>
-      <p>Cadastre um endereço de entrega para continuar.</p>
-      <a class="btn btn-primary" href="enderecos.html">Cadastrar endereço</a>
-    </div>
-  `;
-}
-
 function checkoutItemRow(item) {
   return `
     <li class="checkout-summary-item">
@@ -107,6 +97,193 @@ function shippingOptionRow(option, isSelected) {
       <span>${formatPrice(option.price)}</span>
     </li>
   `;
+}
+
+function addressInlineFormMarkup() {
+  return `
+    <form class="checkout-address-form" data-form="checkout-address">
+      <div class="form-group">
+        <label for="checkout-address-label">Nome do endereço</label>
+        <input class="form-control" id="checkout-address-label" name="label" placeholder="Casa, Trabalho..." required />
+        <p class="form-error"></p>
+      </div>
+      <div class="form-group">
+        <label for="checkout-address-cep">CEP</label>
+        <input class="form-control" id="checkout-address-cep" name="cep" placeholder="00000-000" maxlength="9" required />
+        <p class="form-error"></p>
+      </div>
+      <div class="form-group">
+        <label for="checkout-address-street">Rua</label>
+        <input class="form-control" id="checkout-address-street" name="street" required />
+        <p class="form-error"></p>
+      </div>
+      <div class="form-group">
+        <label for="checkout-address-number">Número</label>
+        <input class="form-control" id="checkout-address-number" name="number" required />
+        <p class="form-error"></p>
+      </div>
+      <div class="form-group">
+        <label for="checkout-address-complement">Complemento</label>
+        <input class="form-control" id="checkout-address-complement" name="complement" />
+        <p class="form-error"></p>
+      </div>
+      <div class="form-group">
+        <label for="checkout-address-neighborhood">Bairro</label>
+        <input class="form-control" id="checkout-address-neighborhood" name="neighborhood" required />
+        <p class="form-error"></p>
+      </div>
+      <div class="form-group">
+        <label for="checkout-address-city">Cidade</label>
+        <input class="form-control" id="checkout-address-city" name="city" required />
+        <p class="form-error"></p>
+      </div>
+      <div class="form-group">
+        <label for="checkout-address-state">Estado</label>
+        <input class="form-control" id="checkout-address-state" name="state" placeholder="UF" maxlength="2" required />
+        <p class="form-error"></p>
+      </div>
+      <button class="btn btn-primary" type="submit">
+        <span class="btn-label">Salvar endereço</span>
+      </button>
+    </form>
+  `;
+}
+
+function clearCheckoutAddressFormErrors(form) {
+  form.querySelectorAll('.form-group').forEach((group) => {
+    group.classList.remove('has-error');
+    const errorEl = group.querySelector('.form-error');
+    if (errorEl) errorEl.textContent = '';
+  });
+}
+
+async function handleCheckoutCepLookup(form) {
+  const digits = form.cep.value.replace(/\D/g, '');
+  if (digits.length !== 8) return;
+
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+    const data = await response.json();
+    if (data.erro) return;
+    form.street.value = data.logradouro || '';
+    form.neighborhood.value = data.bairro || '';
+    form.city.value = data.localidade || '';
+    form.state.value = data.uf || '';
+  } catch {
+    /* ignora falhas de busca de CEP */
+  }
+}
+
+function wireAddressInlineForm(form, hasExistingAddresses, onSaved) {
+  form.cep.addEventListener('input', () => handleCheckoutCepLookup(form));
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearCheckoutAddressFormErrors(form);
+
+    const body = {
+      label: form.label.value.trim(),
+      cep: form.cep.value.replace(/\D/g, ''),
+      street: form.street.value.trim(),
+      number: form.number.value.trim(),
+      complement: form.complement.value.trim(),
+      neighborhood: form.neighborhood.value.trim(),
+      city: form.city.value.trim(),
+      state: form.state.value.trim(),
+      isDefault: !hasExistingAddresses,
+    };
+
+    let hasError = false;
+    if (!body.label) {
+      setFieldError(form.label, 'Informe um nome para o endereço');
+      hasError = true;
+    }
+    if (body.cep.length !== 8) {
+      setFieldError(form.cep, 'Informe um CEP válido');
+      hasError = true;
+    }
+    if (!body.street) {
+      setFieldError(form.street, 'Informe a rua');
+      hasError = true;
+    }
+    if (!body.number) {
+      setFieldError(form.number, 'Informe o número');
+      hasError = true;
+    }
+    if (!body.neighborhood) {
+      setFieldError(form.neighborhood, 'Informe o bairro');
+      hasError = true;
+    }
+    if (!body.city) {
+      setFieldError(form.city, 'Informe a cidade');
+      hasError = true;
+    }
+    if (!body.state) {
+      setFieldError(form.state, 'Informe o estado');
+      hasError = true;
+    }
+    if (hasError) return;
+
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true;
+    button.querySelector('.btn-label').innerHTML = '<span class="spinner"></span>';
+
+    try {
+      const address = await apiPost('/addresses', body);
+      showToast('Endereço adicionado com sucesso!', 'success');
+      onSaved(address);
+    } catch (error) {
+      showToast(error.message || 'Não foi possível salvar o endereço', 'error');
+      button.disabled = false;
+      button.querySelector('.btn-label').textContent = 'Salvar endereço';
+    }
+  });
+}
+
+function addressListMarkup(addresses) {
+  return `<ul class="checkout-summary-items" data-address-list>${addresses.map((a, i) => addressRadioRow(a, a.isDefault || (!addresses.some((x) => x.isDefault) && i === 0))).join('')}</ul>`;
+}
+
+function renderAddressContent(orderRef, addresses) {
+  const content = document.querySelector('[data-address-content]');
+
+  if (!addresses.length) {
+    content.innerHTML = `
+      <p class="pix-intro">Cadastre um endereço de entrega para continuar.</p>
+      ${addressInlineFormMarkup()}
+    `;
+    const form = content.querySelector('[data-form="checkout-address"]');
+    wireAddressInlineForm(form, false, async () => {
+      const updated = await apiGet('/addresses');
+      renderAddressContent(orderRef, updated);
+    });
+    return;
+  }
+
+  content.innerHTML = `
+    ${addressListMarkup(addresses)}
+    <button class="btn btn-ghost btn-sm" type="button" data-toggle-new-address>+ Adicionar novo endereço</button>
+    <div data-new-address-form hidden></div>
+    <div data-shipping-options></div>
+  `;
+
+  content.querySelector('[data-toggle-new-address]').addEventListener('click', () => {
+    const container = content.querySelector('[data-new-address-form]');
+    if (!container.hidden) {
+      container.hidden = true;
+      container.innerHTML = '';
+      return;
+    }
+    container.hidden = false;
+    container.innerHTML = addressInlineFormMarkup();
+    const form = container.querySelector('[data-form="checkout-address"]');
+    wireAddressInlineForm(form, true, async () => {
+      const updated = await apiGet('/addresses');
+      renderAddressContent(orderRef, updated);
+    });
+  });
+
+  wireAddressSelection(orderRef, addresses);
 }
 
 function togglePaymentSection(show) {
@@ -202,12 +379,9 @@ function renderCheckout(order, addresses) {
         </div>
       </section>
 
-      <section class="checkout-summary">
+      <section class="checkout-summary" data-checkout-address>
         <h2>Endereço de entrega</h2>
-        <ul class="checkout-summary-items" data-address-list>
-          ${addresses.map((a, i) => addressRadioRow(a, a.isDefault || (!addresses.some((x) => x.isDefault) && i === 0))).join('')}
-        </ul>
-        <div data-shipping-options></div>
+        <div data-address-content></div>
       </section>
 
       <section class="checkout-payment" data-checkout-payment hidden>
@@ -232,7 +406,7 @@ function renderCheckout(order, addresses) {
     </div>
   `;
 
-  wireAddressSelection(order, addresses);
+  renderAddressContent(order, addresses);
   wirePaymentTabs();
   document.querySelector('[data-pix-btn]').addEventListener('click', () => handlePixPayment(order));
   initCardForm(order);
@@ -272,23 +446,20 @@ function renderCheckoutFromCart(cart, addresses) {
         </div>
       </section>
 
-      <section class="checkout-summary">
+      <section class="checkout-summary" data-checkout-address>
         <h2>Endereço de entrega</h2>
-        <ul class="checkout-summary-items" data-address-list>
-          ${addresses.map((a, i) => addressRadioRow(a, a.isDefault || (!addresses.some((x) => x.isDefault) && i === 0))).join('')}
-        </ul>
-        <div data-shipping-options></div>
+        <div data-address-content></div>
       </section>
 
       <button class="btn btn-primary btn-block" type="button" data-continue-btn disabled>Continuar para pagamento</button>
     </div>
   `;
 
-  wireAddressSelection(pseudoOrder, addresses);
-  document.querySelector('[data-continue-btn]').addEventListener('click', () => createOrderAndProceed(addresses));
+  renderAddressContent(pseudoOrder, addresses);
+  document.querySelector('[data-continue-btn]').addEventListener('click', () => createOrderAndProceed());
 }
 
-async function createOrderAndProceed(addresses) {
+async function createOrderAndProceed() {
   if (!selectedAddressId || !selectedShippingMethod) {
     showToast('Selecione um endereço e um frete para continuar', 'error');
     return;
@@ -300,6 +471,7 @@ async function createOrderAndProceed(addresses) {
 
   try {
     const order = await apiPost('/orders', { addressId: selectedAddressId, shippingMethod: selectedShippingMethod });
+    const addresses = await apiGet('/addresses');
     setCartCount(0);
     renderCheckout(order, addresses);
   } catch (error) {
@@ -498,11 +670,6 @@ async function initCheckoutPage() {
       }
 
       const addresses = await apiGet('/addresses');
-      if (!addresses.length) {
-        renderNoAddressState();
-        return;
-      }
-
       renderCheckout(order, addresses);
       return;
     }
@@ -515,11 +682,6 @@ async function initCheckoutPage() {
     }
 
     const addresses = await apiGet('/addresses');
-    if (!addresses.length) {
-      renderNoAddressState();
-      return;
-    }
-
     renderCheckoutFromCart(cart, addresses);
   } catch (error) {
     renderCheckoutError(error.message || 'Erro ao carregar checkout');
