@@ -132,22 +132,9 @@ function wireCartItemEvents() {
   });
 }
 
-async function handleCheckout() {
-  const button = document.querySelector('[data-checkout-btn]');
-  button.disabled = true;
-  button.innerHTML = '<span class="spinner"></span>';
-
-  try {
-    const order = await apiPost('/orders', {});
-    setCartCount(0);
-
-    // Redireciona pra página de checkout com o orderId
-    window.location.href = `checkout.html?orderId=${order.id}`;
-  } catch (error) {
-    showToast(error.message || 'Não foi possível finalizar o pedido', 'error');
-    button.disabled = false;
-    button.textContent = 'Finalizar Pedido';
-  }
+function handleCheckout() {
+  // O pedido agora é criado em checkout.js, após a seleção de endereço e frete.
+  window.location.href = 'checkout.html';
 }
 
 async function initCartPage() {

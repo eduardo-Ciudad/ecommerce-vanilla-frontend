@@ -112,6 +112,8 @@ function shippingOptionRow(option, isSelected) {
 function togglePaymentSection(show) {
   const payment = document.querySelector('[data-checkout-payment]');
   if (payment) payment.hidden = !show;
+  const continueBtn = document.querySelector('[data-continue-btn]');
+  if (continueBtn) continueBtn.disabled = !show;
 }
 
 function updateCheckoutTotal(order) {
@@ -234,6 +236,77 @@ function renderCheckout(order, addresses) {
   wirePaymentTabs();
   document.querySelector('[data-pix-btn]').addEventListener('click', () => handlePixPayment(order));
   initCardForm(order);
+}
+
+function cartItemsTotal(cart) {
+  return cart.items.reduce((total, item) => total + Number(item.price) * item.quantity, 0);
+}
+
+function cartItemRow(item) {
+  return `
+    <li class="checkout-summary-item">
+      <span>${escapeHtml(item.productName)} (${escapeHtml(item.size)}) x${item.quantity}</span>
+      <span>${formatPrice(item.price * item.quantity)}</span>
+    </li>
+  `;
+}
+
+function renderCheckoutFromCart(cart, addresses) {
+  const root = document.querySelector('[data-checkout-root]');
+  const pseudoOrder = { total: cartItemsTotal(cart) };
+
+  root.innerHTML = `
+    <div class="checkout-layout fade-in">
+      <section class="checkout-summary">
+        <h2>Resumo do Pedido</h2>
+        <ul class="checkout-summary-items">
+          ${cart.items.map(cartItemRow).join('')}
+        </ul>
+        <div class="checkout-summary-item" data-shipping-row hidden>
+          <span>Frete</span>
+          <span data-shipping-price></span>
+        </div>
+        <div class="checkout-summary-total">
+          <span>Total</span>
+          <span data-checkout-total>${formatPrice(pseudoOrder.total)}</span>
+        </div>
+      </section>
+
+      <section class="checkout-summary">
+        <h2>Endereço de entrega</h2>
+        <ul class="checkout-summary-items" data-address-list>
+          ${addresses.map((a, i) => addressRadioRow(a, a.isDefault || (!addresses.some((x) => x.isDefault) && i === 0))).join('')}
+        </ul>
+        <div data-shipping-options></div>
+      </section>
+
+      <button class="btn btn-primary btn-block" type="button" data-continue-btn disabled>Continuar para pagamento</button>
+    </div>
+  `;
+
+  wireAddressSelection(pseudoOrder, addresses);
+  document.querySelector('[data-continue-btn]').addEventListener('click', () => createOrderAndProceed(addresses));
+}
+
+async function createOrderAndProceed(addresses) {
+  if (!selectedAddressId || !selectedShippingMethod) {
+    showToast('Selecione um endereço e um frete para continuar', 'error');
+    return;
+  }
+
+  const button = document.querySelector('[data-continue-btn]');
+  button.disabled = true;
+  button.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const order = await apiPost('/orders', { addressId: selectedAddressId, shippingMethod: selectedShippingMethod });
+    setCartCount(0);
+    renderCheckout(order, addresses);
+  } catch (error) {
+    showToast(error.message || 'Não foi possível finalizar o pedido', 'error');
+    button.disabled = false;
+    button.textContent = 'Continuar para pagamento';
+  }
 }
 
 function wirePaymentTabs() {
@@ -405,26 +478,39 @@ function showPaymentResult(result) {
 async function initCheckoutPage() {
   if (!requireAuth()) return;
 
-  const orderId = getOrderId();
-  if (!orderId) {
-    showToast('Pedido não encontrado', 'error');
-    window.location.href = 'cart.html';
-    return;
-  }
-
   const currentUser = getCurrentUser();
   if (currentUser && !currentUser.emailVerified) {
     renderCheckoutError('Verifique seu email antes de finalizar a compra. Confira sua caixa de entrada.');
     return;
   }
 
-  try {
-    const orders = await apiGet('/orders');
-    const order = orders.find((o) => o.id === orderId);
+  const orderId = getOrderId();
 
-    if (!order) {
-      showToast('Pedido não encontrado', 'error');
-      window.location.href = 'orders.html';
+  try {
+    if (orderId) {
+      const orders = await apiGet('/orders');
+      const order = orders.find((o) => o.id === orderId);
+
+      if (!order) {
+        showToast('Pedido não encontrado', 'error');
+        window.location.href = 'orders.html';
+        return;
+      }
+
+      const addresses = await apiGet('/addresses');
+      if (!addresses.length) {
+        renderNoAddressState();
+        return;
+      }
+
+      renderCheckout(order, addresses);
+      return;
+    }
+
+    const cart = await apiGet('/cart');
+    if (!cart.items.length) {
+      showToast('Seu carrinho está vazio', 'error');
+      window.location.href = 'cart.html';
       return;
     }
 
@@ -434,7 +520,7 @@ async function initCheckoutPage() {
       return;
     }
 
-    renderCheckout(order, addresses);
+    renderCheckoutFromCart(cart, addresses);
   } catch (error) {
     renderCheckoutError(error.message || 'Erro ao carregar checkout');
   }

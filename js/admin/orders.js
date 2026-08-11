@@ -14,11 +14,22 @@ const ADMIN_ORDER_STATUS_BADGE_CLASS = {
   CANCELLED: 'badge-cancelled',
 };
 
+function formatAdminOrderAddress(order) {
+  if (!order.recipientStreet) return '—';
+  const complement = order.recipientComplement ? `, ${escapeHtml(order.recipientComplement)}` : '';
+  return `${escapeHtml(order.recipientStreet)}, ${escapeHtml(order.recipientNumber)}${complement} — ${escapeHtml(order.recipientNeighborhood)}, ${escapeHtml(order.recipientCity)}/${escapeHtml(order.recipientState)} — CEP ${escapeHtml(order.recipientCep)}`;
+}
+
+function formatAdminOrderShipping(order) {
+  if (!order.shippingMethod) return '—';
+  return `${escapeHtml(order.shippingMethod)} (até ${order.shippingDeadlineDays} dias) — ${formatPrice(order.shippingPrice)}`;
+}
+
 function renderAdminOrdersTable(orders) {
   const tbody = document.querySelector('[data-admin-orders-tbody]');
 
   if (!orders.length) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Nenhum pedido encontrado nesta conta.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Nenhum pedido encontrado nesta conta.</div></td></tr>';
     return;
   }
 
@@ -36,6 +47,8 @@ function renderAdminOrdersTable(orders) {
           </td>
           <td>${formatPrice(order.total)}</td>
           <td>${order.items.length}</td>
+          <td>${formatAdminOrderAddress(order)}</td>
+          <td>${formatAdminOrderShipping(order)}</td>
         </tr>
       `
     )
@@ -48,7 +61,7 @@ async function loadAdminOrders() {
     const orders = await apiGet('/orders');
     renderAdminOrdersTable(orders);
   } catch (error) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Não foi possível carregar os pedidos.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Não foi possível carregar os pedidos.</div></td></tr>';
     showToast(error.message || 'Erro ao carregar pedidos', 'error');
   }
 }
