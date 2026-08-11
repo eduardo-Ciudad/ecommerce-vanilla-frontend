@@ -44,6 +44,9 @@ const PAYMENT_RESULT_CONTENT = {
 };
 
 let pixPollInterval = null;
+let selectedAddressId = null;
+let selectedShippingMethod = null;
+let selectedShippingPrice = 0;
 
 function getOrderId() {
   return new URLSearchParams(window.location.search).get('orderId');
@@ -59,6 +62,16 @@ function renderCheckoutError(message) {
   `;
 }
 
+function renderNoAddressState() {
+  document.querySelector('[data-checkout-root]').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state-icon">${ICONS.frown}</div>
+      <p>Cadastre um endereço de entrega para continuar.</p>
+      <a class="btn btn-primary" href="enderecos.html">Cadastrar endereço</a>
+    </div>
+  `;
+}
+
 function checkoutItemRow(item) {
   return `
     <li class="checkout-summary-item">
@@ -68,7 +81,107 @@ function checkoutItemRow(item) {
   `;
 }
 
-function renderCheckout(order) {
+function formatAddressSummary(address) {
+  const complement = address.complement ? `, ${escapeHtml(address.complement)}` : '';
+  return `${escapeHtml(address.street)}, ${escapeHtml(address.number)}${complement} — ${escapeHtml(address.neighborhood)}, ${escapeHtml(address.city)}/${escapeHtml(address.state)}`;
+}
+
+function addressRadioRow(address, isSelected) {
+  return `
+    <li class="checkout-summary-item">
+      <label style="display:flex;align-items:center;gap:var(--space-sm);cursor:pointer;">
+        <input type="radio" name="selectedAddress" value="${address.id}" ${isSelected ? 'checked' : ''} />
+        <span>${escapeHtml(address.label)} — ${formatAddressSummary(address)}</span>
+      </label>
+    </li>
+  `;
+}
+
+function shippingOptionRow(option, isSelected) {
+  return `
+    <li class="checkout-summary-item">
+      <label style="display:flex;align-items:center;gap:var(--space-sm);cursor:pointer;">
+        <input type="radio" name="selectedShipping" value="${escapeHtml(option.method)}" ${isSelected ? 'checked' : ''} />
+        <span>${escapeHtml(option.methodLabel)} — até ${option.deadlineDays} dias úteis</span>
+      </label>
+      <span>${formatPrice(option.price)}</span>
+    </li>
+  `;
+}
+
+function togglePaymentSection(show) {
+  const payment = document.querySelector('[data-checkout-payment]');
+  if (payment) payment.hidden = !show;
+}
+
+function updateCheckoutTotal(order) {
+  const totalEl = document.querySelector('[data-checkout-total]');
+  const shippingRow = document.querySelector('[data-shipping-row]');
+  const shippingPriceEl = document.querySelector('[data-shipping-price]');
+  if (!totalEl) return;
+
+  if (selectedShippingMethod) {
+    shippingRow.hidden = false;
+    shippingPriceEl.textContent = formatPrice(selectedShippingPrice);
+    totalEl.textContent = formatPrice(Number(order.total) + selectedShippingPrice);
+  } else {
+    shippingRow.hidden = true;
+    totalEl.textContent = formatPrice(order.total);
+  }
+}
+
+async function loadShippingOptions(order, cep) {
+  const container = document.querySelector('[data-shipping-options]');
+
+  selectedShippingMethod = null;
+  selectedShippingPrice = 0;
+  togglePaymentSection(false);
+  updateCheckoutTotal(order);
+  container.innerHTML = '<p class="pix-status"><span class="spinner"></span> Calculando frete...</p>';
+
+  try {
+    const options = await apiGet(`/shipping/calculate?cep=${encodeURIComponent(cep)}`);
+    if (!options.length) {
+      container.innerHTML = '<p class="empty-state empty-state--inline">Não foi possível calcular o frete para este CEP.</p>';
+      return;
+    }
+
+    container.innerHTML = `<ul class="checkout-summary-items" data-shipping-list>${options.map((o, i) => shippingOptionRow(o, i === 0)).join('')}</ul>`;
+    selectedShippingMethod = options[0].method;
+    selectedShippingPrice = Number(options[0].price);
+    updateCheckoutTotal(order);
+    togglePaymentSection(true);
+
+    container.querySelectorAll('[name="selectedShipping"]').forEach((radio) => {
+      radio.addEventListener('change', () => {
+        const option = options.find((o) => o.method === radio.value);
+        selectedShippingMethod = option.method;
+        selectedShippingPrice = Number(option.price);
+        updateCheckoutTotal(order);
+      });
+    });
+  } catch (error) {
+    container.innerHTML = '<p class="empty-state empty-state--inline">Não foi possível calcular o frete para este CEP.</p>';
+    showToast(error.message || 'Erro ao calcular frete', 'error');
+  }
+}
+
+function wireAddressSelection(order, addresses) {
+  const initiallySelected = addresses.find((a) => a.isDefault) || addresses[0];
+  selectedAddressId = initiallySelected.id;
+
+  document.querySelectorAll('[name="selectedAddress"]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      selectedAddressId = radio.value;
+      const address = addresses.find((a) => a.id === radio.value);
+      loadShippingOptions(order, address.cep);
+    });
+  });
+
+  loadShippingOptions(order, initiallySelected.cep);
+}
+
+function renderCheckout(order, addresses) {
   const root = document.querySelector('[data-checkout-root]');
   root.innerHTML = `
     <div class="checkout-layout fade-in">
@@ -77,13 +190,25 @@ function renderCheckout(order) {
         <ul class="checkout-summary-items">
           ${order.items.map(checkoutItemRow).join('')}
         </ul>
+        <div class="checkout-summary-item" data-shipping-row hidden>
+          <span>Frete</span>
+          <span data-shipping-price></span>
+        </div>
         <div class="checkout-summary-total">
           <span>Total</span>
-          <span>${formatPrice(order.total)}</span>
+          <span data-checkout-total>${formatPrice(order.total)}</span>
         </div>
       </section>
 
-      <section class="checkout-payment" data-checkout-payment>
+      <section class="checkout-summary">
+        <h2>Endereço de entrega</h2>
+        <ul class="checkout-summary-items" data-address-list>
+          ${addresses.map((a, i) => addressRadioRow(a, a.isDefault || (!addresses.some((x) => x.isDefault) && i === 0))).join('')}
+        </ul>
+        <div data-shipping-options></div>
+      </section>
+
+      <section class="checkout-payment" data-checkout-payment hidden>
         <div class="payment-tabs">
           <button class="payment-tab is-active" type="button" data-payment-tab="card"><span class="payment-tab-icon">${ICONS.creditCard}</span> Cartão de Crédito</button>
           <button class="payment-tab" type="button" data-payment-tab="pix"><span class="payment-tab-icon">${ICONS.smartphone}</span> Pix</button>
@@ -105,6 +230,7 @@ function renderCheckout(order) {
     </div>
   `;
 
+  wireAddressSelection(order, addresses);
   wirePaymentTabs();
   document.querySelector('[data-pix-btn]').addEventListener('click', () => handlePixPayment(order));
   initCardForm(order);
@@ -302,7 +428,13 @@ async function initCheckoutPage() {
       return;
     }
 
-    renderCheckout(order);
+    const addresses = await apiGet('/addresses');
+    if (!addresses.length) {
+      renderNoAddressState();
+      return;
+    }
+
+    renderCheckout(order, addresses);
   } catch (error) {
     renderCheckoutError(error.message || 'Erro ao carregar checkout');
   }
