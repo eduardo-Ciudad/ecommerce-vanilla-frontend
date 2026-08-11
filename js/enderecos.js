@@ -119,9 +119,18 @@ function addressFormMarkup(address) {
         <label>
           <input type="checkbox" name="isDefault" ${a.isDefault ? 'checked' : ''} /> Definir como padrão
         </label>
+        <p class="form-error"></p>
       </div>
     </form>
   `;
+}
+
+function clearAddressFormErrors(form) {
+  form.querySelectorAll('.form-group').forEach((group) => {
+    group.classList.remove('has-error');
+    const errorEl = group.querySelector('.form-error');
+    if (errorEl) errorEl.textContent = '';
+  });
 }
 
 async function handleCepLookup(modal) {
@@ -144,7 +153,7 @@ async function handleCepLookup(modal) {
 
 async function submitAddressForm(addressId) {
   const form = document.querySelector('.modal [data-form="address"]');
-  clearFormErrors(form);
+  clearAddressFormErrors(form);
 
   const body = {
     label: form.label.value.trim(),
