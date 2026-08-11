@@ -149,11 +149,8 @@ function initAuthPage() {
 
     setFormLoading(registerForm, true);
     try {
-      await register(name, email, password);
-      showToast('Conta criada! Agora é só entrar.', 'success');
-      registerForm.reset();
-      switchAuthTab('login');
-      document.getElementById('login-email').value = email;
+      const data = await apiPost('/auth/register', { name, email, password });
+      registerForm.innerHTML = '<div class="auth-success"><p>Cadastro realizado! Enviamos um link de verificação para <strong>' + escapeHtml(email) + '</strong>. Verifique sua caixa de entrada para ativar sua conta.</p></div>';
     } catch (error) {
       showToast(error.message || 'Não foi possível criar a conta', 'error');
     } finally {

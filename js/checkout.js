@@ -286,6 +286,12 @@ async function initCheckoutPage() {
     return;
   }
 
+  const currentUser = getCurrentUser();
+  if (currentUser && !currentUser.emailVerified) {
+    renderCheckoutError('Verifique seu email antes de finalizar a compra. Confira sua caixa de entrada.');
+    return;
+  }
+
   try {
     const orders = await apiGet('/orders');
     const order = orders.find((o) => o.id === orderId);

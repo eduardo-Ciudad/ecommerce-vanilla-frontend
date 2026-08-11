@@ -428,3 +428,21 @@ h1, h2, h3, h4, h5, h6 {
 .empty-state--inline { padding: 0; }
 .empty-state--spacious { padding: var(--space-md) 0; }
 .empty-state--full-row { grid-column: 1 / -1; }
+
+.topbar--warning {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.topbar--warning a {
+    color: #92400E;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.auth-success {
+    text-align: center;
+    padding: var(--space-xl, 2rem) var(--space-md, 1rem);
+    color: var(--color-text, #2D2D2D);
+    line-height: 1.6;
+}

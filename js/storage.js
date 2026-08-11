@@ -27,7 +27,7 @@ function saveSession({ accessToken, refreshToken }) {
 
   const claims = decodeJwt(accessToken);
   const user = claims
-    ? { id: claims.id, email: claims.sub, name: claims.name, role: claims.role }
+    ? { id: claims.id, email: claims.sub, name: claims.name, role: claims.role, emailVerified: claims.emailVerified }
     : null;
 
   if (user) {
