@@ -1,3 +1,6 @@
+const HOME_CATEGORY_PREVIEW_COUNT = 3;
+const HOME_PRODUCT_PREVIEW_COUNT = 8;
+
 const CATEGORY_ICONS = {
   shirt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z"/></svg>',
   footprints: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 11-4 0z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 104 0z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg>',
@@ -25,6 +28,7 @@ async function renderHomeCategories() {
       return;
     }
     grid.innerHTML = categories
+      .slice(0, HOME_CATEGORY_PREVIEW_COUNT)
       .map((category, index) => `
         <a class="category-card cat-color-${index % 4} fade-in" href="shop.html?category=${category.id}">
           <span class="category-card-icon">${categoryIcon(category.name)}</span>
@@ -40,12 +44,13 @@ async function renderHomeCategories() {
 async function renderBestSellers() {
   const grid = document.querySelector('[data-product-grid]');
   try {
-    const products = await apiGet('/products');
+    const response = await apiGet(`/products?page=0&size=${HOME_PRODUCT_PREVIEW_COUNT}`);
+    const products = response.content;
     if (!products.length) {
       grid.innerHTML = '<p class="empty-state">Nenhum produto disponível no momento.</p>';
       return;
     }
-    grid.innerHTML = products.slice(0, 8).map((product) => buildProductCard(product)).join('');
+    grid.innerHTML = products.map((product) => buildProductCard(product)).join('');
   } catch (error) {
     grid.innerHTML = '<p class="empty-state">Não foi possível carregar os produtos.</p>';
   }
