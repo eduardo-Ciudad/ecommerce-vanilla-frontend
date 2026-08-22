@@ -88,3 +88,19 @@
   aspect-ratio: 3 / 4;
   border-radius: var(--radius-lg);
 }
+
+.shop-load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-xl);
+}
+
+.category-filter-toggle {
+  background: none;
+  border: none;
+  padding: 10px 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+}

@@ -1,5 +1,12 @@
-let allProducts = [];
+const SHOP_CATEGORY_PREVIEW_COUNT = 3;
+const SHOP_PRODUCTS_PAGE_SIZE = 20;
+
+let allProducts = []; // apenas os produtos já carregados via "Carregar mais", não o catálogo inteiro
 let allCategories = [];
+let categoriesExpanded = false;
+let currentProductsPage = 0;
+let totalProductsPages = 1;
+let isLoadingMoreProducts = false;
 
 function getShopParams() {
   const params = new URLSearchParams(window.location.search);
@@ -30,7 +37,11 @@ function renderCategoryFilterList() {
     </li>
   `;
 
-  const items = allCategories
+  const visibleCategories = categoriesExpanded
+    ? allCategories
+    : allCategories.slice(0, SHOP_CATEGORY_PREVIEW_COUNT);
+
+  const items = visibleCategories
     .map(
       (category) => `
         <li>
@@ -43,7 +54,15 @@ function renderCategoryFilterList() {
     )
     .join('');
 
-  list.innerHTML = allItem + items;
+  const toggleItem = !categoriesExpanded && allCategories.length > SHOP_CATEGORY_PREVIEW_COUNT
+    ? `
+      <li>
+        <button type="button" class="category-filter-toggle" data-category-filter-toggle>Ver todas as categorias</button>
+      </li>
+    `
+    : '';
+
+  list.innerHTML = allItem + items + toggleItem;
 
   list.querySelectorAll('input[name="category-filter"]').forEach((input) => {
     input.addEventListener('change', () => {
@@ -53,6 +72,14 @@ function renderCategoryFilterList() {
       document.querySelector('[data-filter-panel]').classList.remove('is-open');
     });
   });
+
+  const toggleButton = list.querySelector('[data-category-filter-toggle]');
+  if (toggleButton) {
+    toggleButton.addEventListener('click', () => {
+      categoriesExpanded = true;
+      renderCategoryFilterList();
+    });
+  }
 }
 
 function updateBreadcrumb() {
@@ -96,18 +123,63 @@ function initFilterToggle() {
   toggle.addEventListener('click', () => panel.classList.toggle('is-open'));
 }
 
+function updateLoadMoreButton() {
+  const wrapper = document.querySelector('[data-load-more-wrapper]');
+  if (!wrapper) return;
+  wrapper.hidden = currentProductsPage + 1 >= totalProductsPages;
+}
+
+async function loadMoreProducts() {
+  if (isLoadingMoreProducts || currentProductsPage + 1 >= totalProductsPages) return;
+
+  isLoadingMoreProducts = true;
+  const loadMoreBtn = document.querySelector('[data-load-more-btn]');
+  if (loadMoreBtn) {
+    loadMoreBtn.disabled = true;
+    loadMoreBtn.textContent = 'Carregando...';
+  }
+
+  try {
+    const response = await apiGet(`/products?page=${currentProductsPage + 1}&size=${SHOP_PRODUCTS_PAGE_SIZE}`);
+    allProducts = allProducts.concat(response.content);
+    currentProductsPage = response.page;
+    totalProductsPages = response.totalPages;
+    renderFilteredProducts();
+    updateLoadMoreButton();
+  } catch (error) {
+    showToast(error.message || 'Não foi possível carregar mais produtos', 'error');
+  } finally {
+    isLoadingMoreProducts = false;
+    if (loadMoreBtn) {
+      loadMoreBtn.disabled = false;
+      loadMoreBtn.textContent = 'Carregar mais produtos';
+    }
+  }
+}
+
 async function initShopPage() {
   const grid = document.querySelector('[data-product-grid]');
   initFilterToggle();
 
+  const loadMoreBtn = document.querySelector('[data-load-more-btn]');
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', loadMoreProducts);
+  }
+
   try {
-    const [categories, products] = await Promise.all([apiGet('/categories'), apiGet('/products')]);
+    const [categories, productsResponse] = await Promise.all([
+      apiGet('/categories'),
+      apiGet(`/products?page=0&size=${SHOP_PRODUCTS_PAGE_SIZE}`),
+    ]);
     allCategories = categories;
-    allProducts = products;
+    allProducts = productsResponse.content;
+    currentProductsPage = productsResponse.page;
+    totalProductsPages = productsResponse.totalPages;
 
     renderCategoryFilterList();
     updateBreadcrumb();
     renderFilteredProducts();
+    updateLoadMoreButton();
   } catch (error) {
     grid.innerHTML = '<p class="empty-state">Não foi possível carregar os produtos.</p>';
     showToast(error.message || 'Erro ao carregar a loja', 'error');
