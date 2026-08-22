@@ -52,14 +52,9 @@
 
 .navbar-links {
   display: flex;
+  align-items: center;
   gap: var(--space-lg);
   margin-left: var(--space-xl);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.navbar-links::-webkit-scrollbar {
-  display: none;
 }
 
 .navbar-links a {
@@ -82,6 +77,87 @@
   color: var(--color-text);
   font-weight: 600;
   border-bottom-color: var(--color-primary);
+}
+
+.categories-dropdown {
+  position: relative;
+}
+
+.categories-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition);
+}
+
+.categories-dropdown-trigger:hover {
+  color: var(--color-text);
+}
+
+.categories-dropdown-trigger svg {
+  width: 14px;
+  height: 14px;
+  transition: transform var(--transition);
+}
+
+.categories-dropdown.is-open .categories-dropdown-trigger {
+  color: var(--color-text);
+  border-bottom-color: var(--color-primary);
+}
+
+.categories-dropdown.is-open .categories-dropdown-trigger svg {
+  transform: rotate(180deg);
+}
+
+.categories-dropdown-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 10px);
+  background: var(--color-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 220px;
+  padding: var(--space-xs);
+  display: none;
+  z-index: 110;
+}
+
+.categories-dropdown.is-open .categories-dropdown-menu {
+  display: block;
+}
+
+.categories-dropdown-menu a {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-text);
+  transition: var(--transition);
+}
+
+.categories-dropdown-menu a:hover {
+  background: var(--color-surface);
+}
+
+.categories-dropdown-menu a.categories-dropdown-see-all {
+  margin-top: var(--space-xs);
+  border-top: 1px solid var(--color-border-light);
+  border-radius: 0;
+  font-weight: 600;
+  color: var(--color-primary);
 }
 
 .header-search {

@@ -1,4 +1,7 @@
+const HEADER_CATEGORY_PREVIEW_COUNT = 6;
+
 const ICONS = {
+  chevronDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>',
   search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>',
   user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg>',
   cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1.5"/><circle cx="19" cy="21" r="1.5"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.7L21 8H6"/></svg>',
@@ -49,7 +52,16 @@ function buildHeaderMarkup() {
     <header class="site-header" data-site-header>
       <div class="header-main">
         <a class="header-logo" href="${headerLink('index.html')}"><span>Gabi</span>Kids</a>
-        <nav class="navbar-links" data-category-list></nav>
+        <nav class="navbar-links">
+          <a href="${headerLink('shop.html')}">Loja</a>
+          <div class="categories-dropdown" data-categories-dropdown>
+            <button class="categories-dropdown-trigger" type="button" data-categories-trigger>
+              Categorias
+              ${ICONS.chevronDown}
+            </button>
+            <div class="categories-dropdown-menu" data-category-list></div>
+          </div>
+        </nav>
         <form class="header-search" data-search-form>
           ${ICONS.search}
           <input class="form-control" type="search" name="q" placeholder="Buscar produtos..." aria-label="Buscar produtos" />
@@ -79,12 +91,28 @@ async function loadHeaderCategories() {
   if (!list) return;
   try {
     const categories = await apiGet('/categories');
-    list.innerHTML = categories
+    const items = categories
+      .slice(0, HEADER_CATEGORY_PREVIEW_COUNT)
       .map((c) => `<a href="${headerLink('shop.html')}?category=${c.id}">${escapeHtml(c.name)}</a>`)
       .join('');
+    const seeAllItem = categories.length > HEADER_CATEGORY_PREVIEW_COUNT
+      ? `<a class="categories-dropdown-see-all" href="${headerLink('shop.html')}">Ver todas as categorias</a>`
+      : '';
+    list.innerHTML = items + seeAllItem;
   } catch {
     list.innerHTML = '';
   }
+}
+
+function wireCategoriesDropdown() {
+  const dropdown = document.querySelector('[data-categories-dropdown]');
+  if (!dropdown) return;
+  const trigger = dropdown.querySelector('[data-categories-trigger]');
+  trigger.addEventListener('click', (event) => {
+    event.stopPropagation();
+    dropdown.classList.toggle('is-open');
+  });
+  document.addEventListener('click', () => dropdown.classList.remove('is-open'));
 }
 
 function wireHeaderSearch(form) {
@@ -104,6 +132,7 @@ function initHeader() {
 
   root.innerHTML = buildHeaderMarkup();
   loadHeaderCategories();
+  wireCategoriesDropdown();
 
   wireHeaderSearch(document.querySelector('[data-search-form]'));
   wireHeaderSearch(document.querySelector('[data-search-form-mobile]'));
