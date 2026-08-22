@@ -1,6 +1,9 @@
 let productsCache = [];
 let productCategoriesCache = [];
+let currentProductsPage = 0;
+let totalProductsPages = 1;
 
+const ADMIN_PRODUCTS_PAGE_SIZE = 20;
 const MAX_PRODUCT_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_PRODUCT_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const CAMERA_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4a2 2 0 011.76 1.05l.49.9A2 2 0 0018 7h2a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2h2a2 2 0 001.76-1.05l.48-.9A2 2 0 0110 4z"/><circle cx="12" cy="13" r="3"/></svg>';
@@ -370,11 +373,34 @@ function confirmDeleteVariant(productId, variantId) {
   });
 }
 
-async function loadProducts() {
+function renderProductsPagination() {
+  const wrapper = document.querySelector('[data-products-pagination]');
+  if (!wrapper) return;
+
+  if (totalProductsPages <= 1) {
+    wrapper.innerHTML = '';
+    return;
+  }
+
+  wrapper.innerHTML = `
+    <button class="btn btn-secondary" type="button" data-products-prev ${currentProductsPage <= 0 ? 'disabled' : ''}>Anterior</button>
+    <span class="admin-pagination-label">Página ${currentProductsPage + 1} de ${totalProductsPages}</span>
+    <button class="btn btn-secondary" type="button" data-products-next ${currentProductsPage + 1 >= totalProductsPages ? 'disabled' : ''}>Próxima</button>
+  `;
+
+  wrapper.querySelector('[data-products-prev]').addEventListener('click', () => loadProducts(currentProductsPage - 1));
+  wrapper.querySelector('[data-products-next]').addEventListener('click', () => loadProducts(currentProductsPage + 1));
+}
+
+async function loadProducts(page = currentProductsPage) {
   const tbody = document.querySelector('[data-products-tbody]');
   try {
-    productsCache = await apiGet('/products');
+    const response = await apiGet(`/products?page=${page}&size=${ADMIN_PRODUCTS_PAGE_SIZE}`);
+    productsCache = response.content;
+    currentProductsPage = response.page;
+    totalProductsPages = response.totalPages;
     renderProductsTable();
+    renderProductsPagination();
   } catch (error) {
     tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Não foi possível carregar os produtos.</div></td></tr>';
     showToast(error.message || 'Erro ao carregar produtos', 'error');

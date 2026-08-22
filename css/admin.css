@@ -258,6 +258,19 @@
 .admin-table-wrapper--spaced { margin-bottom: var(--space-xl); }
 .admin-table-wrapper--padded { padding: var(--space-lg); }
 
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+.admin-pagination-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
