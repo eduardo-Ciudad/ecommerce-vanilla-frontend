@@ -28,9 +28,9 @@ async function initDashboard() {
   const grid = document.querySelector('[data-dashboard-grid]');
 
   try {
-    const [categories, products, orders] = await Promise.all([
+    const [categories, productsResponse, orders] = await Promise.all([
       apiGet('/categories'),
-      apiGet('/products'),
+      apiGet('/products?page=0&size=1'),
       apiGet('/orders'),
     ]);
 
@@ -38,7 +38,7 @@ async function initDashboard() {
     const finishedCount = orders.filter((o) => o.status === 'DELIVERED').length;
 
     grid.innerHTML = [
-      dashboardCard('box', products.length, 'Total de Produtos', null, 'products.html'),
+      dashboardCard('box', productsResponse.totalElements, 'Total de Produtos', null, 'products.html'),
       dashboardCard('tag', categories.length, 'Total de Categorias', null, 'categories.html'),
       dashboardCard('clock', pendingCount, 'Pedidos Pendentes', 'Apenas pedidos da conta admin — a API não expõe listagem global'),
       dashboardCard('check', finishedCount, 'Pedidos Entregues', 'Apenas pedidos da conta admin — a API não expõe listagem global'),
