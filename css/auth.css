@@ -115,6 +115,17 @@
 .auth-card-icon--success { background: var(--color-success-bg); color: var(--color-success-text); }
 .auth-card-icon--error { background: var(--color-error-bg); color: var(--color-error); }
 
+.auth-card-icon--lg {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+}
+
+.auth-card-icon--lg svg {
+  width: 32px;
+  height: 32px;
+}
+
 .auth-card h1 {
   font-family: var(--font-heading);
   font-size: var(--text-4xl);

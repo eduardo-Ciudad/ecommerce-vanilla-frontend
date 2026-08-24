@@ -1,13 +1,13 @@
 const VERIFY_EMAIL_RESULT_CONTENT = {
   success: {
     icon: ICONS.check,
-    modifierClass: 'checkout-result-icon--success',
-    title: 'Email verificado com sucesso!',
+    modifierClass: 'auth-card-icon--success',
+    title: 'Email verificado!',
   },
   error: {
     icon: ICONS.x,
-    modifierClass: 'checkout-result-icon--error',
-    title: 'Não foi possível verificar',
+    modifierClass: 'auth-card-icon--error',
+    title: 'Link expirado',
   },
 };
 
@@ -19,9 +19,9 @@ function renderVerifyEmailResult(type, message, actionButton) {
   const config = VERIFY_EMAIL_RESULT_CONTENT[type];
 
   document.getElementById('verify-email-root').innerHTML = `
-    <div class="checkout-result-icon ${config.modifierClass}">${config.icon}</div>
-    <h2>${config.title}</h2>
-    <p>${escapeHtml(message)}</p>
+    <div class="auth-card-icon auth-card-icon--lg ${config.modifierClass}">${config.icon}</div>
+    <h1>${config.title}</h1>
+    <p class="auth-card-subtitle">${escapeHtml(message)}</p>
     ${actionButton}
   `;
 }
