@@ -90,7 +90,7 @@
 }
 
 .admin-nav a.is-active {
-  background: rgba(194, 90, 122, 0.15);
+  background: rgba(41, 191, 207, 0.15);
   color: var(--color-primary-light);
   font-weight: 600;
 }

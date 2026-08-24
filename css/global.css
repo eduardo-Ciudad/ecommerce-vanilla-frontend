@@ -1,13 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap');
 
 :root {
   /* Cores principais */
-  --color-primary: #C25A7A;
-  --color-primary-light: #F4A0B0;
-  --color-primary-bg: #FFF5F7;
-  --color-primary-surface: #FDE8ED;
+  --color-primary: #29BFCF;
+  --color-primary-light: #6FD4DF;
+  --color-primary-bg: #FAF6EF;
+  --color-primary-surface: #E8F7F8;
+  --color-primary-dark: #0E5C66;
   --color-dark: #1A1A2E;
   --color-dark-alt: #2D2D4E;
+
+  /* Cores de apoio (accent) */
+  --color-accent-orange: #F5851F;
+  --color-accent-lime: #A5CE3A;
+  --color-accent-yellow: #FFC421;
+  --color-accent-red: #E63B2E;
 
   /* Neutros */
   --color-bg: #FEFCFD;
@@ -36,8 +43,8 @@
   --color-purple-text: #6D28D9;
 
   /* Tipografia */
-  --font-heading: 'Playfair Display', serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-heading: 'Baloo 2', sans-serif;
+  --font-body: 'Nunito', sans-serif;
   --text-xs: 11px;
   --text-sm: 12px;
   --text-base: 13px;

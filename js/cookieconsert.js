@@ -53,7 +53,7 @@
             '  margin: 0 0 var(--space-md, 1rem); line-height: 1.6;' +
             '}' +
             '.cookie-consent-text a {' +
-            '  color: var(--color-primary, #E8636F); text-decoration: underline;' +
+            '  color: var(--color-primary, #29BFCF); text-decoration: underline;' +
             '  font-weight: 500;' +
             '}' +
             '.cookie-consent-actions {' +
