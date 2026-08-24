@@ -2,8 +2,19 @@
 .hero {
   position: relative;
   overflow: hidden;
-  background: var(--color-primary-bg);
+  background: linear-gradient(135deg, var(--color-primary-bg) 0%, var(--color-white) 55%, var(--color-primary-surface) 100%);
 }
+
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-blob--1 { top: -80px; right: -80px; width: 320px; height: 320px; background: rgba(41, 191, 207, 0.10); }
+.hero-blob--2 { top: 50%; right: -40px; width: 192px; height: 192px; background: rgba(165, 206, 58, 0.12); }
+.hero-blob--3 { bottom: -60px; left: 38%; width: 180px; height: 180px; background: rgba(245, 133, 31, 0.08); }
 
 .hero-inner {
   max-width: var(--max-width-hero);
@@ -22,28 +33,45 @@
   z-index: 2;
 }
 
-.hero-eyebrow {
-  font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--color-primary);
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  width: fit-content;
+}
+
+.hero-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent-lime);
+  flex-shrink: 0;
+}
+
+.hero-badge-text {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-primary-dark);
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 1.5px;
 }
 
 .hero-title {
   font-family: var(--font-heading);
   font-size: 44px;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--color-primary-dark);
   line-height: 1.05;
   letter-spacing: -1px;
   margin: 0;
 }
 
-.hero-title em {
-  font-style: italic;
+.hero-title-accent {
   color: var(--color-primary);
-  font-weight: 500;
 }
 
 .hero-subtitle {
@@ -64,6 +92,14 @@
   padding: 16px 34px;
 }
 
+.hero-actions .btn-primary {
+  background: var(--color-primary);
+}
+
+.hero-actions .btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
 .hero-visual {
   position: relative;
   display: flex;
@@ -79,11 +115,11 @@
   left: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  border: 1px solid rgba(194, 90, 122, 0.15);
+  border: 1px solid rgba(41, 191, 207, 0.15);
 }
 
 .hero-visual-ring--outer { width: 320px; height: 320px; }
-.hero-visual-ring--inner { width: 250px; height: 250px; border-color: rgba(194, 90, 122, 0.1); }
+.hero-visual-ring--inner { width: 250px; height: 250px; border-color: rgba(41, 191, 207, 0.1); }
 
 .hero-visual img,
 .hero-visual-illustration {
@@ -102,7 +138,7 @@
   font-family: var(--font-heading);
   font-size: 48px;
   font-weight: 700;
-  color: rgba(194, 90, 122, 0.06);
+  color: rgba(41, 191, 207, 0.06);
   letter-spacing: 6px;
   white-space: nowrap;
   display: none;
@@ -166,6 +202,18 @@
   height: 22px;
   color: var(--color-primary);
 }
+
+.trust-badge--lime .trust-badge-icon { background: rgba(165, 206, 58, 0.15); }
+.trust-badge--lime .trust-badge-icon svg { color: #7FA22A; }
+
+.trust-badge--turquoise .trust-badge-icon { background: rgba(41, 191, 207, 0.15); }
+.trust-badge--turquoise .trust-badge-icon svg { color: #1B93A1; }
+
+.trust-badge--yellow .trust-badge-icon { background: rgba(255, 196, 33, 0.20); }
+.trust-badge--yellow .trust-badge-icon svg { color: #C99400; }
+
+.trust-badge--orange .trust-badge-icon { background: rgba(245, 133, 31, 0.15); }
+.trust-badge--orange .trust-badge-icon svg { color: #D26E10; }
 
 .trust-badge-title {
   font-size: var(--text-base);
