@@ -98,6 +98,7 @@ function renderProduct(product) {
             <input type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" data-shipping-cep />
             <button type="submit">Calcular</button>
           </div>
+          <div class="product-shipping-result" data-shipping-result></div>
         </form>
 
         <div class="product-benefits">
@@ -164,11 +165,40 @@ function wireProductTabs() {
   });
 }
 
+function shippingOptionRow(option) {
+  return `
+    <div class="product-shipping-option">
+      <span>${escapeHtml(option.methodLabel)} — até ${option.deadlineDays} dias úteis</span>
+      <strong>${formatPrice(option.price)}</strong>
+    </div>
+  `;
+}
+
 function wireShippingForm() {
   const form = document.querySelector('[data-shipping-form]');
-  form.addEventListener('submit', (event) => {
+  const cepInput = document.querySelector('[data-shipping-cep]');
+  const result = document.querySelector('[data-shipping-result]');
+
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    showToast('Cálculo de frete em breve', 'info');
+    const digits = cepInput.value.replace(/\D/g, '');
+
+    if (digits.length !== 8) {
+      result.innerHTML = '<p class="empty-state empty-state--inline">Informe um CEP válido.</p>';
+      return;
+    }
+
+    result.innerHTML = '<p class="empty-state empty-state--inline"><span class="spinner"></span> Calculando frete...</p>';
+
+    try {
+      const options = await apiGet(`/shipping/calculate?cep=${encodeURIComponent(digits)}`);
+      result.innerHTML = options.length
+        ? options.map(shippingOptionRow).join('')
+        : '<p class="empty-state empty-state--inline">Não foi possível calcular o frete para este CEP.</p>';
+    } catch (error) {
+      result.innerHTML = '<p class="empty-state empty-state--inline">Não foi possível calcular o frete para este CEP.</p>';
+      showToast(error.message || 'Erro ao calcular frete', 'error');
+    }
   });
 }
 

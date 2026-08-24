@@ -346,6 +346,24 @@
   color: var(--color-primary-text);
 }
 
+.product-shipping-result:not(:empty) {
+  margin-top: var(--space-sm);
+}
+
+.product-shipping-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.product-shipping-option strong {
+  color: var(--color-text);
+}
+
 .product-benefits {
   display: flex;
   flex-wrap: wrap;
