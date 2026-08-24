@@ -51,7 +51,10 @@ function buildHeaderMarkup() {
     ${showVerificationWarning ? `<div class="topbar topbar--warning">Seu email ainda não foi verificado. <a href="${headerLink('auth.html')}">Reenviar verificação</a></div>` : ''}
     <header class="site-header" data-site-header>
       <div class="header-main">
-        <a class="header-logo" href="${headerLink('index.html')}"><span>Gabi</span>Kids</a>
+        <a class="header-logo" href="${headerLink('index.html')}">
+          <img class="header-logo-icon" src="${headerLink('assets/logo-tree.png')}" alt="" />
+          <span class="header-logo-text">Gabi<span class="header-logo-accent">Kids</span></span>
+        </a>
         <nav class="navbar-links">
           <a href="${headerLink('shop.html')}">Loja</a>
           <div class="categories-dropdown" data-categories-dropdown>
