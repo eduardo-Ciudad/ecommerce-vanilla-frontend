@@ -1,3 +1,21 @@
+const EYE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a20.6 20.6 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a20.6 20.6 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+function wirePasswordToggles() {
+  document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+    const input = button.closest('.form-control-icon').querySelector('input');
+    button.innerHTML = EYE_ICON;
+    button.addEventListener('click', () => {
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      button.innerHTML = isHidden ? EYE_OFF_ICON : EYE_ICON;
+      button.setAttribute('aria-label', isHidden ? 'Ocultar senha' : 'Mostrar senha');
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', wirePasswordToggles);
+
 async function login(email, password) {
   const data = await apiPost('/auth/login', { email, password });
   return saveSession(data);

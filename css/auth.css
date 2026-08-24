@@ -20,12 +20,12 @@
 .auth-split-brand-ring {
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(194, 90, 122, 0.12);
+  border: 1px solid rgba(41, 191, 207, 0.12);
 }
 
 .auth-split-brand-ring--1 { top: -60px; right: -60px; width: 200px; height: 200px; }
-.auth-split-brand-ring--2 { bottom: -40px; left: -40px; width: 160px; height: 160px; border-color: rgba(194, 90, 122, 0.08); }
-.auth-split-brand-ring--3 { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; height: 320px; border-color: rgba(194, 90, 122, 0.06); }
+.auth-split-brand-ring--2 { bottom: -40px; left: -40px; width: 160px; height: 160px; border-color: rgba(41, 191, 207, 0.08); }
+.auth-split-brand-ring--3 { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; height: 320px; border-color: rgba(41, 191, 207, 0.06); }
 
 .auth-split-brand-content {
   position: relative;
@@ -100,7 +100,7 @@
   height: 56px;
   border-radius: var(--radius-lg);
   background: var(--color-primary-bg);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -216,6 +216,67 @@
   outline: none;
 }
 
+.password-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.password-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.auth-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--space-lg);
+  cursor: pointer;
+}
+
+.auth-checkbox-row input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.auth-checkbox-box {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-primary-text);
+  transition: var(--transition);
+}
+
+.auth-checkbox-box svg {
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.auth-checkbox-row input:checked ~ .auth-checkbox-box svg {
+  opacity: 1;
+}
+
+.auth-checkbox-row input:checked ~ .auth-checkbox-box {
+  border-color: var(--color-primary);
+}
+
+.auth-checkbox-label {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+
 .form-label-row {
   display: flex;
   justify-content: space-between;
@@ -229,7 +290,7 @@
 
 .auth-forgot-link {
   font-size: var(--text-sm);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 500;
   transition: var(--transition);
 }
@@ -255,7 +316,44 @@
 }
 
 .auth-terms a {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.auth-resend-email {
+  text-align: center;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 var(--space-xl);
+}
+
+.auth-resend-info {
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.auth-resend-info p {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.auth-resend-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.auth-resend-actions .btn {
+  width: 100%;
+}
+
+.auth-resend-actions .btn:disabled {
+  cursor: not-allowed;
 }
 
 .auth-back-link {
