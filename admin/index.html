@@ -17,7 +17,10 @@
     </button>
 
     <aside class="admin-sidebar" data-admin-sidebar>
-      <div class="admin-sidebar-logo">Gabi<span>Kids</span></div>
+      <div class="admin-sidebar-logo">
+        <img class="header-logo-icon" src="../assets/logo-tree.png" alt="" />
+        <span class="header-logo-text">Gabi<span class="header-logo-accent">Kids</span></span>
+      </div>
       <div class="admin-sidebar-subtitle">Painel Administrativo</div>
       <nav class="admin-nav">
         <a href="index.html">
@@ -50,13 +53,52 @@
     </aside>
 
     <main class="admin-content">
-      <h1>Dashboard</h1>
-      <p class="admin-page-subtitle">Visão geral da sua loja</p>
+      <div class="admin-page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="admin-page-subtitle">Visão geral da sua loja</p>
+        </div>
+        <div class="admin-topbar">
+          <form class="admin-topbar-search" data-admin-search-form>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="search" placeholder="Buscar..." aria-label="Buscar" />
+          </form>
+          <button type="button" class="admin-notification-btn" aria-label="Notificações">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </button>
+          <div class="admin-avatar" data-admin-avatar>AD</div>
+        </div>
+      </div>
+
       <div class="dashboard-grid" data-dashboard-grid>
         <div class="skeleton skeleton-block-sm"></div>
         <div class="skeleton skeleton-block-sm"></div>
         <div class="skeleton skeleton-block-sm"></div>
         <div class="skeleton skeleton-block-sm"></div>
+      </div>
+
+      <div class="admin-table-wrapper">
+        <div class="admin-table-header">
+          <span>Pedidos Recentes</span>
+        </div>
+        <p class="admin-note">
+          Mostra apenas os pedidos da própria conta admin — a API não expõe um endpoint para listar pedidos de
+          todos os clientes da loja.
+        </p>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th>Pagamento</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody data-recent-orders-tbody>
+            <tr><td colspan="5"><div class="skeleton skeleton-row"></div></td></tr>
+          </tbody>
+        </table>
       </div>
     </main>
   </div>

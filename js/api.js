@@ -157,6 +157,22 @@ function lowestVariantPrice(product) {
   return Math.min(...product.variants.map((v) => Number(v.price)));
 }
 
+const ADMIN_ORDER_STATUS_LABELS = {
+  PENDING: 'Pendente',
+  PAID: 'Pago',
+  SHIPPED: 'Enviado',
+  DELIVERED: 'Entregue',
+  CANCELLED: 'Cancelado',
+};
+
+const ADMIN_ORDER_STATUS_BADGE_CLASS = {
+  PENDING: 'badge-pending',
+  PAID: 'badge-paid',
+  SHIPPED: 'badge-shipped',
+  DELIVERED: 'badge-delivered',
+  CANCELLED: 'badge-cancelled',
+};
+
 const PAYMENT_STATUS_LABELS = {
   approved: 'Pago',
   pending: 'Aguardando pagamento',

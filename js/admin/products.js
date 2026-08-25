@@ -48,28 +48,43 @@ function triggerImageUpload(productId) {
   input.click();
 }
 
+function adminProductSku(product) {
+  return `GK-${product.id.slice(0, 8).toUpperCase()}`;
+}
+
 function renderProductsTable() {
   const tbody = document.querySelector('[data-products-tbody]');
 
   if (!productsCache.length) {
-    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Nenhum produto cadastrado.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Nenhum produto cadastrado.</div></td></tr>';
     return;
   }
 
   tbody.innerHTML = productsCache
-    .map(
-      (product) => `
+    .map((product) => {
+      const price = lowestVariantPrice(product);
+      const stock = totalVariantStock(product);
+      const stockClass = stock > 0 && stock <= 5 ? ' admin-product-stock--low' : '';
+
+      return `
         <tr class="fade-in" data-product-row="${product.id}">
           <td>
-            <div class="admin-product-thumb">
-              ${product.imageUrl
-                ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" />`
-                : productImagePlaceholder()}
-              <button class="admin-product-thumb-upload" type="button" data-upload-image="${product.id}" title="Alterar imagem" aria-label="Alterar imagem do produto">${CAMERA_ICON}</button>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div class="admin-product-thumb">
+                ${product.imageUrl
+                  ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" />`
+                  : productImagePlaceholder()}
+                <button class="admin-product-thumb-upload" type="button" data-upload-image="${product.id}" title="Alterar imagem" aria-label="Alterar imagem do produto">${CAMERA_ICON}</button>
+              </div>
+              <div>
+                <div>${escapeHtml(product.name)}</div>
+                <div class="admin-product-name-sku">SKU: ${adminProductSku(product)}</div>
+              </div>
             </div>
           </td>
-          <td>${escapeHtml(product.name)}</td>
           <td>${escapeHtml(product.categoryName || '-')}</td>
+          <td>${price === null ? '—' : formatPrice(price)}</td>
+          <td class="${stockClass.trim()}">${stock} un.</td>
           <td><span class="badge ${product.active ? 'badge-active' : 'badge-inactive'}">${product.active ? 'Ativo' : 'Inativo'}</span></td>
           <td>
             <div class="admin-table-actions">
@@ -85,8 +100,8 @@ function renderProductsTable() {
             </div>
           </td>
         </tr>
-      `
-    )
+      `;
+    })
     .join('');
 
   tbody.querySelectorAll('[data-edit-product]').forEach((btn) => {
@@ -399,10 +414,14 @@ async function loadProducts(page = currentProductsPage) {
     productsCache = response.content;
     currentProductsPage = response.page;
     totalProductsPages = response.totalPages;
+    const subtitle = document.querySelector('[data-products-subtitle]');
+    if (subtitle) {
+      subtitle.textContent = `${response.totalElements} produto${response.totalElements === 1 ? '' : 's'} cadastrado${response.totalElements === 1 ? '' : 's'}`;
+    }
     renderProductsTable();
     renderProductsPagination();
   } catch (error) {
-    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Não foi possível carregar os produtos.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Não foi possível carregar os produtos.</div></td></tr>';
     showToast(error.message || 'Erro ao carregar produtos', 'error');
   }
 }

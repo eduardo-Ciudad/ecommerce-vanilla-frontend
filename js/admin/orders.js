@@ -1,19 +1,3 @@
-const ADMIN_ORDER_STATUS_LABELS = {
-  PENDING: 'Pendente',
-  PAID: 'Pago',
-  SHIPPED: 'Enviado',
-  DELIVERED: 'Entregue',
-  CANCELLED: 'Cancelado',
-};
-
-const ADMIN_ORDER_STATUS_BADGE_CLASS = {
-  PENDING: 'badge-pending',
-  PAID: 'badge-paid',
-  SHIPPED: 'badge-shipped',
-  DELIVERED: 'badge-delivered',
-  CANCELLED: 'badge-cancelled',
-};
-
 function formatAdminOrderAddress(order) {
   if (!order.recipientStreet) return '—';
   const complement = order.recipientComplement ? `, ${escapeHtml(order.recipientComplement)}` : '';

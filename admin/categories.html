@@ -17,7 +17,10 @@
     </button>
 
     <aside class="admin-sidebar" data-admin-sidebar>
-      <div class="admin-sidebar-logo">Gabi<span>Kids</span></div>
+      <div class="admin-sidebar-logo">
+        <img class="header-logo-icon" src="../assets/logo-tree.png" alt="" />
+        <span class="header-logo-text">Gabi<span class="header-logo-accent">Kids</span></span>
+      </div>
       <div class="admin-sidebar-subtitle">Painel Administrativo</div>
       <nav class="admin-nav">
         <a href="index.html">
@@ -51,23 +54,20 @@
 
     <main class="admin-content">
       <div class="admin-page-header">
-        <h1>Categorias</h1>
-        <button class="btn btn-primary" type="button" data-new-category-btn>+ Nova Categoria</button>
+        <div>
+          <h1>Categorias</h1>
+          <p class="admin-page-subtitle" data-categories-subtitle>Carregando...</p>
+        </div>
+        <button class="btn btn-primary" type="button" data-new-category-btn>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Nova Categoria
+        </button>
       </div>
 
-      <div class="admin-table-wrapper">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Criada em</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody data-categories-tbody>
-            <tr><td colspan="3"><div class="skeleton skeleton-row"></div></td></tr>
-          </tbody>
-        </table>
+      <div class="category-grid" data-categories-grid>
+        <div class="skeleton skeleton-block-sm"></div>
+        <div class="skeleton skeleton-block-sm"></div>
+        <div class="skeleton skeleton-block-sm"></div>
       </div>
     </main>
   </div>

@@ -5,14 +5,15 @@ const DASHBOARD_ICONS = {
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>',
 };
 
-function dashboardCard(icon, value, label, note, href) {
+function dashboardCard(icon, colorModifier, value, label, note, href) {
   const tag = href ? 'a' : 'div';
   const hrefAttr = href ? ` href="${href}"` : '';
   const clickableClass = href ? ' dashboard-card--clickable' : '';
+  const iconClass = colorModifier ? ` dashboard-card-icon--${colorModifier}` : '';
 
   return `
     <${tag} class="dashboard-card${clickableClass} fade-in"${hrefAttr}>
-      <span class="dashboard-card-icon">${DASHBOARD_ICONS[icon]}</span>
+      <span class="dashboard-card-icon${iconClass}">${DASHBOARD_ICONS[icon]}</span>
       <div>
         <div class="dashboard-card-value">${value}</div>
         <div class="dashboard-card-label">${label}</div>
@@ -22,10 +23,69 @@ function dashboardCard(icon, value, label, note, href) {
   `;
 }
 
+function renderRecentOrders(orders) {
+  const tbody = document.querySelector('[data-recent-orders-tbody]');
+  const recent = orders
+    .slice()
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5);
+
+  if (!recent.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Nenhum pedido encontrado nesta conta.</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = recent
+    .map(
+      (order) => `
+        <tr>
+          <td>${order.id.slice(0, 8)}...</td>
+          <td>${new Date(order.createdAt).toLocaleDateString('pt-BR')}</td>
+          <td><span class="badge ${ADMIN_ORDER_STATUS_BADGE_CLASS[order.status] || ''}">${ADMIN_ORDER_STATUS_LABELS[order.status] || order.status}</span></td>
+          <td>
+            ${order.paymentStatus
+              ? `<span class="badge ${PAYMENT_STATUS_BADGE_CLASS[order.paymentStatus] || ''}">${PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}</span>`
+              : '<span class="badge badge-pending">Não iniciado</span>'}
+          </td>
+          <td>${formatPrice(order.total)}</td>
+        </tr>
+      `
+    )
+    .join('');
+}
+
+function initDashboardAvatar() {
+  const avatar = document.querySelector('[data-admin-avatar]');
+  const user = getCurrentUser();
+  if (!user || !avatar) return;
+  const name = user.name || user.email || '';
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+  avatar.textContent = initials || 'AD';
+}
+
+function initDashboardSearch() {
+  const form = document.querySelector('[data-admin-search-form]');
+  if (!form) return;
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    showToast('Busca no painel em breve', 'info');
+  });
+}
+
 async function initDashboard() {
   if (!requireAdmin()) return;
 
+  initDashboardAvatar();
+  initDashboardSearch();
+
   const grid = document.querySelector('[data-dashboard-grid]');
+  const recentOrdersTbody = document.querySelector('[data-recent-orders-tbody]');
 
   try {
     const [categories, productsResponse, orders] = await Promise.all([
@@ -38,13 +98,16 @@ async function initDashboard() {
     const finishedCount = orders.filter((o) => o.status === 'DELIVERED').length;
 
     grid.innerHTML = [
-      dashboardCard('box', productsResponse.totalElements, 'Total de Produtos', null, 'products.html'),
-      dashboardCard('tag', categories.length, 'Total de Categorias', null, 'categories.html'),
-      dashboardCard('clock', pendingCount, 'Pedidos Pendentes', 'Apenas pedidos da conta admin — a API não expõe listagem global'),
-      dashboardCard('check', finishedCount, 'Pedidos Entregues', 'Apenas pedidos da conta admin — a API não expõe listagem global'),
+      dashboardCard('box', null, productsResponse.totalElements, 'Total de Produtos', null, 'products.html'),
+      dashboardCard('tag', 'info', categories.length, 'Total de Categorias', null, 'categories.html'),
+      dashboardCard('clock', 'warning', pendingCount, 'Pedidos Pendentes', 'Só da conta admin'),
+      dashboardCard('check', 'success', finishedCount, 'Pedidos Entregues', 'Só da conta admin'),
     ].join('');
+
+    renderRecentOrders(orders);
   } catch (error) {
     grid.innerHTML = '<p class="empty-state">Não foi possível carregar os dados do dashboard.</p>';
+    recentOrdersTbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Não foi possível carregar os pedidos.</div></td></tr>';
     showToast(error.message || 'Erro ao carregar dashboard', 'error');
   }
 }

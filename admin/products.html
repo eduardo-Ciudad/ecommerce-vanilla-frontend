@@ -17,7 +17,10 @@
     </button>
 
     <aside class="admin-sidebar" data-admin-sidebar>
-      <div class="admin-sidebar-logo">Gabi<span>Kids</span></div>
+      <div class="admin-sidebar-logo">
+        <img class="header-logo-icon" src="../assets/logo-tree.png" alt="" />
+        <span class="header-logo-text">Gabi<span class="header-logo-accent">Kids</span></span>
+      </div>
       <div class="admin-sidebar-subtitle">Painel Administrativo</div>
       <nav class="admin-nav">
         <a href="index.html">
@@ -51,23 +54,30 @@
 
     <main class="admin-content">
       <div class="admin-page-header">
-        <h1>Produtos</h1>
-        <button class="btn btn-primary" type="button" data-new-product-btn>+ Novo Produto</button>
+        <div>
+          <h1>Produtos</h1>
+          <p class="admin-page-subtitle" data-products-subtitle>Carregando...</p>
+        </div>
+        <button class="btn btn-primary" type="button" data-new-product-btn>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Novo Produto
+        </button>
       </div>
 
       <div class="admin-table-wrapper">
         <table class="admin-table">
           <thead>
             <tr>
-              <th>Imagem</th>
-              <th>Nome</th>
+              <th>Produto</th>
               <th>Categoria</th>
+              <th>Preço</th>
+              <th>Estoque</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody data-products-tbody>
-            <tr><td colspan="5"><div class="skeleton skeleton-row"></div></td></tr>
+            <tr><td colspan="6"><div class="skeleton skeleton-row"></div></td></tr>
           </tbody>
         </table>
       </div>
