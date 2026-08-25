@@ -410,6 +410,14 @@
   max-width: 260px;
 }
 
+.footer-col p.footer-legal-info {
+  font-size: var(--text-xs);
+  color: rgba(255,255,255,0.35);
+  line-height: 1.6;
+  margin-top: var(--space-md);
+  max-width: 280px;
+}
+
 .footer-social {
   display: flex;
   gap: var(--space-sm);
