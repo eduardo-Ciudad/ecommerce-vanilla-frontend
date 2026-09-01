@@ -218,8 +218,11 @@ async function loadRelatedProducts(product) {
 
     grid.innerHTML = related.map((p) => buildProductCard(p)).join('');
     section.hidden = false;
-  } catch {
-    /* seção opcional: se falhar, mantém oculta */
+  } catch (error) {
+    logAppError('product.related.load', error, {
+      code: 'RELATED_PRODUCTS_LOAD_FAILED',
+      productId: product.id,
+    });
   }
 }
 

@@ -175,8 +175,11 @@ async function handleCheckoutCepLookup(form) {
     form.neighborhood.value = data.bairro || '';
     form.city.value = data.localidade || '';
     form.state.value = data.uf || '';
-  } catch {
-    /* ignora falhas de busca de CEP */
+  } catch (error) {
+    logAppError('checkout.cep_lookup', error, {
+      code: 'VIACEP_LOOKUP_FAILED',
+      provider: 'ViaCEP',
+    });
   }
 }
 
@@ -272,11 +275,7 @@ function wireAddressInlineForm(form, hasExistingAddresses, onSaved) {
       try {
         await onSaved(address);
       } catch (error) {
-        console.error('[Checkout address refresh]', {
-          code: error.code || 'API_ERROR',
-          status: error.status ?? null,
-          error,
-        });
+        logAppError('checkout.addresses.refresh', error);
         showToast(
           'O endereço foi salvo, mas a lista não pôde ser atualizada. Exibimos os dados salvos para você continuar.',
           'warning',
@@ -595,9 +594,8 @@ function mercadoPagoBrickError(brickError) {
 }
 
 function logMercadoPagoError(error) {
-  console.error('[Mercado Pago]', {
-    code: error.code || 'MP_INITIALIZATION_FAILED',
-    message: error.message,
+  logAppError('checkout.mercado_pago', error, {
+    code: 'MP_INITIALIZATION_FAILED',
     cause: error.cause || error,
   });
 }
@@ -795,11 +793,9 @@ function renderPixPollingRecovery(message) {
 }
 
 function logPixPollingError(error, consecutiveFailures) {
-  console.error('[Pix status polling]', {
-    code: error.code || 'PIX_POLL_NETWORK_ERROR',
-    status: error.status ?? null,
+  logAppError('checkout.pix.polling', error, {
+    code: 'PIX_POLL_NETWORK_ERROR',
     consecutiveFailures,
-    error,
   });
 }
 

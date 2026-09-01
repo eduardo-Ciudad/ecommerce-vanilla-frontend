@@ -104,7 +104,8 @@ async function loadHeaderCategories() {
       ? `<a class="categories-dropdown-see-all" href="${headerLink('shop.html')}">Ver todas as categorias</a>`
       : '';
     list.innerHTML = items + seeAllItem;
-  } catch {
+  } catch (error) {
+    logAppError('header.categories.load', error);
     list.innerHTML = '';
   }
 }

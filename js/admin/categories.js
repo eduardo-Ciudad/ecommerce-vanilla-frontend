@@ -3,6 +3,7 @@ const CATEGORY_CARD_COLORS = ['', 'info', 'warning', 'success', 'purple'];
 
 let categoriesCache = [];
 let categoryProductCounts = {};
+let categoryProductCountsAvailable = true;
 
 function renderCategoriesGrid() {
   const grid = document.querySelector('[data-categories-grid]');
@@ -20,6 +21,9 @@ function renderCategoriesGrid() {
       const colorModifier = CATEGORY_CARD_COLORS[index % CATEGORY_CARD_COLORS.length];
       const iconClass = colorModifier ? ` category-card-icon--${colorModifier}` : '';
       const count = categoryProductCounts[category.id] || 0;
+      const countLabel = categoryProductCountsAvailable
+        ? `${count} produto${count === 1 ? '' : 's'}`
+        : 'Contagem indisponível';
 
       return `
         <div class="category-card fade-in" data-category-row="${category.id}">
@@ -27,7 +31,7 @@ function renderCategoriesGrid() {
             <span class="category-card-icon${iconClass}">${CATEGORY_ICON}</span>
             <div>
               <div class="category-card-name">${escapeHtml(category.name)}</div>
-              <div class="category-card-count">${count} produto${count === 1 ? '' : 's'}</div>
+              <div class="category-card-count">${countLabel}</div>
             </div>
           </div>
           <div class="admin-table-actions">
@@ -111,8 +115,11 @@ async function loadCategoryProductCounts() {
       counts[product.categoryId] = (counts[product.categoryId] || 0) + 1;
       return counts;
     }, {});
-  } catch {
+    categoryProductCountsAvailable = true;
+  } catch (error) {
+    logAppError('admin.categories.product_counts.load', error);
     categoryProductCounts = {};
+    categoryProductCountsAvailable = false;
   }
 }
 

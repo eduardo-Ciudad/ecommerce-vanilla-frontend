@@ -3,6 +3,22 @@ const API_BASE = 'https://gabikids.duckdns.org';
 const DEFAULT_API_TIMEOUT_MS = 15000;
 const DEFAULT_UPLOAD_TIMEOUT_MS = 60000;
 
+function logAppError(context, error, details = {}) {
+  const {
+    code: fallbackCode = 'UNEXPECTED_ERROR',
+    ...metadata
+  } = details;
+
+  console.error(`[${context}]`, {
+    timestamp: new Date().toISOString(),
+    code: error?.code || fallbackCode,
+    message: error?.message || String(error || 'Erro desconhecido'),
+    status: error?.status ?? null,
+    details: metadata,
+    error: error || null,
+  });
+}
+
 class ApiError extends Error {
   constructor(message, status = null, code = 'API_ERROR') {
     super(message);
@@ -42,8 +58,11 @@ async function parseErrorMessage(response) {
     if (typeof data.error === 'string') return data.error;
     const fieldMessages = Object.values(data).filter((v) => typeof v === 'string');
     if (fieldMessages.length) return fieldMessages.join(' ');
-  } catch {
-    /* corpo sem JSON */
+  } catch (error) {
+    logAppError('api.error_response.parse', error, {
+      code: 'API_ERROR_BODY_PARSE_FAILED',
+      responseStatus: response.status,
+    });
   }
   return `Erro ${response.status} ao comunicar com o servidor`;
 }
@@ -247,7 +266,11 @@ async function refreshAccessToken(requestContext) {
         let data;
         try {
           data = await response.json();
-        } catch {
+        } catch (error) {
+          logAppError('api.auth.refresh_response.parse', error, {
+            code: 'API_REFRESH_INVALID_RESPONSE',
+            responseStatus: response.status,
+          });
           return false;
         }
 
@@ -259,6 +282,10 @@ async function refreshAccessToken(requestContext) {
         if (error instanceof ApiTimeoutError || error instanceof ApiAbortError) {
           throw error;
         }
+
+        logAppError('api.auth.refresh', error, {
+          code: 'API_REFRESH_FAILED',
+        });
         return false;
       } finally {
         refreshContext.cleanup();

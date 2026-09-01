@@ -146,8 +146,11 @@ async function handleCepLookup(modal) {
     modal.querySelector('[name="neighborhood"]').value = data.bairro || '';
     modal.querySelector('[name="city"]').value = data.localidade || '';
     modal.querySelector('[name="state"]').value = data.uf || '';
-  } catch {
-    /* ignora falhas de busca de CEP */
+  } catch (error) {
+    logAppError('addresses.cep_lookup', error, {
+      code: 'VIACEP_LOOKUP_FAILED',
+      provider: 'ViaCEP',
+    });
   }
 }
 

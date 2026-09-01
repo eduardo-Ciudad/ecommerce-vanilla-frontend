@@ -433,8 +433,13 @@ async function initProductsPage() {
 
   try {
     productCategoriesCache = await apiGet('/categories');
-  } catch {
+  } catch (error) {
+    logAppError('admin.products.categories.load', error);
     productCategoriesCache = [];
+    showToast(
+      'Não foi possível carregar as categorias. O cadastro e a edição de produtos podem ficar indisponíveis.',
+      'warning',
+    );
   }
 
   await loadProducts();
