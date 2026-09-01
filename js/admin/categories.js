@@ -106,7 +106,7 @@ function openNewCategoryModal() {
 
 async function loadCategoryProductCounts() {
   try {
-    const response = await apiGet('/products?page=0&size=1000');
+    const response = await apiGet('/products?page=0&size=1000&includeWithoutImage=true');
     categoryProductCounts = response.content.reduce((counts, product) => {
       counts[product.categoryId] = (counts[product.categoryId] || 0) + 1;
       return counts;
