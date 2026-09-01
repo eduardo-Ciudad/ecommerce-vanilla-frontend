@@ -90,7 +90,7 @@ async function initDashboard() {
   try {
     const [categories, productsResponse, orders] = await Promise.all([
       apiGet('/categories'),
-      apiGet('/products?page=0&size=1'),
+      apiGet('/products?page=0&size=1&includeWithoutImage=true'),
       apiGet('/orders'),
     ]);
 
