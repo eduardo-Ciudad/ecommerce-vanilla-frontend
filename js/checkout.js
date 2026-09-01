@@ -174,6 +174,29 @@ async function handleCheckoutCepLookup(form) {
   }
 }
 
+function addressesWithSavedAddress(addresses, savedAddress) {
+  return [
+    ...addresses.filter(
+      (address) => String(address.id) !== String(savedAddress.id),
+    ),
+    savedAddress,
+  ];
+}
+
+async function refreshAddressesAfterSave(orderRef, addresses, savedAddress) {
+  try {
+    const updated = await apiGet('/addresses');
+    renderAddressContent(orderRef, updated);
+  } catch (error) {
+    // O endereço foi salvo; mantém a UI utilizável com a resposta do POST.
+    renderAddressContent(
+      orderRef,
+      addressesWithSavedAddress(addresses, savedAddress),
+    );
+    throw error;
+  }
+}
+
 function wireAddressInlineForm(form, hasExistingAddresses, onSaved) {
   form.cep.addEventListener('input', () => handleCheckoutCepLookup(form));
 
@@ -229,11 +252,31 @@ function wireAddressInlineForm(form, hasExistingAddresses, onSaved) {
     button.querySelector('.btn-label').innerHTML = '<span class="spinner"></span>';
 
     try {
-      const address = await apiPost('/addresses', body);
+      let address;
+
+      try {
+        address = await apiPost('/addresses', body);
+      } catch (error) {
+        showToast(error.message || 'Não foi possível salvar o endereço', 'error');
+        return;
+      }
+
       showToast('Endereço adicionado com sucesso!', 'success');
-      onSaved(address);
-    } catch (error) {
-      showToast(error.message || 'Não foi possível salvar o endereço', 'error');
+
+      try {
+        await onSaved(address);
+      } catch (error) {
+        console.error('[Checkout address refresh]', {
+          code: error.code || 'API_ERROR',
+          status: error.status ?? null,
+          error,
+        });
+        showToast(
+          'O endereço foi salvo, mas a lista não pôde ser atualizada. Exibimos os dados salvos para você continuar.',
+          'warning',
+        );
+      }
+    } finally {
       button.disabled = false;
       button.querySelector('.btn-label').textContent = 'Salvar endereço';
     }
@@ -253,10 +296,11 @@ function renderAddressContent(orderRef, addresses) {
       ${addressInlineFormMarkup()}
     `;
     const form = content.querySelector('[data-form="checkout-address"]');
-    wireAddressInlineForm(form, false, async () => {
-      const updated = await apiGet('/addresses');
-      renderAddressContent(orderRef, updated);
-    });
+    wireAddressInlineForm(
+      form,
+      false,
+      (address) => refreshAddressesAfterSave(orderRef, [], address),
+    );
     return;
   }
 
@@ -277,10 +321,15 @@ function renderAddressContent(orderRef, addresses) {
     container.hidden = false;
     container.innerHTML = addressInlineFormMarkup();
     const form = container.querySelector('[data-form="checkout-address"]');
-    wireAddressInlineForm(form, true, async () => {
-      const updated = await apiGet('/addresses');
-      renderAddressContent(orderRef, updated);
-    });
+    wireAddressInlineForm(
+      form,
+      true,
+      (address) => refreshAddressesAfterSave(
+        orderRef,
+        addresses,
+        address,
+      ),
+    );
   });
 
   wireAddressSelection(orderRef, addresses);
