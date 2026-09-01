@@ -5,6 +5,22 @@ const STORAGE_KEYS = {
   CART_COUNT: 'cartCount',
 };
 
+function readStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function removeStorage(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Storage indisponivel: a sessao continua sendo tratada como ausente.
+  }
+}
+
 function decodeJwt(token) {
   try {
     const payload = token.split('.')[1];
@@ -37,11 +53,11 @@ function saveSession({ accessToken, refreshToken }) {
 }
 
 function getAccessToken() {
-  return localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+  return readStorage(STORAGE_KEYS.ACCESS_TOKEN);
 }
 
 function getRefreshToken() {
-  return localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+  return readStorage(STORAGE_KEYS.REFRESH_TOKEN);
 }
 
 function setAccessToken(token) {
@@ -49,12 +65,19 @@ function setAccessToken(token) {
 }
 
 function getCurrentUser() {
-  const raw = localStorage.getItem(STORAGE_KEYS.USER);
-  return raw ? JSON.parse(raw) : null;
+  const raw = readStorage(STORAGE_KEYS.USER);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    clearAuthenticationData();
+    return null;
+  }
 }
 
 function isAuthenticated() {
-  return !!getAccessToken();
+  return !!getAccessToken() && !!getCurrentUser();
 }
 
 function isAdmin() {
@@ -62,11 +85,13 @@ function isAdmin() {
   return !!user && user.role === 'ADMIN';
 }
 
+function clearAuthenticationData() {
+  [STORAGE_KEYS.ACCESS_TOKEN, STORAGE_KEYS.REFRESH_TOKEN, STORAGE_KEYS.USER].forEach(removeStorage);
+}
+
 function clearSession() {
-  localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-  localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-  localStorage.removeItem(STORAGE_KEYS.USER);
-  localStorage.removeItem(STORAGE_KEYS.CART_COUNT);
+  clearAuthenticationData();
+  removeStorage(STORAGE_KEYS.CART_COUNT);
 }
 
 function getCartCount() {

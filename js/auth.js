@@ -44,6 +44,12 @@ function requireAdmin() {
     window.location.href = `${resolveRootPath()}index.html`;
     return false;
   }
+
+  const guardedContent = document.querySelector('[data-admin-guarded]');
+  if (guardedContent) {
+    guardedContent.removeAttribute('hidden');
+  }
+
   return true;
 }
 
