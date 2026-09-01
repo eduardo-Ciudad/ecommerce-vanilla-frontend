@@ -1,9 +1,38 @@
 const API_BASE = 'https://gabikids.duckdns.org';
 //const API_BASE = 'http://localhost:8080';
+const DEFAULT_API_TIMEOUT_MS = 15000;
+const DEFAULT_UPLOAD_TIMEOUT_MS = 60000;
+
 class ApiError extends Error {
-  constructor(message, status) {
+  constructor(message, status = null, code = 'API_ERROR') {
     super(message);
+    this.name = this.constructor.name;
     this.status = status;
+    this.code = code;
+  }
+}
+
+class ApiTimeoutError extends ApiError {
+  constructor(timeoutMs) {
+    super(
+      `A comunicação com o servidor excedeu o limite de ${Math.ceil(timeoutMs / 1000)} segundos`,
+      null,
+      'API_TIMEOUT',
+    );
+    this.timeoutMs = timeoutMs;
+  }
+}
+
+class ApiAbortError extends ApiError {
+  constructor() {
+    super('A comunicação com o servidor foi cancelada', null, 'API_ABORTED');
+  }
+}
+
+class ApiContractError extends ApiError {
+  constructor(endpoint, message) {
+    super(`Resposta inválida da API em ${endpoint}: ${message}`, null, 'API_INVALID_RESPONSE');
+    this.endpoint = endpoint;
   }
 }
 
@@ -19,41 +48,249 @@ async function parseErrorMessage(response) {
   return `Erro ${response.status} ao comunicar com o servidor`;
 }
 
+function createRequestContext(timeoutMs, externalSignal) {
+  const controller = new AbortController();
+  const context = {
+    controller,
+    signal: controller.signal,
+    timeoutMs,
+    timedOut: false,
+  };
+
+  const timeoutId = setTimeout(() => {
+    context.timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+
+  const handleExternalAbort = () => controller.abort();
+
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      handleExternalAbort();
+    } else {
+      externalSignal.addEventListener('abort', handleExternalAbort, { once: true });
+    }
+  }
+
+  context.cleanup = () => {
+    clearTimeout(timeoutId);
+    externalSignal?.removeEventListener('abort', handleExternalAbort);
+  };
+
+  return context;
+}
+
+function requestAbortError(context) {
+  return context.timedOut
+    ? new ApiTimeoutError(context.timeoutMs)
+    : new ApiAbortError();
+}
+
+async function fetchWithContext(url, config, context) {
+  if (context.signal.aborted) {
+    throw requestAbortError(context);
+  }
+
+  try {
+    return await fetch(url, { ...config, signal: context.signal });
+  } catch (error) {
+    if (context.signal.aborted) {
+      throw requestAbortError(context);
+    }
+    throw error;
+  }
+}
+
+function waitForSharedPromise(promise, context) {
+  if (context.signal.aborted) {
+    return Promise.reject(requestAbortError(context));
+  }
+
+  return new Promise((resolve, reject) => {
+    const handleAbort = () => reject(requestAbortError(context));
+
+    context.signal.addEventListener('abort', handleAbort, { once: true });
+
+    promise.then(
+      (value) => {
+        context.signal.removeEventListener('abort', handleAbort);
+        resolve(value);
+      },
+      (error) => {
+        context.signal.removeEventListener('abort', handleAbort);
+        reject(error);
+      },
+    );
+  });
+}
+
+function responsePath(endpoint) {
+  return endpoint.split('?')[0];
+}
+
+function validateArrayResponse(data, endpoint) {
+  if (!Array.isArray(data)) {
+    throw new ApiContractError(endpoint, 'era esperado um array');
+  }
+}
+
+function validateCartResponse(data, endpoint) {
+  if (!data || typeof data !== 'object' || !Array.isArray(data.items)) {
+    throw new ApiContractError(endpoint, 'era esperado um carrinho com o campo "items" em formato de array');
+  }
+}
+
+function validateOrderResponse(data, endpoint) {
+  if (!data || typeof data !== 'object' || !Array.isArray(data.items)) {
+    throw new ApiContractError(endpoint, 'era esperado um pedido com o campo "items" em formato de array');
+  }
+}
+
+function validateProductsPageResponse(data, endpoint) {
+  const isValid =
+    data &&
+    typeof data === 'object' &&
+    Array.isArray(data.content) &&
+    typeof data.page === 'number' &&
+    typeof data.totalPages === 'number' &&
+    typeof data.totalElements === 'number';
+
+  if (!isValid) {
+    throw new ApiContractError(
+      endpoint,
+      'era esperada uma página com "content", "page", "totalPages" e "totalElements"',
+    );
+  }
+}
+
+function validateOrdersResponse(data, endpoint) {
+  validateArrayResponse(data, endpoint);
+  data.forEach((order) => validateOrderResponse(order, endpoint));
+}
+
+function validateApiResponse(endpoint, method, data) {
+  const path = responsePath(endpoint);
+
+  if (method === 'GET' && path === '/products') {
+    validateProductsPageResponse(data, endpoint);
+    return data;
+  }
+
+  if (method === 'GET' && path === '/orders') {
+    validateOrdersResponse(data, endpoint);
+    return data;
+  }
+
+  if (method === 'POST' && path === '/orders') {
+    validateOrderResponse(data, endpoint);
+    return data;
+  }
+
+  if (
+    method === 'GET' &&
+    ['/categories', '/addresses', '/shipping/calculate'].includes(path)
+  ) {
+    validateArrayResponse(data, endpoint);
+    return data;
+  }
+
+  if (
+    (method === 'GET' && path === '/cart') ||
+    (method === 'POST' && path === '/cart/items') ||
+    (method === 'PUT' && /^\/cart\/items\/[^/]+$/.test(path))
+  ) {
+    validateCartResponse(data, endpoint);
+  }
+
+  return data;
+}
+
+async function parseSuccessResponse(response, endpoint, method) {
+  if (response.status === 204) return null;
+
+  const text = await response.text();
+  if (!text) return validateApiResponse(endpoint, method, null);
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new ApiContractError(endpoint, 'o corpo não contém JSON válido');
+  }
+
+  return validateApiResponse(endpoint, method, data);
+}
+
 let refreshPromise = null;
 
-async function refreshAccessToken() {
+async function refreshAccessToken(requestContext) {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return false;
 
   if (!refreshPromise) {
-    refreshPromise = fetch(`${API_BASE}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    })
-      .then(async (response) => {
+    refreshPromise = (async () => {
+      const refreshContext = createRequestContext(DEFAULT_API_TIMEOUT_MS);
+
+      try {
+        const response = await fetchWithContext(
+          `${API_BASE}/auth/refresh`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken }),
+          },
+          refreshContext,
+        );
+
         if (!response.ok) return false;
-        const data = await response.json();
+
+        let data;
+        try {
+          data = await response.json();
+        } catch {
+          return false;
+        }
+
+        if (!data || typeof data.accessToken !== 'string') return false;
+
         setAccessToken(data.accessToken);
         return true;
-      })
-      .catch(() => false)
-      .finally(() => {
+      } catch (error) {
+        if (error instanceof ApiTimeoutError || error instanceof ApiAbortError) {
+          throw error;
+        }
+        return false;
+      } finally {
+        refreshContext.cleanup();
+      }
+    })().finally(() => {
         refreshPromise = null;
-      });
+    });
   }
 
-  return refreshPromise;
+  return waitForSharedPromise(refreshPromise, requestContext);
+}
+
+function handleFailedRefresh() {
+  clearSession();
+  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+  window.location.href = `${resolveRootPath()}auth.html?redirect=${redirect}`;
 }
 
 async function apiFetch(endpoint, options = {}) {
   const token = getAccessToken();
+  const {
+    timeoutMs = DEFAULT_API_TIMEOUT_MS,
+    signal,
+    ...fetchOptions
+  } = options;
+  const requestContext = createRequestContext(timeoutMs, signal);
 
   const config = {
-    ...options,
+    ...fetchOptions,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...fetchOptions.headers,
     },
   };
 
@@ -61,56 +298,60 @@ async function apiFetch(endpoint, options = {}) {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let response = await fetch(`${API_BASE}${endpoint}`, config);
+  try {
+    let response = await fetchWithContext(`${API_BASE}${endpoint}`, config, requestContext);
 
-  if (response.status === 401 && token) {
-    const refreshed = await refreshAccessToken();
-    if (refreshed) {
-      config.headers['Authorization'] = `Bearer ${getAccessToken()}`;
-      response = await fetch(`${API_BASE}${endpoint}`, config);
-    } else {
-      clearSession();
-      const redirect = encodeURIComponent(window.location.pathname + window.location.search);
-      window.location.href = `${resolveRootPath()}auth.html?redirect=${redirect}`;
-      return null;
+    if (response.status === 401 && token) {
+      const refreshed = await refreshAccessToken(requestContext);
+      if (refreshed) {
+        config.headers['Authorization'] = `Bearer ${getAccessToken()}`;
+        response = await fetchWithContext(`${API_BASE}${endpoint}`, config, requestContext);
+      } else {
+        handleFailedRefresh();
+        return null;
+      }
     }
+
+    if (!response.ok) {
+      const message = await parseErrorMessage(response);
+      throw new ApiError(message, response.status);
+    }
+
+    return await parseSuccessResponse(response, endpoint, config.method);
+  } finally {
+    requestContext.cleanup();
   }
-
-  if (!response.ok) {
-    const message = await parseErrorMessage(response);
-    throw new ApiError(message, response.status);
-  }
-
-  if (response.status === 204) return null;
-
-  const text = await response.text();
-  return text ? JSON.parse(text) : null;
 }
 
 function resolveRootPath() {
   return window.location.pathname.includes('/admin/') ? '../' : '';
 }
 
-async function apiGet(endpoint) {
-  return apiFetch(endpoint, { method: 'GET' });
+async function apiGet(endpoint, options = {}) {
+  return apiFetch(endpoint, { ...options, method: 'GET' });
 }
 
-async function apiPost(endpoint, body) {
-  return apiFetch(endpoint, { method: 'POST', body: JSON.stringify(body) });
+async function apiPost(endpoint, body, options = {}) {
+  return apiFetch(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) });
 }
 
-async function apiPut(endpoint, body) {
-  return apiFetch(endpoint, { method: 'PUT', body: JSON.stringify(body) });
+async function apiPut(endpoint, body, options = {}) {
+  return apiFetch(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) });
 }
 
-async function apiDelete(endpoint) {
-  return apiFetch(endpoint, { method: 'DELETE' });
+async function apiDelete(endpoint, options = {}) {
+  return apiFetch(endpoint, { ...options, method: 'DELETE' });
 }
 
-async function apiUploadFile(endpoint, file) {
+async function apiUploadFile(endpoint, file, options = {}) {
   const token = getAccessToken();
   const formData = new FormData();
   formData.append('file', file);
+  const {
+    timeoutMs = DEFAULT_UPLOAD_TIMEOUT_MS,
+    signal,
+  } = options;
+  const requestContext = createRequestContext(timeoutMs, signal);
 
   const config = {
     method: 'POST',
@@ -123,23 +364,29 @@ async function apiUploadFile(endpoint, file) {
   }
 
   // Não setar Content-Type — o browser seta automaticamente com boundary
-  let response = await fetch(`${API_BASE}${endpoint}`, config);
+  try {
+    let response = await fetchWithContext(`${API_BASE}${endpoint}`, config, requestContext);
 
-  if (response.status === 401 && token) {
-    const refreshed = await refreshAccessToken();
-    if (refreshed) {
-      config.headers['Authorization'] = `Bearer ${getAccessToken()}`;
-      response = await fetch(`${API_BASE}${endpoint}`, config);
+    if (response.status === 401 && token) {
+      const refreshed = await refreshAccessToken(requestContext);
+      if (refreshed) {
+        config.headers['Authorization'] = `Bearer ${getAccessToken()}`;
+        response = await fetchWithContext(`${API_BASE}${endpoint}`, config, requestContext);
+      } else {
+        handleFailedRefresh();
+        return null;
+      }
     }
-  }
 
-  if (!response.ok) {
-    const message = await parseErrorMessage(response);
-    throw new ApiError(message, response.status);
-  }
+    if (!response.ok) {
+      const message = await parseErrorMessage(response);
+      throw new ApiError(message, response.status);
+    }
 
-  const text = await response.text();
-  return text ? JSON.parse(text) : null;
+    return await parseSuccessResponse(response, endpoint, config.method);
+  } finally {
+    requestContext.cleanup();
+  }
 }
 
 function escapeHtml(str) {
