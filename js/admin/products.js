@@ -410,7 +410,7 @@ function renderProductsPagination() {
 async function loadProducts(page = currentProductsPage) {
   const tbody = document.querySelector('[data-products-tbody]');
   try {
-    const response = await apiGet(`/products?page=${page}&size=${ADMIN_PRODUCTS_PAGE_SIZE}`);
+    const response = await apiGet(`/products?page=${page}&size=${ADMIN_PRODUCTS_PAGE_SIZE}&includeWithoutImage=true`);
     productsCache = response.content;
     currentProductsPage = response.page;
     totalProductsPages = response.totalPages;
