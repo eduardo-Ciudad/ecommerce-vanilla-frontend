@@ -493,55 +493,168 @@ function wirePaymentTabs() {
   });
 }
 
-// O CardPayment Brick já renderiza seu próprio botão "Pagar" com o valor
-// formatado, então não adicionamos um botão de submit manual abaixo dele.
-function initCardForm(order) {
-  const container = document.getElementById('mp-card-form');
+class MercadoPagoInitializationError extends Error {
+  constructor(code, message, cause = null) {
+    super(message);
+    this.name = 'MercadoPagoInitializationError';
+    this.code = code;
+    this.cause = cause;
+  }
+}
 
-  if (typeof MercadoPago === 'undefined') {
-    container.innerHTML = '<p class="empty-state empty-state--inline">Não foi possível carregar o formulário de pagamento.</p>';
+function getMercadoPagoPublicKey() {
+  if (typeof MP_PUBLIC_KEY === 'undefined') {
+    throw new MercadoPagoInitializationError(
+      'MP_CONFIG_MISSING',
+      'config.js não definiu MP_PUBLIC_KEY',
+    );
+  }
+
+  if (
+    typeof MP_PUBLIC_KEY !== 'string'
+    || !MP_PUBLIC_KEY.trim()
+    || ['TEST-sua-chave-publica-aqui', 'YOUR_PUBLIC_KEY', 'REPLACE_ME'].includes(MP_PUBLIC_KEY)
+  ) {
+    throw new MercadoPagoInitializationError(
+      'MP_CONFIG_INVALID',
+      'MP_PUBLIC_KEY está vazia ou contém um valor de exemplo',
+    );
+  }
+
+  return MP_PUBLIC_KEY;
+}
+
+function mercadoPagoBrickError(brickError) {
+  const cause = typeof brickError?.cause === 'string'
+    ? brickError.cause
+    : 'unknown';
+  const normalizedCause = cause
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_');
+
+  return new MercadoPagoInitializationError(
+    `MP_BRICK_${normalizedCause}`,
+    brickError?.message || 'O CardPayment Brick reportou um erro',
+    brickError,
+  );
+}
+
+function logMercadoPagoError(error) {
+  console.error('[Mercado Pago]', {
+    code: error.code || 'MP_INITIALIZATION_FAILED',
+    message: error.message,
+    cause: error.cause || error,
+  });
+}
+
+function showFatalCardFormError(error) {
+  logMercadoPagoError(error);
+
+  const container = document.getElementById('mp-card-form');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="empty-state empty-state--inline">
+      Não foi possível disponibilizar o pagamento por cartão.
+      Tente novamente ou escolha Pix.
+    </div>
+  `;
+}
+
+function handleCardBrickError(brickError) {
+  const error = mercadoPagoBrickError(brickError);
+
+  if (brickError?.type === 'critical') {
+    showFatalCardFormError(error);
     return;
   }
 
-  const mp = new MercadoPago(MP_PUBLIC_KEY, { locale: 'pt-BR' });
-  const bricksBuilder = mp.bricks();
+  logMercadoPagoError(error);
+  showToast(
+    'O formulário de cartão encontrou uma instabilidade. Revise os dados e tente novamente.',
+    'error',
+  );
+}
 
-  bricksBuilder.create('cardPayment', 'mp-card-form', {
-    initialization: {
-      amount: Number(order.total),
-    },
-    customization: {
-      visual: {
-        style: {
-          theme: 'default',
+// O CardPayment Brick já renderiza seu próprio botão "Pagar" com o valor
+// formatado, então não adicionamos um botão de submit manual abaixo dele.
+async function initCardForm(order) {
+  try {
+    const publicKey = getMercadoPagoPublicKey();
+
+    if (typeof MercadoPago === 'undefined') {
+      throw new MercadoPagoInitializationError(
+        'MP_SDK_UNAVAILABLE',
+        'O SDK do Mercado Pago não foi carregado',
+      );
+    }
+
+    let mp;
+    try {
+      mp = new MercadoPago(publicKey, { locale: 'pt-BR' });
+    } catch (error) {
+      throw new MercadoPagoInitializationError(
+        'MP_SDK_CONSTRUCTION_FAILED',
+        'Falha ao construir o SDK do Mercado Pago',
+        error,
+      );
+    }
+
+    let bricksBuilder;
+    try {
+      bricksBuilder = mp.bricks();
+    } catch (error) {
+      throw new MercadoPagoInitializationError(
+        'MP_BRICKS_BUILDER_FAILED',
+        'Falha ao inicializar o Bricks Builder',
+        error,
+      );
+    }
+
+    try {
+      await bricksBuilder.create('cardPayment', 'mp-card-form', {
+        initialization: {
+          amount: Number(order.total),
         },
-      },
-      paymentMethods: {
-        maxInstallments: 6,
-      },
-    },
-    callbacks: {
-      onReady: () => {},
-      onSubmit: async (cardFormData) => {
-        try {
-          const result = await apiPost('/payments/process', {
-            orderId: order.id,
-            paymentMethod: 'credit_card',
-            token: cardFormData.token,
-            installments: cardFormData.installments,
-            cardIssuerId: cardFormData.payment_method_id,
-          });
-          showPaymentResult(result);
-        } catch (error) {
-          showToast(error.message || 'Erro ao processar pagamento', 'error');
-        }
-      },
-      onError: (error) => {
-        console.error('MP Brick error:', error);
-        showToast('Erro no formulário de pagamento', 'error');
-      },
-    },
-  });
+        customization: {
+          visual: {
+            style: {
+              theme: 'default',
+            },
+          },
+          paymentMethods: {
+            maxInstallments: 6,
+          },
+        },
+        callbacks: {
+          onReady: () => {},
+          onSubmit: async (cardFormData) => {
+            try {
+              const result = await apiPost('/payments/process', {
+                orderId: order.id,
+                paymentMethod: 'credit_card',
+                token: cardFormData.token,
+                installments: cardFormData.installments,
+                cardIssuerId: cardFormData.payment_method_id,
+              });
+              showPaymentResult(result);
+            } catch (error) {
+              showToast(error.message || 'Erro ao processar pagamento', 'error');
+            }
+          },
+          onError: handleCardBrickError,
+        },
+      });
+    } catch (error) {
+      throw new MercadoPagoInitializationError(
+        'MP_BRICK_CREATION_FAILED',
+        'Falha ao criar o CardPayment Brick',
+        error,
+      );
+    }
+  } catch (error) {
+    showFatalCardFormError(error);
+  }
 }
 
 async function handlePixPayment(order) {
