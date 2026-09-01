@@ -80,10 +80,7 @@ function updateSummary() {
 }
 
 async function updateItemQuantity(itemId, variantId, quantity) {
-  const cart = await apiPut(`/cart/items/${itemId}`, { variantId, quantity });
-  currentCart = cart;
-  setCartCount(cart.items.reduce((total, item) => total + item.quantity, 0));
-  return cart;
+  return apiPut(`/cart/items/${itemId}`, { variantId, quantity });
 }
 
 function wireCartItemEvents() {
@@ -93,28 +90,77 @@ function wireCartItemEvents() {
     const price = Number(row.dataset.price);
     const qtyInput = row.querySelector('[data-qty-input]');
     const subtotalEl = row.querySelector('[data-cart-item-subtotal]');
+    const decreaseButton = row.querySelector('[data-qty-decrease]');
+    const increaseButton = row.querySelector('[data-qty-increase]');
+    let isUpdating = false;
 
     async function changeQuantity(newQuantity) {
-      if (newQuantity < 1) return;
+      if (newQuantity < 1 || isUpdating) return;
+
       const previous = Number(qtyInput.value);
+      const currentItem = currentCart.items.find(
+        (item) => String(item.id) === itemId,
+      );
+
+      if (!currentItem) {
+        showToast('Não foi possível localizar o item no carrinho', 'error');
+        return;
+      }
+
+      isUpdating = true;
+      decreaseButton.disabled = true;
+      increaseButton.disabled = true;
+
+      currentItem.quantity = newQuantity;
       qtyInput.value = newQuantity;
       subtotalEl.textContent = formatPrice(price * newQuantity);
       updateSummary();
 
       try {
-        await updateItemQuantity(itemId, variantId, newQuantity);
+        const cart = await updateItemQuantity(itemId, variantId, newQuantity);
+        const updatedItem = cart.items.find(
+          (item) => String(item.id) === itemId,
+        );
+
+        if (!updatedItem) {
+          throw new ApiContractError(
+            `/cart/items/${itemId}`,
+            'o item atualizado não foi retornado no carrinho',
+          );
+        }
+
+        currentCart.items = currentCart.items.map((item) =>
+          String(item.id) === itemId ? updatedItem : item,
+        );
+
+        qtyInput.value = updatedItem.quantity;
+        subtotalEl.textContent = formatPrice(
+          Number(updatedItem.price) * updatedItem.quantity,
+        );
+        updateSummary();
+        setCartCount(
+          currentCart.items.reduce(
+            (total, item) => total + item.quantity,
+            0,
+          ),
+        );
       } catch (error) {
+        currentItem.quantity = previous;
         qtyInput.value = previous;
         subtotalEl.textContent = formatPrice(price * previous);
         updateSummary();
         showToast(error.message || 'Não foi possível atualizar a quantidade', 'error');
+      } finally {
+        isUpdating = false;
+        decreaseButton.disabled = false;
+        increaseButton.disabled = false;
       }
     }
 
-    row.querySelector('[data-qty-decrease]').addEventListener('click', () => {
+    decreaseButton.addEventListener('click', () => {
       changeQuantity(Number(qtyInput.value) - 1);
     });
-    row.querySelector('[data-qty-increase]').addEventListener('click', () => {
+    increaseButton.addEventListener('click', () => {
       changeQuantity(Number(qtyInput.value) + 1);
     });
 
