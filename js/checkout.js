@@ -43,7 +43,13 @@ const PAYMENT_RESULT_CONTENT = {
   },
 };
 
-let pixPollInterval = null;
+const PIX_POLL_DELAY_MS = 5000;
+const PIX_POLL_MAX_DURATION_MS = 5 * 60 * 1000;
+const PIX_POLL_MAX_CONSECUTIVE_FAILURES = 5;
+
+let pixPollTimeout = null;
+let pixPollAbortController = null;
+let pixPollSession = 0;
 let selectedAddressId = null;
 let selectedShippingMethod = null;
 let selectedShippingPrice = 0;
@@ -756,31 +762,115 @@ function renderPixResult(result, order) {
   startPixPolling(order.id);
 }
 
-function startPixPolling(orderId) {
-  if (pixPollInterval) clearInterval(pixPollInterval);
-  let attempts = 0;
-  const maxAttempts = 60;
+function stopPixPolling() {
+  pixPollSession += 1;
 
-  pixPollInterval = setInterval(async () => {
-    attempts += 1;
-    if (attempts > maxAttempts) {
-      clearInterval(pixPollInterval);
-      showToast('O QR Code Pix expirou. Gere um novo código para continuar.', 'warning');
+  if (pixPollTimeout) {
+    clearTimeout(pixPollTimeout);
+    pixPollTimeout = null;
+  }
+
+  if (pixPollAbortController) {
+    pixPollAbortController.abort();
+    pixPollAbortController = null;
+  }
+}
+
+function renderPixPollingRecovery(message) {
+  stopPixPolling();
+
+  const pixContent = document.querySelector('[data-pix-content]');
+  if (!pixContent) return;
+
+  pixContent.innerHTML = `
+    <div class="empty-state empty-state--inline">
+      <p>${escapeHtml(message)}</p>
+      <p>
+        O pagamento ainda pode ser confirmado posteriormente.
+        Consulte o pedido antes de iniciar uma nova tentativa.
+      </p>
+      <a class="btn btn-primary" href="orders.html">Ver meus pedidos</a>
+    </div>
+  `;
+}
+
+function logPixPollingError(error, consecutiveFailures) {
+  console.error('[Pix status polling]', {
+    code: error.code || 'PIX_POLL_NETWORK_ERROR',
+    status: error.status ?? null,
+    consecutiveFailures,
+    error,
+  });
+}
+
+function startPixPolling(orderId) {
+  stopPixPolling();
+
+  const session = pixPollSession;
+  const deadline = Date.now() + PIX_POLL_MAX_DURATION_MS;
+  let consecutiveFailures = 0;
+
+  const poll = async () => {
+    if (session !== pixPollSession) return;
+
+    if (Date.now() >= deadline) {
+      renderPixPollingRecovery(
+        'Ainda não recebemos a confirmação deste Pix.',
+      );
       return;
     }
+
+    pixPollAbortController = new AbortController();
+
     try {
-      const orders = await apiGet('/orders');
+      const orders = await apiGet('/orders', {
+        signal: pixPollAbortController.signal,
+      });
+
+      if (session !== pixPollSession) return;
+
+      consecutiveFailures = 0;
       const updated = orders.find((o) => o.id === orderId);
+
       if (updated && updated.paymentStatus === 'approved') {
-        clearInterval(pixPollInterval);
         showPaymentResult({ status: 'approved' });
+        return;
       }
-    } catch { /* ignora falhas de polling — tenta de novo no próximo tick */ }
-  }, 5000);
+    } catch (error) {
+      // Abort provocado por stopPixPolling() não é falha operacional.
+      if (session !== pixPollSession || error.code === 'API_ABORTED') return;
+
+      consecutiveFailures += 1;
+      logPixPollingError(error, consecutiveFailures);
+
+      if (consecutiveFailures >= PIX_POLL_MAX_CONSECUTIVE_FAILURES) {
+        renderPixPollingRecovery(
+          'Não foi possível continuar verificando automaticamente a confirmação deste Pix.',
+        );
+        return;
+      }
+    } finally {
+      if (session === pixPollSession) {
+        pixPollAbortController = null;
+      }
+    }
+
+    if (Date.now() >= deadline) {
+      renderPixPollingRecovery(
+        'Ainda não recebemos a confirmação deste Pix.',
+      );
+      return;
+    }
+
+    // Só agenda depois que apiGet termina, impedindo sobreposição.
+    pixPollTimeout = setTimeout(poll, PIX_POLL_DELAY_MS);
+  };
+
+  pixPollTimeout = setTimeout(poll, PIX_POLL_DELAY_MS);
 }
 
 function showPaymentResult(result) {
-  if (pixPollInterval) clearInterval(pixPollInterval);
+  stopPixPolling();
 
   document.querySelector('[data-checkout-payment]').hidden = true;
 
@@ -850,4 +940,5 @@ async function initCheckoutPage() {
   }
 }
 
+window.addEventListener('pagehide', stopPixPolling);
 document.addEventListener('DOMContentLoaded', initCheckoutPage);
