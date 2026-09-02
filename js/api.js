@@ -182,9 +182,9 @@ function validateProductsPageResponse(data, endpoint) {
   }
 }
 
-function validateOrdersResponse(data, endpoint) {
-  validateArrayResponse(data, endpoint);
-  data.forEach((order) => validateOrderResponse(order, endpoint));
+function validateOrdersPageResponse(data, endpoint) {
+  validateProductsPageResponse(data, endpoint);
+  data.content.forEach((order) => validateOrderResponse(order, endpoint));
 }
 
 function validateApiResponse(endpoint, method, data) {
@@ -196,7 +196,7 @@ function validateApiResponse(endpoint, method, data) {
   }
 
   if (method === 'GET' && path === '/orders') {
-    validateOrdersResponse(data, endpoint);
+    validateOrdersPageResponse(data, endpoint);
     return data;
   }
 

@@ -134,7 +134,8 @@ async function initOrdersPage() {
 
   const root = document.querySelector('[data-orders-root]');
   try {
-    const orders = await apiGet('/orders');
+    const response = await apiGet('/orders?page=0&size=1000');
+    const orders = response.content;
     if (!orders.length) {
       renderEmptyOrders();
       return;

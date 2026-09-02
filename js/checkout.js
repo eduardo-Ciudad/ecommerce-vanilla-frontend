@@ -414,7 +414,15 @@ function wireAddressSelection(order, addresses) {
   loadShippingOptions(order, initiallySelected.cep);
 }
 
-function renderCheckout(order, addresses) {
+function formatOrderDeliveryAddress(order) {
+  const complement = order.recipientComplement
+    ? `, ${escapeHtml(order.recipientComplement)}`
+    : '';
+
+  return `${escapeHtml(order.recipientStreet)}, ${escapeHtml(order.recipientNumber)}${complement} — ${escapeHtml(order.recipientNeighborhood)}, ${escapeHtml(order.recipientCity)}/${escapeHtml(order.recipientState)} — CEP ${escapeHtml(order.recipientCep)}`;
+}
+
+function renderCheckout(order) {
   const root = document.querySelector('[data-checkout-root]');
   root.innerHTML = `
     <div class="checkout-layout fade-in">
@@ -423,22 +431,22 @@ function renderCheckout(order, addresses) {
         <ul class="checkout-summary-items">
           ${order.items.map(checkoutItemRow).join('')}
         </ul>
-        <div class="checkout-summary-item" data-shipping-row hidden>
-          <span>Frete</span>
-          <span data-shipping-price></span>
+        <div class="checkout-summary-item">
+          <span>Frete — ${escapeHtml(order.shippingMethod)} (até ${order.shippingDeadlineDays} dias úteis)</span>
+          <span>${formatPrice(order.shippingPrice)}</span>
         </div>
         <div class="checkout-summary-total">
           <span>Total</span>
-          <span data-checkout-total>${formatPrice(order.total)}</span>
+          <span>${formatPrice(order.total)}</span>
         </div>
       </section>
 
-      <section class="checkout-summary" data-checkout-address>
+      <section class="checkout-summary">
         <h2>Endereço de entrega</h2>
-        <div data-address-content></div>
+        <p class="pix-intro">${escapeHtml(order.recipientName)} — ${formatOrderDeliveryAddress(order)}</p>
       </section>
 
-      <section class="checkout-payment" data-checkout-payment hidden>
+      <section class="checkout-payment" data-checkout-payment>
         <div class="payment-tabs">
           <button class="payment-tab is-active" type="button" data-payment-tab="card"><span class="payment-tab-icon">${ICONS.creditCard}</span> Cartão de Crédito</button>
           <button class="payment-tab" type="button" data-payment-tab="pix"><span class="payment-tab-icon">${ICONS.smartphone}</span> Pix</button>
@@ -460,7 +468,6 @@ function renderCheckout(order, addresses) {
     </div>
   `;
 
-  renderAddressContent(order, addresses);
   wirePaymentTabs();
   document.querySelector('[data-pix-btn]').addEventListener('click', () => handlePixPayment(order));
   initCardForm(order);
@@ -525,9 +532,8 @@ async function createOrderAndProceed() {
 
   try {
     const order = await apiPost('/orders', { addressId: selectedAddressId, shippingMethod: selectedShippingMethod });
-    const addresses = await apiGet('/addresses');
     setCartCount(0);
-    renderCheckout(order, addresses);
+    renderCheckout(order);
   } catch (error) {
     showToast(error.message || 'Não foi possível finalizar o pedido', 'error');
     button.disabled = false;
@@ -819,13 +825,14 @@ function startPixPolling(orderId) {
     pixPollAbortController = new AbortController();
 
     try {
-      const orders = await apiGet('/orders', {
+      const response = await apiGet('/orders?page=0&size=1000', {
         signal: pixPollAbortController.signal,
       });
 
       if (session !== pixPollSession) return;
 
       consecutiveFailures = 0;
+      const orders = response.content;
       const updated = orders.find((o) => o.id === orderId);
 
       if (updated && updated.paymentStatus === 'approved') {
@@ -908,7 +915,8 @@ async function initCheckoutPage() {
 
   try {
     if (orderId) {
-      const orders = await apiGet('/orders');
+      const response = await apiGet('/orders?page=0&size=1000');
+      const orders = response.content;
       const order = orders.find((o) => o.id === orderId);
 
       if (!order) {
@@ -917,8 +925,7 @@ async function initCheckoutPage() {
         return;
       }
 
-      const addresses = await apiGet('/addresses');
-      renderCheckout(order, addresses);
+      renderCheckout(order);
       return;
     }
 

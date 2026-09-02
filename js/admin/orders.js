@@ -42,7 +42,8 @@ function renderAdminOrdersTable(orders) {
 async function loadAdminOrders() {
   const tbody = document.querySelector('[data-admin-orders-tbody]');
   try {
-    const orders = await apiGet('/orders');
+    const response = await apiGet('/orders?page=0&size=1000');
+    const orders = response.content;
     renderAdminOrdersTable(orders);
   } catch (error) {
     tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Não foi possível carregar os pedidos.</div></td></tr>';

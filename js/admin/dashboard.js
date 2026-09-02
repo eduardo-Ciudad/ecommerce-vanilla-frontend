@@ -88,12 +88,13 @@ async function initDashboard() {
   const recentOrdersTbody = document.querySelector('[data-recent-orders-tbody]');
 
   try {
-    const [categories, productsResponse, orders] = await Promise.all([
+    const [categories, productsResponse, ordersResponse] = await Promise.all([
       apiGet('/categories'),
       apiGet('/products?page=0&size=1&includeWithoutImage=true'),
-      apiGet('/orders'),
+      apiGet('/orders?page=0&size=1000'),
     ]);
 
+    const orders = ordersResponse.content;
     const pendingCount = orders.filter((o) => o.status === 'PENDING').length;
     const finishedCount = orders.filter((o) => o.status === 'DELIVERED').length;
 
