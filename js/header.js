@@ -2,6 +2,7 @@ const HEADER_CATEGORY_PREVIEW_COUNT = 6;
 
 const ICONS = {
   chevronDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>',
+  menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>',
   search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>',
   user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg>',
   cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg>',
@@ -58,6 +59,16 @@ function buildHeaderMarkup() {
           <img class="header-logo-icon" src="${headerLink('assets/logo-tree.png')}" alt="" />
           <span class="header-logo-text">Gabi<span class="header-logo-accent">Kids</span></span>
         </a>
+        <button
+          class="header-menu-trigger"
+          type="button"
+          data-mobile-menu-trigger
+          aria-label="Abrir menu de navegação"
+          aria-controls="header-mobile-menu"
+          aria-expanded="false"
+        >
+          ${ICONS.menu}
+        </button>
         <nav class="navbar-links">
           <a href="${headerLink('shop.html')}">Loja</a>
           <div class="categories-dropdown" data-categories-dropdown>
@@ -87,13 +98,25 @@ function buildHeaderMarkup() {
           <input type="search" name="q" placeholder="Buscar produtos..." aria-label="Buscar produtos" class="form-control" />
         </form>
       </div>
+      <nav
+        class="header-mobile-menu"
+        id="header-mobile-menu"
+        data-mobile-menu
+        aria-label="Navegação principal"
+      >
+        <a class="header-mobile-menu-link" href="${headerLink('shop.html')}">Loja</a>
+        <div class="header-mobile-categories">
+          <span class="header-mobile-menu-title">Categorias</span>
+          <div class="header-mobile-category-list" data-category-list></div>
+        </div>
+      </nav>
     </header>
   `;
 }
 
 async function loadHeaderCategories() {
-  const list = document.querySelector('[data-category-list]');
-  if (!list) return;
+  const lists = document.querySelectorAll('[data-category-list]');
+  if (!lists.length) return;
   try {
     const categories = await apiGet('/categories');
     const items = categories
@@ -103,10 +126,14 @@ async function loadHeaderCategories() {
     const seeAllItem = categories.length > HEADER_CATEGORY_PREVIEW_COUNT
       ? `<a class="categories-dropdown-see-all" href="${headerLink('shop.html')}">Ver todas as categorias</a>`
       : '';
-    list.innerHTML = items + seeAllItem;
+    lists.forEach((list) => {
+      list.innerHTML = items + seeAllItem;
+    });
   } catch (error) {
     logAppError('header.categories.load', error);
-    list.innerHTML = '';
+    lists.forEach((list) => {
+      list.innerHTML = '';
+    });
   }
 }
 
@@ -119,6 +146,41 @@ function wireCategoriesDropdown() {
     dropdown.classList.toggle('is-open');
   });
   document.addEventListener('click', () => dropdown.classList.remove('is-open'));
+}
+
+function wireMobileMenu() {
+  const menu = document.querySelector('[data-mobile-menu]');
+  const trigger = document.querySelector('[data-mobile-menu-trigger]');
+  if (!menu || !trigger) return;
+
+  const closeMenu = ({ returnFocus = false } = {}) => {
+    menu.classList.remove('is-open');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.setAttribute('aria-label', 'Abrir menu de navegação');
+    if (returnFocus) trigger.focus();
+  };
+
+  trigger.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const isOpen = menu.classList.toggle('is-open');
+    trigger.setAttribute('aria-expanded', String(isOpen));
+    trigger.setAttribute(
+      'aria-label',
+      isOpen ? 'Fechar menu de navegação' : 'Abrir menu de navegação'
+    );
+  });
+
+  menu.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (event.target.closest('a')) closeMenu();
+  });
+
+  document.addEventListener('click', () => closeMenu());
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && menu.classList.contains('is-open')) {
+      closeMenu({ returnFocus: true });
+    }
+  });
 }
 
 function wireHeaderSearch(form) {
@@ -139,6 +201,7 @@ function initHeader() {
   root.innerHTML = buildHeaderMarkup();
   loadHeaderCategories();
   wireCategoriesDropdown();
+  wireMobileMenu();
 
   wireHeaderSearch(document.querySelector('[data-search-form]'));
   wireHeaderSearch(document.querySelector('[data-search-form-mobile]'));
