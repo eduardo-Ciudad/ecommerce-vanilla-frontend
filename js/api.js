@@ -1,5 +1,6 @@
-const API_BASE = 'https://gabikids.duckdns.org';
-//const API_BASE = 'http://localhost:8080';
+const API_BASE = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+  ? 'http://localhost:8080'
+  : 'https://gabikids.duckdns.org';
 const DEFAULT_API_TIMEOUT_MS = 15000;
 const DEFAULT_UPLOAD_TIMEOUT_MS = 60000;
 
