@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /auth.html
+Disallow: /cart.html
+Disallow: /checkout.html
+Disallow: /orders.html
+Disallow: /enderecos.html
+Disallow: /esqueci-senha.html
+Disallow: /resetar-senha.html
+Disallow: /confirmar-alteracao-senha.html
+Disallow: /verificar-email.html
+
+Sitemap: https://gabikids.vercel.app/sitemap.xml
