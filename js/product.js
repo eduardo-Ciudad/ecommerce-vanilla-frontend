@@ -37,6 +37,7 @@ function renderBreadcrumb(product) {
 
 function renderProduct(product) {
   renderBreadcrumb(product);
+  applyProductSeo(product);
 
   const root = document.querySelector('[data-product-root]');
   const imageContent = product.imageUrl

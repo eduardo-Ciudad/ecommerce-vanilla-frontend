@@ -172,6 +172,7 @@ async function initShopPage() {
       apiGet(`/products?page=0&size=${SHOP_PRODUCTS_PAGE_SIZE}`),
     ]);
     allCategories = categories;
+    applyShopSeo(categories);
     allProducts = productsResponse.content;
     currentProductsPage = productsResponse.page;
     totalProductsPages = productsResponse.totalPages;
