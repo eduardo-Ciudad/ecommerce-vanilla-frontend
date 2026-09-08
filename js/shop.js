@@ -24,6 +24,21 @@ function setShopParams({ categoryId, query }) {
   history.replaceState(null, '', `shop.html${search ? `?${search}` : ''}`);
 }
 
+function buildProductsUrl(categoryId, page) {
+  const categoryParam = categoryId ? `categoryId=${encodeURIComponent(categoryId)}&` : '';
+  return `/products?${categoryParam}page=${page}&size=${SHOP_PRODUCTS_PAGE_SIZE}`;
+}
+
+function renderProductsLoading() {
+  const grid = document.querySelector('[data-product-grid]');
+  const loadMoreWrapper = document.querySelector('[data-load-more-wrapper]');
+  if (loadMoreWrapper) loadMoreWrapper.hidden = true;
+  grid.innerHTML = Array.from(
+    { length: 4 },
+    () => '<div class="skeleton product-card-skeleton"></div>'
+  ).join('');
+}
+
 function renderCategoryFilterList() {
   const list = document.querySelector('[data-category-filter-list]');
   const { categoryId } = getShopParams();
@@ -65,9 +80,24 @@ function renderCategoryFilterList() {
   list.innerHTML = allItem + items + toggleItem;
 
   list.querySelectorAll('input[name="category-filter"]').forEach((input) => {
-    input.addEventListener('change', () => {
+    input.addEventListener('change', async () => {
       setShopParams({ categoryId: input.value, query: getShopParams().query });
-      renderFilteredProducts();
+      currentProductsPage = 0;
+      renderProductsLoading();
+
+      try {
+        const response = await apiGet(buildProductsUrl(input.value, 0));
+        allProducts = response.content;
+        currentProductsPage = response.page;
+        totalProductsPages = response.totalPages;
+        renderFilteredProducts();
+        updateLoadMoreButton();
+      } catch (error) {
+        document.querySelector('[data-product-grid]').innerHTML =
+          '<p class="empty-state">Não foi possível carregar os produtos.</p>';
+        showToast(error.message || 'Erro ao filtrar os produtos', 'error');
+      }
+
       updateBreadcrumb();
       document.querySelector('[data-filter-panel]').classList.remove('is-open');
     });
@@ -95,12 +125,11 @@ function updateBreadcrumb() {
 
 function renderFilteredProducts() {
   const grid = document.querySelector('[data-product-grid]');
-  const { categoryId, query } = getShopParams();
+  const { query } = getShopParams();
 
   const filtered = allProducts.filter((product) => {
-    const matchesCategory = !categoryId || product.categoryId === categoryId;
     const matchesQuery = !query || product.name.toLowerCase().includes(query);
-    return matchesCategory && matchesQuery;
+    return matchesQuery;
   });
 
   if (!filtered.length) {
@@ -140,7 +169,8 @@ async function loadMoreProducts() {
   }
 
   try {
-    const response = await apiGet(`/products?page=${currentProductsPage + 1}&size=${SHOP_PRODUCTS_PAGE_SIZE}`);
+    const { categoryId } = getShopParams();
+    const response = await apiGet(buildProductsUrl(categoryId, currentProductsPage + 1));
     allProducts = allProducts.concat(response.content);
     currentProductsPage = response.page;
     totalProductsPages = response.totalPages;
@@ -159,6 +189,7 @@ async function loadMoreProducts() {
 
 async function initShopPage() {
   const grid = document.querySelector('[data-product-grid]');
+  const { categoryId } = getShopParams();
   initFilterToggle();
 
   const loadMoreBtn = document.querySelector('[data-load-more-btn]');
@@ -169,7 +200,7 @@ async function initShopPage() {
   try {
     const [categories, productsResponse] = await Promise.all([
       apiGet('/categories'),
-      apiGet(`/products?page=0&size=${SHOP_PRODUCTS_PAGE_SIZE}`),
+      apiGet(buildProductsUrl(categoryId, 0)),
     ]);
     allCategories = categories;
     applyShopSeo(categories);
