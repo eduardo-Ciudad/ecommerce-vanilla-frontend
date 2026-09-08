@@ -52,9 +52,13 @@ function renderCart(cart) {
 }
 
 function renderCartItem(item) {
+  const imageContent = item.imageUrl
+    ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.productName)}">`
+    : productImagePlaceholder();
+
   return `
     <li class="cart-item" data-cart-item-id="${item.id}" data-variant-id="${item.variantId}" data-price="${item.price}" data-stock="${item.stock ?? ''}">
-      <div class="cart-item-image">${productImagePlaceholder()}</div>
+      <div class="cart-item-image">${imageContent}</div>
       <div class="cart-item-info">
         <span class="cart-item-name">${escapeHtml(item.productName)}</span>
         <span class="cart-item-size">Tamanho: ${escapeHtml(item.size)}</span>

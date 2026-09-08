@@ -291,6 +291,7 @@ function wireProductInteractions(product) {
         variantId: selectedVariant.id,
         productId: product.id,
         productName: product.name,
+        imageUrl: product.imageUrl,
         size: selectedVariant.size,
         price: selectedVariant.price,
         quantity: Number(qtyInput.value),

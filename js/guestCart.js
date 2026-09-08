@@ -23,6 +23,7 @@ function addToGuestCart(item) {
   );
 
   if (existingItem) {
+    existingItem.imageUrl = item.imageUrl;
     existingItem.quantity = Math.min(
       Number(existingItem.stock),
       Number(existingItem.quantity) + Number(item.quantity),
@@ -33,6 +34,7 @@ function addToGuestCart(item) {
       variantId: item.variantId,
       productId: item.productId,
       productName: item.productName,
+      imageUrl: item.imageUrl,
       size: item.size,
       price: Number(item.price),
       quantity: Math.min(stock, Math.max(1, Number(item.quantity))),
