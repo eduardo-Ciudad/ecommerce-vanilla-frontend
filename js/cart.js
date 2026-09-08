@@ -53,7 +53,7 @@ function renderCart(cart) {
 
 function renderCartItem(item) {
   return `
-    <li class="cart-item" data-cart-item-id="${item.id}" data-variant-id="${item.variantId}" data-price="${item.price}">
+    <li class="cart-item" data-cart-item-id="${item.id}" data-variant-id="${item.variantId}" data-price="${item.price}" data-stock="${item.stock ?? ''}">
       <div class="cart-item-image">${productImagePlaceholder()}</div>
       <div class="cart-item-info">
         <span class="cart-item-name">${escapeHtml(item.productName)}</span>
@@ -88,6 +88,7 @@ function wireCartItemEvents() {
     const itemId = row.dataset.cartItemId;
     const variantId = row.dataset.variantId;
     const price = Number(row.dataset.price);
+    const stock = Number(row.dataset.stock);
     const qtyInput = row.querySelector('[data-qty-input]');
     const subtotalEl = row.querySelector('[data-cart-item-subtotal]');
     const decreaseButton = row.querySelector('[data-qty-decrease]');
@@ -104,6 +105,24 @@ function wireCartItemEvents() {
 
       if (!currentItem) {
         showToast('Não foi possível localizar o item no carrinho', 'error');
+        return;
+      }
+
+      if (!isAuthenticated()) {
+        const cappedQuantity = Number.isFinite(stock)
+          ? Math.min(newQuantity, stock)
+          : newQuantity;
+        const items = updateGuestCartItemQuantity(variantId, cappedQuantity);
+        const updatedItem = items.find(
+          (item) => String(item.variantId) === variantId,
+        );
+        if (!updatedItem) return;
+
+        currentItem.quantity = updatedItem.quantity;
+        qtyInput.value = updatedItem.quantity;
+        subtotalEl.textContent = formatPrice(price * updatedItem.quantity);
+        updateSummary();
+        setCartCount(guestCartCount());
         return;
       }
 
@@ -165,6 +184,14 @@ function wireCartItemEvents() {
     });
 
     row.querySelector('[data-remove-item]').addEventListener('click', async () => {
+      if (!isAuthenticated()) {
+        removeFromGuestCartItem(variantId);
+        setCartCount(guestCartCount());
+        renderCart(guestCartForRendering());
+        showToast('Item removido do carrinho', 'success');
+        return;
+      }
+
       try {
         await apiDelete(`/cart/items/${itemId}`);
         const cart = await apiGet('/cart');
@@ -180,11 +207,24 @@ function wireCartItemEvents() {
 
 function handleCheckout() {
   // O pedido agora é criado em checkout.js, após a seleção de endereço e frete.
-  window.location.href = 'checkout.html';
+  window.location.href = isAuthenticated()
+    ? 'checkout.html'
+    : 'auth.html?redirect=checkout.html';
+}
+
+function guestCartForRendering() {
+  return {
+    items: getGuestCart().map((item) => ({ ...item, id: item.variantId })),
+  };
 }
 
 async function initCartPage() {
-  if (!requireAuth()) return;
+  if (!isAuthenticated()) {
+    const cart = guestCartForRendering();
+    setCartCount(guestCartCount());
+    renderCart(cart);
+    return;
+  }
 
   try {
     const cart = await apiGet('/cart');

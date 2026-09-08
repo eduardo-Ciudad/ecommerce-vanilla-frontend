@@ -287,8 +287,17 @@ function wireProductInteractions(product) {
     if (!selectedVariant) return;
 
     if (!isAuthenticated()) {
-      const redirect = encodeURIComponent(`product.html?id=${product.id}`);
-      window.location.href = `auth.html?redirect=${redirect}`;
+      addToGuestCart({
+        variantId: selectedVariant.id,
+        productId: product.id,
+        productName: product.name,
+        size: selectedVariant.size,
+        price: selectedVariant.price,
+        quantity: Number(qtyInput.value),
+        stock: selectedVariant.stock,
+      });
+      setCartCount(guestCartCount());
+      showToast('Produto adicionado ao carrinho!', 'success');
       return;
     }
 

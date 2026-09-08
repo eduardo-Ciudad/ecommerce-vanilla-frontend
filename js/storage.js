@@ -3,6 +3,7 @@ const STORAGE_KEYS = {
   REFRESH_TOKEN: 'refreshToken',
   USER: 'user',
   CART_COUNT: 'cartCount',
+  GUEST_CART: 'guestCart',
 };
 
 function readStorage(key) {

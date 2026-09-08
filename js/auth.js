@@ -18,7 +18,43 @@ document.addEventListener('DOMContentLoaded', wirePasswordToggles);
 
 async function login(email, password) {
   const data = await apiPost('/auth/login', { email, password });
-  return saveSession(data);
+  const user = saveSession(data);
+  await syncGuestCartToServer();
+  return user;
+}
+
+async function syncGuestCartToServer() {
+  const items = getGuestCart();
+  if (!items.length) return;
+
+  const errors = [];
+  let syncedCart = null;
+
+  for (const item of items) {
+    try {
+      syncedCart = await apiPost('/cart/items', {
+        variantId: item.variantId,
+        quantity: item.quantity,
+      });
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+
+  clearGuestCart();
+
+  if (syncedCart) {
+    setCartCount(
+      syncedCart.items.reduce((total, item) => total + item.quantity, 0),
+    );
+  }
+
+  if (errors.length) {
+    showToast(
+      `${errors.length} item(ns) do seu carrinho não puderam ser adicionados: ${errors[0].message || 'erro ao sincronizar'}`,
+      'error',
+    );
+  }
 }
 
 async function register(name, email, password) {
