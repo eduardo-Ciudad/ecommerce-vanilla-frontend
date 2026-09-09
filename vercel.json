@@ -1,4 +1,9 @@
 {
   "buildCommand": "sh build.sh",
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "git": {
+    "deploymentEnabled": {
+      "main": false
+    }
+  }
 }

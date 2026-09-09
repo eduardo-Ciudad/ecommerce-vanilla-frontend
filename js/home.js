@@ -1,44 +1,139 @@
-const HOME_CATEGORY_PREVIEW_COUNT = 3;
+const HOME_CATEGORY_PREVIEW_COUNT = 6;
 const HOME_PRODUCT_PREVIEW_COUNT = 8;
+const HOME_EDITORIAL_COUNT = 4;
 
-const CATEGORY_ICONS = {
-  shirt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z"/></svg>',
-  footprints: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 11-4 0z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 104 0z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg>',
-  baby: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M15 12h.01"/><path d="M19.38 6.81A9 9 0 0120.8 10.2a2 2 0 010 3.6 9 9 0 01-17.6 0 2 2 0 010-3.6A9 9 0 0112 3c2 0 3.5 1.1 3.5 2.5S14.6 8 13.5 8c-.8 0-1.5-.4-1.5-1"/><path d="M9 12h.01"/></svg>',
-  tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12.59 2.59A2 2 0 0011.17 2H4a2 2 0 00-2 2v7.17a2 2 0 00.59 1.42l8.7 8.7a2.43 2.43 0 003.42 0l6.58-6.58a2.43 2.43 0 000-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>',
-};
+const CATEGORY_FALLBACK_COLORS = ['#D8F2F5', '#FFF3C9', '#E8F4C8'];
 
-function categoryIcon(name) {
-  const lower = (name || '').toLowerCase();
+function normalizeText(value) {
+  return (value || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim()
+    .toLowerCase();
+}
 
-  if (/tênis|tenis|calçado|calcado|sapato|sandália|sandalia/.test(lower)) return CATEGORY_ICONS.footprints;
-  if (/bebê|bebe|infantil|baby/.test(lower)) return CATEGORY_ICONS.baby;
-  if (/cal[cç]a/.test(lower)) return CATEGORY_ICONS.tag;
-  if (/camiseta|blusa|blusinha|vestido|jaqueta|casaco|moletom|camisa|regata/.test(lower)) return CATEGORY_ICONS.shirt;
+let categoriesPromise = null;
 
-  return CATEGORY_ICONS.tag;
+function loadCategories() {
+  if (!categoriesPromise) {
+    categoriesPromise = apiGet('/categories').catch((error) => {
+      categoriesPromise = null;
+      throw error;
+    });
+  }
+  return categoriesPromise;
+}
+
+async function renderVaralLinks() {
+  const links = document.querySelectorAll('[data-varal-link]');
+  if (!links.length) return;
+  try {
+    const categories = await loadCategories();
+    links.forEach((link) => {
+      const target = normalizeText(link.dataset.varalLink);
+      const segment = categories.find(
+        (category) => !category.parentId && normalizeText(category.name) === target,
+      );
+      if (segment) {
+        link.href = `shop.html?category=${segment.id}`;
+      }
+    });
+  } catch (error) {
+    // Mantém o href padrão (shop.html) definido no HTML
+  }
 }
 
 async function renderHomeCategories() {
   const grid = document.querySelector('[data-category-grid]');
   try {
-    const categories = await apiGet('/categories');
-    if (!categories.length) {
+    const categories = await loadCategories();
+    const subcategories = categories.filter((category) => category.parentId);
+
+    if (!subcategories.length) {
       grid.innerHTML = '<p class="empty-state">Nenhuma categoria cadastrada ainda.</p>';
       return;
     }
-    grid.innerHTML = categories
+
+    const withImageFirst = [...subcategories].sort((a, b) => {
+      const aHasImage = a.imageUrl ? 0 : 1;
+      const bHasImage = b.imageUrl ? 0 : 1;
+      if (aHasImage !== bHasImage) return aHasImage - bHasImage;
+      return (a.name || '').localeCompare(b.name || '', 'pt-BR');
+    });
+
+    grid.innerHTML = withImageFirst
       .slice(0, HOME_CATEGORY_PREVIEW_COUNT)
-      .map((category, index) => `
-        <a class="category-card cat-color-${index % 4} fade-in" href="shop.html?category=${category.id}">
-          <span class="category-card-icon">${categoryIcon(category.name)}</span>
-          <span class="category-card-name">${escapeHtml(category.name)}</span>
-        </a>
-      `)
+      .map((category, index) => {
+        const fallback = CATEGORY_FALLBACK_COLORS[index % CATEGORY_FALLBACK_COLORS.length];
+        const media = category.imageUrl
+          ? `<img class="photo-card-img" src="${escapeHtml(category.imageUrl)}" alt="${escapeHtml(category.name)}" loading="lazy" />`
+          : `<span class="photo-card-fallback" style="background:${fallback}" aria-hidden="true"></span>`;
+        return `
+          <a class="photo-card photo-card--sm fade-in" href="shop.html?category=${category.id}">
+            ${media}
+            <span class="photo-card-overlay" aria-hidden="true"></span>
+            <span class="photo-card-caption">
+              <span class="photo-card-name">${escapeHtml(category.name)}</span>
+              <span class="photo-card-link">conferir ›</span>
+            </span>
+          </a>
+        `;
+      })
       .join('');
   } catch (error) {
     grid.innerHTML = '<p class="empty-state">Não foi possível carregar as categorias.</p>';
   }
+}
+
+function renderEditorial(products) {
+  const root = document.querySelector('[data-editorial]');
+  if (!root) return;
+
+  const curated = products.slice(0, HOME_EDITORIAL_COUNT);
+  if (!curated.length) {
+    root.closest('.editorial')?.remove();
+    return;
+  }
+
+  const feature = curated[0];
+  const featureMedia = feature.imageUrl
+    ? `<img src="${escapeHtml(feature.imageUrl)}" alt="${escapeHtml(feature.name)}" loading="lazy" />`
+    : productImagePlaceholder();
+
+  const list = curated
+    .map((product) => {
+      const price = lowestVariantPrice(product);
+      const priceLabel = price === null ? 'Indisponível' : formatPrice(price);
+      const media = product.imageUrl
+        ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" />`
+        : productImagePlaceholder();
+      return `
+        <a class="editorial-item" href="product.html?id=${product.id}">
+          <span class="editorial-item-media">${media}</span>
+          <span class="editorial-item-info">
+            <span class="editorial-item-category">${escapeHtml(product.categoryName || '')}</span>
+            <span class="editorial-item-name">${escapeHtml(product.name)}</span>
+            <span class="editorial-item-price">${priceLabel}</span>
+          </span>
+        </a>
+      `;
+    })
+    .join('');
+
+  root.innerHTML = `
+    <div class="editorial-feature">
+      <div class="editorial-copy">
+        <div class="editorial-eyebrow">Looks da estação</div>
+        <h2 class="editorial-title">Combina bem</h2>
+        <p class="editorial-text">Peças da coleção que funcionam juntas — do café da manhã à hora de dormir.</p>
+      </div>
+      <a class="editorial-feature-media" href="product.html?id=${feature.id}">
+        ${featureMedia}
+        <span class="editorial-feature-cta">Confira →</span>
+      </a>
+    </div>
+    <div class="editorial-list">${list}</div>
+  `;
 }
 
 async function renderBestSellers() {
@@ -48,11 +143,14 @@ async function renderBestSellers() {
     const products = response.content;
     if (!products.length) {
       grid.innerHTML = '<p class="empty-state">Nenhum produto disponível no momento.</p>';
+      document.querySelector('.editorial')?.remove();
       return;
     }
     grid.innerHTML = products.map((product) => buildProductCard(product)).join('');
+    renderEditorial(products);
   } catch (error) {
     grid.innerHTML = '<p class="empty-state">Não foi possível carregar os produtos.</p>';
+    document.querySelector('.editorial')?.remove();
   }
 }
 
@@ -67,6 +165,7 @@ function initNewsletterForm() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  renderVaralLinks();
   renderHomeCategories();
   renderBestSellers();
   initNewsletterForm();
