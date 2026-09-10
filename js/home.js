@@ -1,8 +1,9 @@
-const HOME_CATEGORY_PREVIEW_COUNT = 6;
 const HOME_PRODUCT_PREVIEW_COUNT = 8;
-const HOME_EDITORIAL_COUNT = 4;
-
-const CATEGORY_FALLBACK_COLORS = ['#D8F2F5', '#FFF3C9', '#E8F4C8'];
+const HOME_EDITORIAL_PRODUCT_IDS = [
+  'cced2d1c-3e1f-4cb0-8f9b-b4dae8beb596',
+  '5c142349-6663-407d-b10d-43bcb2dc68db',
+  '1fb65825-b47f-446e-b434-b1bb32687849',
+];
 
 function normalizeText(value) {
   return (value || '')
@@ -43,64 +44,11 @@ async function renderVaralLinks() {
   }
 }
 
-async function renderHomeCategories() {
-  const grid = document.querySelector('[data-category-grid]');
-  try {
-    const categories = await loadCategories();
-    const subcategories = categories.filter((category) => category.parentId);
-
-    if (!subcategories.length) {
-      grid.innerHTML = '<p class="empty-state">Nenhuma categoria cadastrada ainda.</p>';
-      return;
-    }
-
-    const withImageFirst = [...subcategories].sort((a, b) => {
-      const aHasImage = a.imageUrl ? 0 : 1;
-      const bHasImage = b.imageUrl ? 0 : 1;
-      if (aHasImage !== bHasImage) return aHasImage - bHasImage;
-      return (a.name || '').localeCompare(b.name || '', 'pt-BR');
-    });
-
-    grid.innerHTML = withImageFirst
-      .slice(0, HOME_CATEGORY_PREVIEW_COUNT)
-      .map((category, index) => {
-        const fallback = CATEGORY_FALLBACK_COLORS[index % CATEGORY_FALLBACK_COLORS.length];
-        const media = category.imageUrl
-          ? `<img class="photo-card-img" src="${escapeHtml(category.imageUrl)}" alt="${escapeHtml(category.name)}" loading="lazy" />`
-          : `<span class="photo-card-fallback" style="background:${fallback}" aria-hidden="true"></span>`;
-        return `
-          <a class="photo-card photo-card--sm fade-in" href="shop.html?category=${category.id}">
-            ${media}
-            <span class="photo-card-overlay" aria-hidden="true"></span>
-            <span class="photo-card-caption">
-              <span class="photo-card-name">${escapeHtml(category.name)}</span>
-              <span class="photo-card-link">conferir ›</span>
-            </span>
-          </a>
-        `;
-      })
-      .join('');
-  } catch (error) {
-    grid.innerHTML = '<p class="empty-state">Não foi possível carregar as categorias.</p>';
-  }
-}
-
 function renderEditorial(products) {
   const root = document.querySelector('[data-editorial]');
   if (!root) return;
 
-  const curated = products.slice(0, HOME_EDITORIAL_COUNT);
-  if (!curated.length) {
-    root.closest('.editorial')?.remove();
-    return;
-  }
-
-  const feature = curated[0];
-  const featureMedia = feature.imageUrl
-    ? `<img src="${escapeHtml(feature.imageUrl)}" alt="${escapeHtml(feature.name)}" loading="lazy" />`
-    : productImagePlaceholder();
-
-  const list = curated
+  const list = products
     .map((product) => {
       const price = lowestVariantPrice(product);
       const priceLabel = price === null ? 'Indisponível' : formatPrice(price);
@@ -123,17 +71,27 @@ function renderEditorial(products) {
   root.innerHTML = `
     <div class="editorial-feature">
       <div class="editorial-copy">
-        <div class="editorial-eyebrow">Looks da estação</div>
-        <h2 class="editorial-title">Combina bem</h2>
-        <p class="editorial-text">Peças da coleção que funcionam juntas — do café da manhã à hora de dormir.</p>
+        <div class="editorial-eyebrow">Edição da estação</div>
+        <h2 class="editorial-title">Looks de Verão</h2>
+        <p class="editorial-text">Modelos leves e confortáveis para aproveitar os dias mais quentes.</p>
       </div>
-      <a class="editorial-feature-media" href="product.html?id=${feature.id}">
-        ${featureMedia}
-        <span class="editorial-feature-cta">Confira →</span>
+      <a class="editorial-feature-media" href="shop.html" aria-label="Confira todos os produtos">
+        <img src="img/card-verao.jpg" alt="Look infantil de verão" loading="lazy" />
+        <span class="editorial-feature-cta">confira <span aria-hidden="true">→</span></span>
       </a>
     </div>
     <div class="editorial-list">${list}</div>
   `;
+}
+
+async function renderSummerEditorial() {
+  const requests = HOME_EDITORIAL_PRODUCT_IDS.map((id) => apiGet(`/products/${id}`));
+  const results = await Promise.allSettled(requests);
+  const products = results
+    .filter((result) => result.status === 'fulfilled')
+    .map((result) => result.value);
+
+  renderEditorial(products);
 }
 
 async function renderBestSellers() {
@@ -143,14 +101,11 @@ async function renderBestSellers() {
     const products = response.content;
     if (!products.length) {
       grid.innerHTML = '<p class="empty-state">Nenhum produto disponível no momento.</p>';
-      document.querySelector('.editorial')?.remove();
       return;
     }
     grid.innerHTML = products.map((product) => buildProductCard(product)).join('');
-    renderEditorial(products);
   } catch (error) {
     grid.innerHTML = '<p class="empty-state">Não foi possível carregar os produtos.</p>';
-    document.querySelector('.editorial')?.remove();
   }
 }
 
@@ -166,7 +121,7 @@ function initNewsletterForm() {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderVaralLinks();
-  renderHomeCategories();
   renderBestSellers();
+  renderSummerEditorial();
   initNewsletterForm();
 });

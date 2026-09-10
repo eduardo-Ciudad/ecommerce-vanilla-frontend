@@ -250,72 +250,45 @@
   .home-section { padding: var(--space-4xl) var(--space-md); }
 }
 
-/* ===== Categorias ===== */
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-md);
+/* ===== Compre por tamanho ===== */
+.size-shopping {
+  padding-bottom: var(--space-lg);
 }
 
-.category-card {
-  position: relative;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  aspect-ratio: 3 / 4;
+.size-shopping .section-heading {
+  margin-bottom: var(--space-lg);
+}
+
+.size-shopping-options {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: var(--space-lg);
-  transition: var(--transition);
+  gap: var(--space-sm);
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scrollbar-width: thin;
 }
 
-.category-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-4px);
+.size-pill {
+  flex: 1 0 auto;
+  min-height: 46px;
+  padding: 10px 22px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-full);
+  background: var(--color-white);
+  color: var(--color-primary-dark);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-align: center;
 }
 
-.category-card-icon {
-  position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
-  width: 44px;
-  height: 44px;
-  background: rgba(255,255,255,0.9);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.curated-categories {
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-xl);
 }
-
-.category-card-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.category-card-name {
-  font-family: var(--font-heading);
-  font-size: var(--text-3xl);
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.cat-color-0 { background: linear-gradient(180deg, var(--color-primary-surface) 0%, var(--color-primary-light) 100%); }
-.cat-color-0 .category-card-icon { color: var(--color-primary); }
-.cat-color-1 { background: linear-gradient(180deg, var(--color-info-bg) 0%, #A8CFF0 100%); }
-.cat-color-1 .category-card-icon { color: var(--color-info); }
-.cat-color-2 { background: linear-gradient(180deg, var(--color-success-bg) 0%, #8BD4A8 100%); }
-.cat-color-2 .category-card-icon { color: var(--color-success-text); }
-.cat-color-3 { background: linear-gradient(180deg, var(--color-warning-bg) 0%, #F5DDB0 100%); }
-.cat-color-3 .category-card-icon { color: var(--color-warning-text); }
 
 @media (min-width: 768px) {
-  .category-grid { grid-template-columns: repeat(4, 1fr); }
-  .category-card-name { font-size: var(--text-4xl); }
-}
-
-.category-card-skeleton {
-  aspect-ratio: 3 / 4;
-  border-radius: var(--radius-xl);
+  .size-shopping-options { overflow: visible; }
+  .size-pill { min-width: 0; }
 }
 
 /* ===== Mais vendidos ===== */
@@ -338,56 +311,22 @@
   border-radius: var(--radius-lg);
 }
 
-/* ===== Título orgânico (rabisco amarelo) ===== */
-.organic-heading {
-  position: relative;
-  display: inline-block;
-  padding: 12px 30px 14px;
-}
-
-.organic-heading-blob {
-  position: absolute;
-  inset: 0;
-  background: var(--color-accent-yellow);
-  border-radius: 62% 38% 55% 45% / 56% 62% 38% 44%;
-  transform: rotate(-1.6deg);
-  z-index: 0;
-}
-
-.organic-heading-blob::before,
-.organic-heading-blob::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  background: var(--color-accent-yellow);
-}
-
-.organic-heading-blob::before { left: -12px; top: 4px; width: 20px; height: 20px; }
-.organic-heading-blob::after { right: -8px; bottom: 0; width: 14px; height: 14px; }
-
-.organic-heading-text {
-  position: relative;
-  z-index: 1;
-  color: var(--color-primary-dark);
-  font-size: var(--text-4xl);
-}
-
 /* ===== Varal Meninas / Meninos ===== */
 .varal {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: var(--space-2xl) var(--space-md) 0;
+  padding: var(--space-xl) var(--space-md) 0;
 }
 
 .varal-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-md);
+  max-width: var(--max-width);
+  margin: 0 auto;
 }
 
 @media (min-width: 768px) {
   .varal {
-    padding: var(--space-4xl) var(--space-md) 0;
+    padding: var(--space-xl) var(--space-md) 0;
   }
   .varal-grid {
     grid-template-columns: 1fr 1fr;
@@ -395,7 +334,7 @@
   }
 }
 
-/* ===== Photo card (varal + categorias por tipo de peça) ===== */
+/* ===== Photo card (varal + categorias curadas) ===== */
 .photo-card {
   position: relative;
   display: block;
@@ -410,13 +349,16 @@
   border-radius: 14px;
 }
 
+.photo-card--lg {
+  border-radius: 8px;
+}
+
 .photo-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-4px);
 }
 
-.photo-card-img,
-.photo-card-fallback {
+.photo-card-img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -434,6 +376,44 @@
     rgba(14, 92, 102, 0.18) 45%,
     rgba(14, 92, 102, 0) 70%
   );
+}
+
+.photo-card--sm .photo-card-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(14, 92, 102, 0.78) 0%,
+    rgba(14, 92, 102, 0.58) 24%,
+    rgba(14, 92, 102, 0.30) 48%,
+    rgba(14, 92, 102, 0.10) 66%,
+    rgba(14, 92, 102, 0) 82%
+  );
+}
+
+.photo-card--sm .photo-card-img,
+.photo-card--lg .photo-card-img {
+  transition: var(--card-image-transition);
+}
+
+.photo-card--sm:hover,
+.photo-card--lg:hover {
+  box-shadow: var(--card-hover-shadow);
+}
+
+.photo-card--sm:hover .photo-card-img,
+.photo-card--lg:hover .photo-card-img {
+  transform: var(--card-hover-image-transform);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-card--sm .photo-card-img,
+  .photo-card--lg .photo-card-img {
+    transition: none;
+  }
+
+  .photo-card--sm:hover .photo-card-img,
+  .photo-card--lg:hover .photo-card-img {
+    transform: none;
+  }
 }
 
 .photo-card-caption {
@@ -484,43 +464,41 @@
 }
 
 @media (min-width: 640px) {
-  .photo-card-grid { grid-template-columns: repeat(3, 1fr); }
+  .photo-card-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (min-width: 1024px) {
-  .photo-card-grid { grid-template-columns: repeat(6, 1fr); gap: var(--space-md); }
+  .photo-card-grid { gap: var(--space-md); }
 }
 
-/* ===== Editorial "Combina bem" ===== */
+/* ===== Editorial "Looks de Verão" ===== */
 .editorial {
   position: relative;
   overflow: hidden;
   margin-top: var(--space-2xl);
-  background: linear-gradient(120deg, #29BFCF 0%, #4FC9C0 42%, #F5851F 100%);
+  isolation: isolate;
+  background: #173941;
 }
 
-.editorial-blob {
+.editorial::before,
+.editorial::after {
+  content: '';
   position: absolute;
-  border-radius: 50%;
+  inset: 0;
   pointer-events: none;
 }
 
-.editorial-blob--1 {
-  top: -120px;
-  left: 8%;
-  width: 420px;
-  height: 420px;
-  background: rgba(255, 255, 255, 0.20);
-  filter: blur(70px);
+.editorial::before {
+  inset: -18px;
+  z-index: -2;
+  background: url('../img/background-verao.jpg') center 44% / cover no-repeat;
+  filter: blur(8px);
+  transform: scale(1.04);
 }
 
-.editorial-blob--2 {
-  bottom: -140px;
-  right: 12%;
-  width: 380px;
-  height: 380px;
-  background: rgba(255, 196, 33, 0.35);
-  filter: blur(80px);
+.editorial::after {
+  z-index: -1;
+  background: rgba(7, 35, 43, 0.58);
 }
 
 .editorial-inner {
@@ -572,10 +550,10 @@
   margin-top: var(--space-lg);
   border-radius: var(--radius-xl);
   overflow: hidden;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   background: var(--color-primary-surface);
   color: rgba(14, 92, 102, 0.28);
-  box-shadow: 0 18px 40px rgba(14, 92, 102, 0.22);
+  box-shadow: 0 22px 48px rgba(3, 24, 30, 0.34);
 }
 
 .editorial-feature-media img {
@@ -598,11 +576,18 @@
   gap: 8px;
   height: 44px;
   padding: 0 24px;
-  border-radius: 12px;
-  background: var(--color-primary-dark);
-  color: var(--color-white);
+  border-radius: var(--radius-full);
+  background: var(--color-white);
+  color: var(--color-primary-dark);
   font-size: var(--text-base);
   font-weight: 700;
+  box-shadow: 0 8px 22px rgba(3, 24, 30, 0.2);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.editorial-feature-media:hover .editorial-feature-cta {
+  transform: translateY(-2px);
+  box-shadow: 0 11px 26px rgba(3, 24, 30, 0.28);
 }
 
 .editorial-list {
@@ -624,6 +609,29 @@
 .editorial-item:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+.editorial-item:focus-visible,
+.editorial-feature-media:focus-visible {
+  outline: 3px solid var(--color-white);
+  outline-offset: 4px;
+}
+
+.editorial-loading {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-xl);
+}
+
+.editorial-feature-skeleton {
+  min-height: 440px;
+  border-radius: var(--radius-xl);
+}
+
+.editorial-item-skeleton {
+  display: block;
+  height: 120px;
+  border-radius: 16px;
 }
 
 .editorial-item-media {
@@ -682,6 +690,10 @@
     padding: var(--space-3xl) var(--space-md);
   }
   .editorial-feature-media { margin-top: var(--space-lg); }
+  .editorial-loading {
+    grid-template-columns: 1.05fr 1fr;
+    gap: 44px;
+  }
 }
 
 /* ===== Depoimentos ===== */
