@@ -13,23 +13,26 @@ function getShopParams() {
   return {
     categoryId: params.get('category') || '',
     brand: params.get('brand') || '',
+    sizeRange: params.get('sizeRange') || '',
     query: (params.get('q') || '').trim().toLowerCase(),
   };
 }
 
-function setShopParams({ categoryId, brand, query }) {
+function setShopParams({ categoryId, brand, sizeRange, query }) {
   const params = new URLSearchParams();
   if (categoryId) params.set('category', categoryId);
   if (brand) params.set('brand', brand);
+  if (sizeRange) params.set('sizeRange', sizeRange);
   if (query) params.set('q', query);
   const search = params.toString();
   history.replaceState(null, '', `shop.html${search ? `?${search}` : ''}`);
 }
 
-function buildProductsUrl(categoryId, brand, page) {
+function buildProductsUrl(categoryId, brand, sizeRange, page) {
   const categoryParam = categoryId ? `categoryId=${encodeURIComponent(categoryId)}&` : '';
   const brandParam = brand ? `brand=${encodeURIComponent(brand)}&` : '';
-  return `/products?${categoryParam}${brandParam}page=${page}&size=${SHOP_PRODUCTS_PAGE_SIZE}`;
+  const sizeRangeParam = sizeRange ? `sizeRange=${encodeURIComponent(sizeRange)}&` : '';
+  return `/products?${categoryParam}${brandParam}${sizeRangeParam}page=${page}&size=${SHOP_PRODUCTS_PAGE_SIZE}`;
 }
 
 function renderProductsLoading() {
@@ -84,13 +87,13 @@ function renderCategoryFilterList() {
 
   list.querySelectorAll('input[name="category-filter"]').forEach((input) => {
     input.addEventListener('change', async () => {
-      const { brand, query } = getShopParams();
-      setShopParams({ categoryId: input.value, brand, query });
+      const { brand, sizeRange, query } = getShopParams();
+      setShopParams({ categoryId: input.value, brand, sizeRange, query });
       currentProductsPage = 0;
       renderProductsLoading();
 
       try {
-        const response = await apiGet(buildProductsUrl(input.value, brand, 0));
+        const response = await apiGet(buildProductsUrl(input.value, brand, sizeRange, 0));
         allProducts = response.content;
         currentProductsPage = response.page;
         totalProductsPages = response.totalPages;
@@ -173,8 +176,10 @@ async function loadMoreProducts() {
   }
 
   try {
-    const { categoryId, brand } = getShopParams();
-    const response = await apiGet(buildProductsUrl(categoryId, brand, currentProductsPage + 1));
+    const { categoryId, brand, sizeRange } = getShopParams();
+    const response = await apiGet(
+      buildProductsUrl(categoryId, brand, sizeRange, currentProductsPage + 1)
+    );
     allProducts = allProducts.concat(response.content);
     currentProductsPage = response.page;
     totalProductsPages = response.totalPages;
@@ -193,7 +198,7 @@ async function loadMoreProducts() {
 
 async function initShopPage() {
   const grid = document.querySelector('[data-product-grid]');
-  const { categoryId, brand } = getShopParams();
+  const { categoryId, brand, sizeRange } = getShopParams();
   initFilterToggle();
 
   const loadMoreBtn = document.querySelector('[data-load-more-btn]');
@@ -204,7 +209,7 @@ async function initShopPage() {
   try {
     const [categories, productsResponse] = await Promise.all([
       apiGet('/categories'),
-      apiGet(buildProductsUrl(categoryId, brand, 0)),
+      apiGet(buildProductsUrl(categoryId, brand, sizeRange, 0)),
     ]);
     allCategories = categories;
     applyShopSeo(categories);
