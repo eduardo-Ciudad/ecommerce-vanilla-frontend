@@ -12,21 +12,24 @@ function getShopParams() {
   const params = new URLSearchParams(window.location.search);
   return {
     categoryId: params.get('category') || '',
+    brand: params.get('brand') || '',
     query: (params.get('q') || '').trim().toLowerCase(),
   };
 }
 
-function setShopParams({ categoryId, query }) {
+function setShopParams({ categoryId, brand, query }) {
   const params = new URLSearchParams();
   if (categoryId) params.set('category', categoryId);
+  if (brand) params.set('brand', brand);
   if (query) params.set('q', query);
   const search = params.toString();
   history.replaceState(null, '', `shop.html${search ? `?${search}` : ''}`);
 }
 
-function buildProductsUrl(categoryId, page) {
+function buildProductsUrl(categoryId, brand, page) {
   const categoryParam = categoryId ? `categoryId=${encodeURIComponent(categoryId)}&` : '';
-  return `/products?${categoryParam}page=${page}&size=${SHOP_PRODUCTS_PAGE_SIZE}`;
+  const brandParam = brand ? `brand=${encodeURIComponent(brand)}&` : '';
+  return `/products?${categoryParam}${brandParam}page=${page}&size=${SHOP_PRODUCTS_PAGE_SIZE}`;
 }
 
 function renderProductsLoading() {
@@ -81,12 +84,13 @@ function renderCategoryFilterList() {
 
   list.querySelectorAll('input[name="category-filter"]').forEach((input) => {
     input.addEventListener('change', async () => {
-      setShopParams({ categoryId: input.value, query: getShopParams().query });
+      const { brand, query } = getShopParams();
+      setShopParams({ categoryId: input.value, brand, query });
       currentProductsPage = 0;
       renderProductsLoading();
 
       try {
-        const response = await apiGet(buildProductsUrl(input.value, 0));
+        const response = await apiGet(buildProductsUrl(input.value, brand, 0));
         allProducts = response.content;
         currentProductsPage = response.page;
         totalProductsPages = response.totalPages;
@@ -169,8 +173,8 @@ async function loadMoreProducts() {
   }
 
   try {
-    const { categoryId } = getShopParams();
-    const response = await apiGet(buildProductsUrl(categoryId, currentProductsPage + 1));
+    const { categoryId, brand } = getShopParams();
+    const response = await apiGet(buildProductsUrl(categoryId, brand, currentProductsPage + 1));
     allProducts = allProducts.concat(response.content);
     currentProductsPage = response.page;
     totalProductsPages = response.totalPages;
@@ -189,7 +193,7 @@ async function loadMoreProducts() {
 
 async function initShopPage() {
   const grid = document.querySelector('[data-product-grid]');
-  const { categoryId } = getShopParams();
+  const { categoryId, brand } = getShopParams();
   initFilterToggle();
 
   const loadMoreBtn = document.querySelector('[data-load-more-btn]');
@@ -200,7 +204,7 @@ async function initShopPage() {
   try {
     const [categories, productsResponse] = await Promise.all([
       apiGet('/categories'),
-      apiGet(buildProductsUrl(categoryId, 0)),
+      apiGet(buildProductsUrl(categoryId, brand, 0)),
     ]);
     allCategories = categories;
     applyShopSeo(categories);
