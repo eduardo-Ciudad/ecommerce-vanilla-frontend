@@ -206,6 +206,7 @@
 
 .form-group-icon input {
   flex: 1;
+  min-width: 0;
   border: none;
   padding: 14px 0;
   font-size: var(--text-md);
@@ -221,6 +222,8 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  width: 40px;
+  height: 40px;
   color: var(--color-text-muted);
 }
 
@@ -289,6 +292,9 @@
 }
 
 .auth-forgot-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
   font-size: var(--text-sm);
   color: var(--color-primary-text);
   font-weight: 500;

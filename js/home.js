@@ -1,9 +1,85 @@
 const HOME_PRODUCT_PREVIEW_COUNT = 8;
+const HERO_SLIDE_INTERVAL = 4000;
 const HOME_EDITORIAL_PRODUCT_IDS = [
   'cced2d1c-3e1f-4cb0-8f9b-b4dae8beb596',
   '5c142349-6663-407d-b10d-43bcb2dc68db',
   '1fb65825-b47f-446e-b434-b1bb32687849',
 ];
+
+function initHeroCarousel() {
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+
+  const slides = Array.from(hero.querySelectorAll('[data-hero-slide]'));
+  const dots = Array.from(hero.querySelectorAll('[data-hero-dot]'));
+  const arrows = Array.from(hero.querySelectorAll('[data-hero-direction]'));
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let activeIndex = 0;
+  let timerId = null;
+  let isPointerOverHero = false;
+
+  function stopTimer() {
+    if (timerId === null) return;
+    window.clearInterval(timerId);
+    timerId = null;
+  }
+
+  function startTimer() {
+    stopTimer();
+    if (reducedMotion.matches || isPointerOverHero) return;
+
+    timerId = window.setInterval(() => {
+      goToSlide(activeIndex + 1);
+    }, HERO_SLIDE_INTERVAL);
+  }
+
+  function goToSlide(index, restartTimer = false) {
+    activeIndex = (index + slides.length) % slides.length;
+
+    slides.forEach((slide, slideIndex) => {
+      const isActive = slideIndex === activeIndex;
+      slide.classList.toggle('is-active', isActive);
+      slide.setAttribute('aria-hidden', String(!isActive));
+    });
+
+    dots.forEach((dot, dotIndex) => {
+      const isActive = dotIndex === activeIndex;
+      dot.classList.toggle('is-active', isActive);
+      dot.setAttribute('aria-current', String(isActive));
+    });
+
+    if (restartTimer) startTimer();
+  }
+
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => {
+      goToSlide(index, true);
+    });
+  });
+
+  arrows.forEach((arrow) => {
+    arrow.addEventListener('click', () => {
+      const offset = arrow.dataset.heroDirection === 'next' ? 1 : -1;
+      const targetIndex = (activeIndex + offset + dots.length) % dots.length;
+
+      dots[targetIndex].click();
+    });
+  });
+
+  hero.addEventListener('mouseenter', () => {
+    isPointerOverHero = true;
+    stopTimer();
+  });
+
+  hero.addEventListener('mouseleave', () => {
+    isPointerOverHero = false;
+    startTimer();
+  });
+
+  reducedMotion.addEventListener('change', startTimer);
+  goToSlide(0);
+  startTimer();
+}
 
 function normalizeText(value) {
   return (value || '')
@@ -120,6 +196,7 @@ function initNewsletterForm() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  initHeroCarousel();
   renderVaralLinks();
   renderBestSellers();
   renderSummerEditorial();

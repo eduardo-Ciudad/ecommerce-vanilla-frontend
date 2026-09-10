@@ -406,6 +406,13 @@ body {
     gap: var(--space-xs);
   }
 
+  .header-menu-trigger,
+  .header-icon-btn,
+  .user-menu-trigger {
+    width: 40px;
+    height: 40px;
+  }
+
   .navbar-links {
     display: none;
   }
@@ -422,11 +429,17 @@ body {
 
   .header-link-entrar {
     padding: 8px 10px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
     font-size: var(--text-sm);
   }
 
   .header-btn-cadastrar {
     padding: 8px 10px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
     font-size: var(--text-sm);
   }
 
@@ -435,7 +448,7 @@ body {
     top: 100%;
     left: 0;
     right: 0;
-    max-height: calc(100vh - var(--header-height));
+    max-height: calc(100dvh - var(--site-header-height, var(--header-height)));
     overflow-y: auto;
     padding: var(--space-sm) var(--space-md) var(--space-md);
     background: var(--color-white);
@@ -657,6 +670,15 @@ body {
   transition: var(--transition);
 }
 
+@media (max-width: 767px) {
+  .footer-col a:not(.footer-social a) {
+    min-height: 40px;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+  }
+}
+
 .footer-col a:hover {
   color: var(--color-white);
 }
@@ -838,6 +860,7 @@ body {
   transition: var(--transition);
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .product-card:hover {
@@ -894,8 +917,8 @@ body {
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   background: var(--color-white);
   border-radius: 50%;
   display: flex;

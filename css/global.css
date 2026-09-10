@@ -272,6 +272,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-sm {
   padding: 8px 18px;
+  min-height: 40px;
   font-size: var(--text-sm);
   border-radius: var(--radius-sm);
 }

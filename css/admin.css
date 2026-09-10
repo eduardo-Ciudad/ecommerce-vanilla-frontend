@@ -139,6 +139,7 @@
 .admin-content {
   flex: 1;
   width: 100%;
+  min-width: 0;
   padding: var(--space-xl) var(--space-md) var(--space-3xl);
   padding-top: calc(var(--space-xl) + 52px);
 }
@@ -213,6 +214,7 @@
 
 .admin-topbar-search input {
   flex: 1;
+  min-width: 0;
   border: none;
   background: none;
   font-size: var(--text-base);
@@ -462,6 +464,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-md);
+  min-width: 0;
 }
 
 .category-card-icon {

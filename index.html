@@ -39,29 +39,85 @@
 
   <main>
     <!-- HERO -->
-    <section class="hero">
-      <span class="hero-blob hero-blob--1" aria-hidden="true"></span>
-      <span class="hero-blob hero-blob--2" aria-hidden="true"></span>
-      <span class="hero-blob hero-blob--3" aria-hidden="true"></span>
-      <div class="hero-inner">
-        <div class="hero-content">
-          <div class="hero-badge fade-in">
-            <span class="hero-badge-dot"></span>
-            <span class="hero-badge-text">Verão 2026</span>
+    <section class="hero" aria-roledescription="carrossel" aria-label="Destaques de verão">
+      <div class="hero-slides">
+        <article class="hero-slide is-active" data-hero-slide aria-hidden="false">
+          <img
+            class="hero-slide-image"
+            src="img/hero/hero1.jpg"
+            alt="Crianças aproveitando o verão com roupas leves"
+          />
+          <div class="hero-inner">
+            <div class="hero-content">
+              <h1 class="hero-title">Verão pede leveza</h1>
+              <p class="hero-subtitle">Peças que acompanham cada brincadeira, conforto, cor e liberdade de movimento para os pequenos aproveitarem o verão inteiro.</p>
+              <div class="hero-actions">
+                <a class="btn btn-primary" href="shop.html">Ver coleção de verão →</a>
+              </div>
+            </div>
           </div>
-          <h1 class="hero-title fade-in">Moda infantil com<br /><span class="hero-title-accent">estilo e conforto</span></h1>
-          <p class="hero-subtitle fade-in">Peças cuidadosamente selecionadas para os pequenos. Qualidade, durabilidade e muito charme em cada item.</p>
-          <div class="hero-actions fade-in">
-            <a class="btn btn-primary" href="shop.html">Ver coleção →</a>
-            <a class="btn btn-secondary" href="shop.html">Novidades</a>
+        </article>
+
+        <article class="hero-slide" data-hero-slide aria-hidden="true">
+          <img
+            class="hero-slide-image"
+            src="img/hero/hero2.jpg"
+            alt="Look infantil preparado para dias de parque e praia"
+          />
+          <div class="hero-inner">
+            <div class="hero-content">
+              <h2 class="hero-title">Estilo que combina com o verão</h2>
+              <p class="hero-subtitle">Do parque à praia, looks pensados pra cada momento do verão dos pequenos.</p>
+              <div class="hero-actions">
+                <a class="btn btn-primary" href="#looks-de-verao">Ver looks de verão →</a>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="hero-visual" aria-hidden="true">
-          <span class="hero-visual-ring hero-visual-ring--outer"></span>
-          <span class="hero-visual-ring hero-visual-ring--inner"></span>
-          <img class="hero-visual-image" src="img/hero-banner.png" alt="Criança sorrindo vestindo roupas da GabiKids" />
-          <span class="hero-watermark">GabiKids</span>
-        </div>
+        </article>
+
+        <article class="hero-slide" data-hero-slide aria-hidden="true">
+          <img
+            class="hero-slide-image"
+            src="img/hero/hero3.png"
+            alt="Crianças brincando com conjuntos confortáveis"
+          />
+          <div class="hero-inner">
+            <div class="hero-content">
+              <h2 class="hero-title">Feito pra brincar sem parar</h2>
+              <p class="hero-subtitle">Conjuntos confortáveis, fáceis de vestir e prontos pra qualquer aventura, a partir de R$ 64,99</p>
+              <div class="hero-actions">
+                <a class="btn btn-primary" href="shop.html">Ver conjuntos →</a>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <button
+        class="hero-arrow hero-arrow--previous"
+        type="button"
+        data-hero-direction="previous"
+        aria-label="Slide anterior"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+      <button
+        class="hero-arrow hero-arrow--next"
+        type="button"
+        data-hero-direction="next"
+        aria-label="Próximo slide"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      </button>
+
+      <div class="hero-dots" aria-label="Selecionar destaque">
+        <button class="hero-dot is-active" type="button" data-hero-dot aria-label="Ir para o slide 1" aria-current="true"></button>
+        <button class="hero-dot" type="button" data-hero-dot aria-label="Ir para o slide 2" aria-current="false"></button>
+        <button class="hero-dot" type="button" data-hero-dot aria-label="Ir para o slide 3" aria-current="false"></button>
       </div>
     </section>
 
@@ -167,7 +223,7 @@
     </section>
 
     <!-- EDITORIAL "LOOKS DE VERÃO" -->
-    <section class="editorial">
+    <section class="editorial" id="looks-de-verao">
       <div class="editorial-inner" data-editorial>
         <div class="editorial-loading" aria-label="Carregando seleção de verão">
           <span class="skeleton editorial-feature-skeleton"></span>
