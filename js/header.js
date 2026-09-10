@@ -22,6 +22,46 @@ function headerLink(path) {
   return `${resolveRootPath()}${path}`;
 }
 
+function initFooterTrustStrip() {
+  const footer = document.querySelector('.site-footer');
+  if (!footer || footer.querySelector('.footer-trust-strip')) return;
+
+  const trustStrip = document.createElement('section');
+  trustStrip.className = 'footer-trust-strip';
+  trustStrip.setAttribute('aria-label', 'Segurança da loja');
+  trustStrip.innerHTML = `
+    <div class="footer-trust-strip-inner">
+      <div class="footer-trust-badge">
+        <span class="footer-trust-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="10" width="14" height="11" rx="2" />
+            <path d="M8 10V7a4 4 0 018 0v3" />
+            <path d="M12 14v3" />
+          </svg>
+        </span>
+        <span class="footer-trust-copy">
+          <strong>Site seguro</strong>
+          <small>Protegido por certificado SSL</small>
+        </span>
+      </div>
+      <div class="footer-trust-badge">
+        <span class="footer-trust-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21.5s7.5-3.7 7.5-10.2V5.2L12 2.5 4.5 5.2v6.1C4.5 17.8 12 21.5 12 21.5z" />
+            <path d="M9 11.7l2.2 2.2 4-4.2" />
+          </svg>
+        </span>
+        <span class="footer-trust-copy">
+          <strong>Pagamento seguro</strong>
+          <small>Processado via Mercado Pago</small>
+        </span>
+      </div>
+    </div>
+  `;
+
+  footer.prepend(trustStrip);
+}
+
 function buildHeaderMarkup() {
   const user = getCurrentUser();
   const cartCount = getCartCount();
@@ -51,7 +91,7 @@ function buildHeaderMarkup() {
     : '';
 
   return `
-    <div class="topbar"><span>✨ Frete Grátis em compras acima de R$ 199 · Troca fácil em 30 dias</span></div>
+    <div class="topbar"><span>Frete Grátis em compras acima de R$ 199 · Troca fácil em 30 dias</span></div>
     ${showVerificationWarning ? `<div class="topbar topbar--warning">Seu email ainda não foi verificado. <a href="${headerLink('auth.html')}">Reenviar verificação</a></div>` : ''}
     <header class="site-header" data-site-header>
       <div class="header-main">
@@ -199,6 +239,19 @@ function initHeader() {
   if (!root) return;
 
   root.innerHTML = buildHeaderMarkup();
+
+  const syncHeaderOffset = () => {
+    document.body.style.setProperty('--site-header-height', `${root.offsetHeight}px`);
+  };
+
+  syncHeaderOffset();
+  if ('ResizeObserver' in window) {
+    const headerResizeObserver = new ResizeObserver(syncHeaderOffset);
+    headerResizeObserver.observe(root);
+  } else {
+    window.addEventListener('resize', syncHeaderOffset);
+  }
+
   loadHeaderCategories();
   wireCategoriesDropdown();
   wireMobileMenu();
@@ -230,4 +283,7 @@ function initHeader() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', initHeader);
+document.addEventListener('DOMContentLoaded', () => {
+  initHeader();
+  initFooterTrustStrip();
+});

@@ -3,6 +3,19 @@ body {
   overflow-x: hidden;
 }
 
+body {
+  padding-top: var(--site-header-height, 0px);
+}
+
+/* Fixed evita as limitações de sticky causadas pelo overflow dos ancestrais. */
+#header-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
 /* ===== Top bar ===== */
 .topbar {
   background: var(--color-dark);
@@ -19,9 +32,7 @@ body {
 
 /* ===== Navbar ===== */
 .site-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  position: relative;
   background: var(--color-white);
   border-bottom: 1px solid var(--color-border-light);
   transition: box-shadow var(--transition);
@@ -500,6 +511,62 @@ body {
   padding: var(--space-3xl) 40px 0;
 }
 
+.footer-trust-strip {
+  max-width: var(--max-width);
+  margin: 0 auto var(--space-2xl);
+  padding-bottom: var(--space-xl);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.footer-trust-strip-inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+.footer-trust-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-trust-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(41, 191, 207, 0.12);
+  border: 1px solid rgba(41, 191, 207, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.footer-trust-icon svg {
+  width: 21px;
+  height: 21px;
+  color: var(--color-primary-light);
+}
+
+.footer-trust-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.footer-trust-copy strong {
+  color: rgba(255,255,255,0.92);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.footer-trust-copy small {
+  color: rgba(255,255,255,0.5);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
 .footer-grid {
   max-width: var(--max-width);
   margin: 0 auto;
@@ -602,6 +669,11 @@ body {
 }
 
 @media (min-width: 768px) {
+  .footer-trust-strip-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 620px;
+  }
+
   .footer-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -769,7 +841,7 @@ body {
 }
 
 .product-card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--card-hover-shadow);
   transform: translateY(-4px);
 }
 
@@ -788,6 +860,21 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: var(--card-image-transition);
+}
+
+.product-card:hover .product-card-image img {
+  transform: var(--card-hover-image-transform);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card-image img {
+    transition: none;
+  }
+
+  .product-card:hover .product-card-image img {
+    transform: none;
+  }
 }
 
 .product-card-badge {

@@ -85,6 +85,9 @@
 
   /* Transição */
   --transition: 0.2s ease;
+  --card-image-transition: transform 0.35s ease;
+  --card-hover-image-transform: scale(1.04);
+  --card-hover-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
 
   /* Layout */
   --max-width: 1280px;
