@@ -4,6 +4,8 @@ const SHIPPING_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="non
 const EXCHANGE_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 014-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg>';
 const SHIELD_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/></svg>';
 const CLOCK_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
+const PREVIOUS_IMAGE_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>';
+const NEXT_IMAGE_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18l6-6-6-6"/></svg>';
 
 function sumCartQuantity(cart) {
   return cart.items.reduce((total, item) => total + item.quantity, 0);
@@ -40,9 +42,73 @@ function renderProduct(product) {
   applyProductSeo(product);
 
   const root = document.querySelector('[data-product-root]');
-  const imageContent = product.imageUrl
-    ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" />`
+  const productImages = Array.isArray(product.images)
+    ? product.images.filter((image) => image?.url)
+    : [];
+  const mainImageUrl = productImages[0]?.url || product.imageUrl;
+  const imageContent = mainImageUrl
+    ? `<img src="${escapeHtml(mainImageUrl)}" alt="${escapeHtml(product.name)}" data-product-main-image />`
     : productImagePlaceholder();
+  const thumbnailsContent = productImages.length
+    ? `
+      <div class="product-thumbnails" aria-label="Imagens do produto">
+        ${productImages.map((image, index) => `
+          <button
+            type="button"
+            class="product-thumbnail${index === 0 ? ' is-active' : ''}"
+            data-product-thumbnail
+            data-full-image="${escapeHtml(image.url)}"
+            aria-label="Exibir imagem ${index + 1} de ${escapeHtml(product.name)}"
+            aria-pressed="${index === 0 ? 'true' : 'false'}"
+          >
+            <img
+              src="${escapeHtml(image.thumbnailUrl || image.url)}"
+              alt=""
+            />
+          </button>
+        `).join('')}
+      </div>
+    `
+    : '';
+  const galleryNavigationContent = productImages.length > 1
+    ? `
+      <button
+        type="button"
+        class="product-gallery-arrow product-gallery-arrow--previous"
+        data-gallery-direction="previous"
+        aria-label="Exibir imagem anterior"
+      >
+        ${PREVIOUS_IMAGE_ICON}
+      </button>
+      <button
+        type="button"
+        class="product-gallery-arrow product-gallery-arrow--next"
+        data-gallery-direction="next"
+        aria-label="Exibir próxima imagem"
+      >
+        ${NEXT_IMAGE_ICON}
+      </button>
+    `
+    : '';
+  const specifications = Array.isArray(product.specifications)
+    ? product.specifications
+    : [];
+  const specificationsContent = specifications.length
+    ? `
+      <dl class="product-specifications">
+        ${specifications.map((specification) => `
+          <div class="product-specification">
+            <dt>${escapeHtml(specification.name || '')}</dt>
+            <dd>${escapeHtml(specification.value || '')}</dd>
+          </div>
+        `).join('')}
+      </dl>
+    `
+    : `
+      <div class="empty-state empty-state--inline">
+        <p>Nenhuma especificação cadastrada para este produto.</p>
+      </div>
+    `;
 
   root.innerHTML = `
     <div class="product-detail fade-in">
@@ -51,7 +117,9 @@ function renderProduct(product) {
           ${productCardBadge(product)}
           <span class="product-image-wishlist" aria-hidden="true">${ICONS.heart}</span>
           <div class="product-image">${imageContent}</div>
+          ${galleryNavigationContent}
         </div>
+        ${thumbnailsContent}
       </div>
 
       <div class="product-info">
@@ -113,11 +181,15 @@ function renderProduct(product) {
     <div class="product-tabs">
       <div class="product-tabs-nav" role="tablist">
         <button type="button" class="is-active" data-tab-trigger="desc" role="tab">Descrição</button>
+        <button type="button" data-tab-trigger="specs" role="tab">Especificações</button>
         <button type="button" data-tab-trigger="size" role="tab">Tabela de Medidas</button>
         <button type="button" data-tab-trigger="reviews" role="tab">Avaliações</button>
       </div>
       <div class="product-tab-panel" data-tab-panel="desc">
         <p>${escapeHtml(product.description || 'Sem descrição disponível.')}</p>
+      </div>
+      <div class="product-tab-panel" data-tab-panel="specs" hidden>
+        ${specificationsContent}
       </div>
       <div class="product-tab-panel" data-tab-panel="size" hidden>
         <div class="empty-state empty-state--inline">
@@ -143,10 +215,51 @@ function renderProduct(product) {
     </div>
   `;
 
+  wireProductGallery();
   wireProductInteractions(product);
   wireProductTabs();
   wireShippingForm();
   loadRelatedProducts(product);
+}
+
+function wireProductGallery() {
+  const mainImage = document.querySelector('[data-product-main-image]');
+  const thumbnails = document.querySelectorAll('[data-product-thumbnail]');
+  const navigationButtons = document.querySelectorAll('[data-gallery-direction]');
+
+  if (!mainImage || !thumbnails.length) return;
+
+  thumbnails.forEach((thumbnail) => {
+    const thumbnailImage = thumbnail.querySelector('img');
+
+    if (thumbnailImage) {
+      thumbnailImage.addEventListener('error', () => {
+        thumbnailImage.src = thumbnail.dataset.fullImage;
+      }, { once: true });
+    }
+
+    thumbnail.addEventListener('click', () => {
+      mainImage.src = thumbnail.dataset.fullImage;
+
+      thumbnails.forEach((item) => {
+        const isActive = item === thumbnail;
+        item.classList.toggle('is-active', isActive);
+        item.setAttribute('aria-pressed', String(isActive));
+      });
+    });
+  });
+
+  navigationButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const activeIndex = Array.from(thumbnails)
+        .findIndex((thumbnail) => thumbnail.classList.contains('is-active'));
+      const currentIndex = activeIndex >= 0 ? activeIndex : 0;
+      const offset = button.dataset.galleryDirection === 'next' ? 1 : -1;
+      const targetIndex = (currentIndex + offset + thumbnails.length) % thumbnails.length;
+
+      thumbnails[targetIndex].click();
+    });
+  });
 }
 
 function wireProductTabs() {
