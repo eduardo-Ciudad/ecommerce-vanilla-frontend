@@ -2,6 +2,7 @@ let productsCache = [];
 let productCategoriesCache = [];
 let currentProductsPage = 0;
 let totalProductsPages = 1;
+let currentProductsSearch = '';
 
 const ADMIN_PRODUCTS_PAGE_SIZE = 20;
 const MAX_PRODUCT_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -410,7 +411,10 @@ function renderProductsPagination() {
 async function loadProducts(page = currentProductsPage) {
   const tbody = document.querySelector('[data-products-tbody]');
   try {
-    const response = await apiGet(`/products?page=${page}&size=${ADMIN_PRODUCTS_PAGE_SIZE}&includeWithoutImage=true`);
+    const query = currentProductsSearch.trim()
+      ? `&q=${encodeURIComponent(currentProductsSearch.trim())}`
+      : '';
+    const response = await apiGet(`/products?page=${page}&size=${ADMIN_PRODUCTS_PAGE_SIZE}&includeWithoutImage=true${query}`);
     productsCache = response.content;
     currentProductsPage = response.page;
     totalProductsPages = response.totalPages;
@@ -430,6 +434,15 @@ async function initProductsPage() {
   if (!requireAdmin()) return;
 
   document.querySelector('[data-new-product-btn]').addEventListener('click', () => openProductModal(null));
+  const searchInput = document.querySelector('[data-products-search]');
+  let searchTimeout;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      currentProductsSearch = searchInput.value;
+      loadProducts(0);
+    }, 400);
+  });
 
   try {
     productCategoriesCache = await apiGet('/categories');
