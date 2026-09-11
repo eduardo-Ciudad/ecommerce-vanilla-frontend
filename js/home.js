@@ -173,7 +173,7 @@ async function renderSummerEditorial() {
 async function renderBestSellers() {
   const grid = document.querySelector('[data-product-grid]');
   try {
-    const response = await apiGet(`/products?page=0&size=${HOME_PRODUCT_PREVIEW_COUNT}`);
+    const response = await apiGet(`/products?page=0&size=${HOME_PRODUCT_PREVIEW_COUNT}&categoryId=bcf6a5dd-d2e9-40d9-8967-70b8b60e8079`);
     const products = response.content;
     if (!products.length) {
       grid.innerHTML = '<p class="empty-state">Nenhum produto disponível no momento.</p>';
