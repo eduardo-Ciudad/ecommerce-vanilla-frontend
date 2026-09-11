@@ -346,6 +346,25 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-light);
   overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.admin-table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.admin-table-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+.admin-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
 }
 
 .admin-table-wrapper--spaced { margin-bottom: var(--space-xl); }
@@ -409,6 +428,34 @@
 .admin-table-actions {
   display: flex;
   gap: 6px;
+}
+
+.order-id-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.id-toggle {
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.id-toggle:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.id-full {
+  color: var(--color-text-secondary);
+  font-family: monospace;
+  font-size: 0.8125rem;
+  white-space: nowrap;
 }
 
 .icon-btn {
