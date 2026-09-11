@@ -23,10 +23,10 @@ function renderAdminOrdersTable(orders) {
         <tr>
           <td>${order.id.slice(0, 8)}...</td>
           <td>${new Date(order.createdAt).toLocaleDateString('pt-BR')}</td>
-          <td><span class="badge ${ADMIN_ORDER_STATUS_BADGE_CLASS[order.status] || ''}">${ADMIN_ORDER_STATUS_LABELS[order.status] || order.status}</span></td>
+          <td><span class="badge ${ADMIN_ORDER_STATUS_BADGE_CLASS[order.status] || ''}">${ADMIN_ORDER_STATUS_LABELS[order.status] || escapeHtml(order.status)}</span></td>
           <td>
             ${order.paymentStatus
-              ? `<span class="badge ${PAYMENT_STATUS_BADGE_CLASS[order.paymentStatus] || ''}">${PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}</span>`
+              ? `<span class="badge ${PAYMENT_STATUS_BADGE_CLASS[order.paymentStatus] || ''}">${PAYMENT_STATUS_LABELS[order.paymentStatus] || escapeHtml(order.paymentStatus)}</span>`
               : '<span class="badge badge-pending">Não iniciado</span>'}
           </td>
           <td>${formatPrice(order.total)}</td>
@@ -42,8 +42,7 @@ function renderAdminOrdersTable(orders) {
 async function loadAdminOrders() {
   const tbody = document.querySelector('[data-admin-orders-tbody]');
   try {
-    const response = await apiGet('/orders?page=0&size=1000');
-    const orders = response.content;
+const response = await apiGet('/orders/admin?page=0&size=1000');    const orders = response.content;
     renderAdminOrdersTable(orders);
   } catch (error) {
     tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Não foi possível carregar os pedidos.</div></td></tr>';
