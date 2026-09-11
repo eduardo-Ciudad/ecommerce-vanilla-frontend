@@ -380,3 +380,9 @@
   width: auto;
   object-fit: contain;
 }
+
+@media (max-width: 1023px) {
+  body.page-auth-split .site-header {
+    display: none;
+  }
+}
