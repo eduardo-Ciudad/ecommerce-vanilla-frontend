@@ -84,6 +84,14 @@ function buildHeaderMarkup() {
     : `
       <a class="header-link-entrar" href="${headerLink('auth.html')}">Entrar</a>
       <a class="header-btn-cadastrar" href="${headerLink('auth.html')}?tab=register">Cadastrar</a>
+      <a
+        class="header-icon-btn header-mobile-only"
+        href="${headerLink('auth.html')}"
+        aria-label="Minha conta"
+        hidden
+      >
+        ${ICONS.user}
+      </a>
     `;
 
   const adminLink = user && user.role === 'ADMIN'
@@ -124,6 +132,16 @@ function buildHeaderMarkup() {
           <input class="form-control" type="search" name="q" placeholder="Buscar produtos..." aria-label="Buscar produtos" />
         </form>
         <div class="header-actions">
+          <button
+            class="header-icon-btn header-mobile-only"
+            type="button"
+            data-mobile-search-trigger
+            aria-label="Abrir busca"
+            aria-expanded="false"
+            hidden
+          >
+            ${ICONS.search}
+          </button>
           ${adminLink}
           ${userMenu}
           <a class="header-icon-btn" href="${headerLink('cart.html')}" aria-label="Carrinho">
@@ -223,6 +241,37 @@ function wireMobileMenu() {
   });
 }
 
+function wireMobileSearch() {
+  const siteHeader = document.querySelector('[data-site-header]');
+  const trigger = document.querySelector('[data-mobile-search-trigger]');
+  const search = document.querySelector('.header-mobile-search');
+  const input = search?.querySelector('input');
+  if (!siteHeader || !trigger || !search || !input) return;
+
+  const closeSearch = ({ returnFocus = false } = {}) => {
+    siteHeader.classList.remove('is-search-open');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.setAttribute('aria-label', 'Abrir busca');
+    if (returnFocus) trigger.focus();
+  };
+
+  trigger.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const isOpen = siteHeader.classList.toggle('is-search-open');
+    trigger.setAttribute('aria-expanded', String(isOpen));
+    trigger.setAttribute('aria-label', isOpen ? 'Fechar busca' : 'Abrir busca');
+    if (isOpen) input.focus();
+  });
+
+  search.addEventListener('click', (event) => event.stopPropagation());
+  document.addEventListener('click', () => closeSearch());
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && siteHeader.classList.contains('is-search-open')) {
+      closeSearch({ returnFocus: true });
+    }
+  });
+}
+
 function wireHeaderSearch(form) {
   if (!form) return;
   form.addEventListener('submit', (event) => {
@@ -255,6 +304,7 @@ function initHeader() {
   loadHeaderCategories();
   wireCategoriesDropdown();
   wireMobileMenu();
+  wireMobileSearch();
 
   wireHeaderSearch(document.querySelector('[data-search-form]'));
   wireHeaderSearch(document.querySelector('[data-search-form-mobile]'));
