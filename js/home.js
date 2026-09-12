@@ -1,9 +1,9 @@
 const HOME_PRODUCT_PREVIEW_COUNT = 8;
 const HERO_SLIDE_INTERVAL = 4000;
 const HOME_EDITORIAL_PRODUCT_IDS = [
-  'cced2d1c-3e1f-4cb0-8f9b-b4dae8beb596',
-  '5c142349-6663-407d-b10d-43bcb2dc68db',
-  '1fb65825-b47f-446e-b434-b1bb32687849',
+  'e0367817-f653-4fd5-8125-e29a7be5996c',
+  '0538ecb1-a311-43d5-8cac-b96011aa0f5a',
+  '1cc34d19-2821-47b8-ae88-eeac5bc20309',
 ];
 
 function initHeroCarousel() {
