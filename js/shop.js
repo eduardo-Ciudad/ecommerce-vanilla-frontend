@@ -28,11 +28,12 @@ function setShopParams({ categoryId, brand, sizeRange, query }) {
   history.replaceState(null, '', `shop.html${search ? `?${search}` : ''}`);
 }
 
-function buildProductsUrl(categoryId, brand, sizeRange, page) {
+function buildProductsUrl(categoryId, brand, sizeRange, query, page) {
   const categoryParam = categoryId ? `categoryId=${encodeURIComponent(categoryId)}&` : '';
   const brandParam = brand ? `brand=${encodeURIComponent(brand)}&` : '';
   const sizeRangeParam = sizeRange ? `sizeRange=${encodeURIComponent(sizeRange)}&` : '';
-  return `/products?${categoryParam}${brandParam}${sizeRangeParam}page=${page}&size=${SHOP_PRODUCTS_PAGE_SIZE}`;
+  const queryParam = query ? `q=${encodeURIComponent(query)}&` : '';
+  return `/products?${categoryParam}${brandParam}${sizeRangeParam}${queryParam}page=${page}&size=${SHOP_PRODUCTS_PAGE_SIZE}`;
 }
 
 function renderProductsLoading() {
@@ -93,7 +94,7 @@ function renderCategoryFilterList() {
       renderProductsLoading();
 
       try {
-        const response = await apiGet(buildProductsUrl(input.value, brand, sizeRange, 0));
+        const response = await apiGet(buildProductsUrl(input.value, brand, sizeRange, query, 0));
         allProducts = response.content;
         currentProductsPage = response.page;
         totalProductsPages = response.totalPages;
@@ -132,14 +133,8 @@ function updateBreadcrumb() {
 
 function renderFilteredProducts() {
   const grid = document.querySelector('[data-product-grid]');
-  const { query } = getShopParams();
 
-  const filtered = allProducts.filter((product) => {
-    const matchesQuery = !query || product.name.toLowerCase().includes(query);
-    return matchesQuery;
-  });
-
-  if (!filtered.length) {
+  if (!allProducts.length) {
     grid.innerHTML = `
       <div class="empty-state empty-state--full-row">
         <div class="empty-state-icon">${ICONS.search}</div>
@@ -150,7 +145,7 @@ function renderFilteredProducts() {
     return;
   }
 
-  grid.innerHTML = filtered.map((product) => buildProductCard(product)).join('');
+  grid.innerHTML = allProducts.map((product) => buildProductCard(product)).join('');
 }
 
 function initFilterToggle() {
@@ -176,9 +171,9 @@ async function loadMoreProducts() {
   }
 
   try {
-    const { categoryId, brand, sizeRange } = getShopParams();
+    const { categoryId, brand, sizeRange, query } = getShopParams();
     const response = await apiGet(
-      buildProductsUrl(categoryId, brand, sizeRange, currentProductsPage + 1)
+      buildProductsUrl(categoryId, brand, sizeRange, query, currentProductsPage + 1)
     );
     allProducts = allProducts.concat(response.content);
     currentProductsPage = response.page;
@@ -198,7 +193,7 @@ async function loadMoreProducts() {
 
 async function initShopPage() {
   const grid = document.querySelector('[data-product-grid]');
-  const { categoryId, brand, sizeRange } = getShopParams();
+  const { categoryId, brand, sizeRange, query } = getShopParams();
   initFilterToggle();
 
   const loadMoreBtn = document.querySelector('[data-load-more-btn]');
@@ -209,7 +204,7 @@ async function initShopPage() {
   try {
     const [categories, productsResponse] = await Promise.all([
       apiGet('/categories'),
-      apiGet(buildProductsUrl(categoryId, brand, sizeRange, 0)),
+      apiGet(buildProductsUrl(categoryId, brand, sizeRange, query, 0)),
     ]);
     allCategories = categories;
     applyShopSeo(categories);
