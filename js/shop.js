@@ -191,7 +191,28 @@ async function loadMoreProducts() {
   }
 }
 
+async function resolveBlingCategoryParam() {
+  const params = new URLSearchParams(window.location.search);
+  const blingCategoryId = params.get('blingCategory');
+  if (!blingCategoryId) return;
+
+  try {
+    const category = await apiGet(`/categories/by-bling-id/${encodeURIComponent(blingCategoryId)}`);
+    params.delete('blingCategory');
+    params.set('category', category.id);
+  } catch (error) {
+    // Categoria ainda não sincronizada nesse ambiente — remove o parâmetro
+    // inválido e segue sem filtro de categoria, em vez de quebrar a página.
+    params.delete('blingCategory');
+  }
+
+  const newSearch = params.toString();
+  const newUrl = `${window.location.pathname}${newSearch ? `?${newSearch}` : ''}`;
+  window.history.replaceState(null, '', newUrl);
+}
+
 async function initShopPage() {
+  await resolveBlingCategoryParam();
   const grid = document.querySelector('[data-product-grid]');
   const { categoryId, brand, sizeRange, query } = getShopParams();
   initFilterToggle();

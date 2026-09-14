@@ -1,10 +1,11 @@
 const HOME_PRODUCT_PREVIEW_COUNT = 8;
 const HERO_SLIDE_INTERVAL = 4000;
-const HOME_EDITORIAL_PRODUCT_IDS = [
-  'e0367817-f653-4fd5-8125-e29a7be5996c',
-  '0538ecb1-a311-43d5-8cac-b96011aa0f5a',
-  '1cc34d19-2821-47b8-ae88-eeac5bc20309',
+const HOME_EDITORIAL_BLING_PRODUCT_IDS = [
+  16686012475,
+  16686012678,
+  16686012447,
 ];
+const HOME_BESTSELLERS_BLING_CATEGORY_ID = 14290233;
 
 function initHeroCarousel() {
   const hero = document.querySelector('.hero');
@@ -161,7 +162,7 @@ function renderEditorial(products) {
 }
 
 async function renderSummerEditorial() {
-  const requests = HOME_EDITORIAL_PRODUCT_IDS.map((id) => apiGet(`/products/${id}`));
+  const requests = HOME_EDITORIAL_BLING_PRODUCT_IDS.map((blingId) => apiGet(`/products/by-bling-id/${blingId}`));
   const results = await Promise.allSettled(requests);
   const products = results
     .filter((result) => result.status === 'fulfilled')
@@ -173,7 +174,8 @@ async function renderSummerEditorial() {
 async function renderBestSellers() {
   const grid = document.querySelector('[data-product-grid]');
   try {
-    const response = await apiGet(`/products?page=0&size=${HOME_PRODUCT_PREVIEW_COUNT}&categoryId=26ccc12e-fa10-4369-bee4-f67ce2f82e41`);
+    const category = await apiGet(`/categories/by-bling-id/${HOME_BESTSELLERS_BLING_CATEGORY_ID}`);
+    const response = await apiGet(`/products?page=0&size=${HOME_PRODUCT_PREVIEW_COUNT}&categoryId=${category.id}`);
     const products = response.content;
     if (!products.length) {
       grid.innerHTML = '<p class="empty-state">Nenhum produto disponível no momento.</p>';
