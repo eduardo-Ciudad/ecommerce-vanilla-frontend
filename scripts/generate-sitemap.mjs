@@ -9,6 +9,7 @@ const staticEntries = [
   ['/shop.html', 'daily', '0.9'],
   ['/politica-de-privacidade.html', 'yearly', '0.3'],
   ['/termos-de-uso.html', 'yearly', '0.3'],
+  ['/politica-de-troca-e-devolucao.html', 'yearly', '0.3'],
   ['/politica-de-cookies.html', 'yearly', '0.3'],
 ];
 

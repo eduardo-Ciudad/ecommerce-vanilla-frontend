@@ -21,6 +21,11 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://gabikids.vercel.app/politica-de-troca-e-devolucao.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://gabikids.vercel.app/politica-de-cookies.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

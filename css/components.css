@@ -674,6 +674,15 @@ body {
   max-width: 280px;
 }
 
+.footer-col p.footer-trust-badge {
+  display: block;
+  font-size: var(--text-xs);
+  color: rgba(255,255,255,0.45);
+  line-height: 1.6;
+  margin-top: var(--space-xs);
+  max-width: 280px;
+}
+
 .footer-social {
   display: flex;
   gap: var(--space-sm);
