@@ -81,6 +81,10 @@
 }
 
 .order-card-pay-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
   padding: 0 var(--space-md) var(--space-md);
 }
 
@@ -104,6 +108,93 @@
   animation: fadeIn 0.2s ease both;
 }
 
+.order-products-list {
+  margin: 0;
+}
+
+.order-timeline {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 var(--space-lg);
+  padding: 0;
+  list-style: none;
+}
+
+.order-timeline-step {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.order-timeline-marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 2px solid var(--color-border-light);
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-white);
+}
+
+.order-timeline-marker svg {
+  width: 15px;
+  height: 15px;
+}
+
+.order-timeline-label {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.25;
+}
+
+.order-timeline-step.is-done .order-timeline-marker {
+  border-color: var(--color-success);
+  background: var(--color-success);
+}
+
+.order-timeline-step.is-done .order-timeline-label {
+  color: var(--color-text);
+}
+
+.order-timeline-step.is-current .order-timeline-marker {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 28%, transparent);
+  animation: orderTimelinePulse 2s ease-out infinite;
+}
+
+.order-timeline-step.is-current .order-timeline-label {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.order-timeline-connector {
+  width: 2px;
+  height: 18px;
+  margin-left: 13px;
+  background: var(--color-border-light);
+}
+
+.order-timeline-connector.is-done {
+  background: var(--color-success);
+}
+
+@keyframes orderTimelinePulse {
+  70% { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .order-timeline-step.is-current .order-timeline-marker {
+    animation: none;
+  }
+}
+
 .order-item-row {
   display: flex;
   justify-content: space-between;
@@ -124,6 +215,31 @@
 
   .order-card-header {
     flex-wrap: nowrap;
+  }
+
+  .order-timeline {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .order-timeline-step {
+    display: flex;
+    flex: 0 1 124px;
+    flex-direction: column;
+    gap: var(--space-xs);
+    text-align: center;
+  }
+
+  .order-timeline-label {
+    max-width: 124px;
+  }
+
+  .order-timeline-connector {
+    flex: 1 1 36px;
+    width: auto;
+    min-width: 16px;
+    height: 2px;
+    margin: 13px -1px 0;
   }
 }
 
