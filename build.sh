@@ -36,3 +36,5 @@ if [ "${VERCEL_ENV:-}" = "production" ]; then
 fi
 
 printf "const MP_PUBLIC_KEY = '%s';\n" "$mp_public_key" > config.js
+
+node scripts/generate-sitemap.mjs
