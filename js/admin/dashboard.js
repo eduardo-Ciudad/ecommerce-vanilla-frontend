@@ -91,7 +91,7 @@ async function initDashboard() {
     const [categories, productsResponse, ordersResponse] = await Promise.all([
       apiGet('/categories'),
       apiGet('/products?page=0&size=1&includeWithoutImage=true'),
-      apiGet('/orders?page=0&size=1000'),
+      apiGet('/orders/admin?page=0&size=1000'),
     ]);
 
     const orders = ordersResponse.content;
@@ -101,8 +101,8 @@ async function initDashboard() {
     grid.innerHTML = [
       dashboardCard('box', null, productsResponse.totalElements, 'Total de Produtos', null, 'products.html'),
       dashboardCard('tag', 'info', categories.length, 'Total de Categorias', null, 'categories.html'),
-      dashboardCard('clock', 'warning', pendingCount, 'Pedidos Pendentes', 'Só da conta admin'),
-      dashboardCard('check', 'success', finishedCount, 'Pedidos Entregues', 'Só da conta admin'),
+      dashboardCard('clock', 'warning', pendingCount, 'Pedidos Pendentes'),
+      dashboardCard('check', 'success', finishedCount, 'Pedidos Entregues'),
     ].join('');
 
     renderRecentOrders(orders);
