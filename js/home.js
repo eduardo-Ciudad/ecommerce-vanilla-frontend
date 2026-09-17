@@ -14,6 +14,7 @@ function initHeroCarousel() {
   const slides = Array.from(hero.querySelectorAll('[data-hero-slide]'));
   const dots = Array.from(hero.querySelectorAll('[data-hero-dot]'));
   const arrows = Array.from(hero.querySelectorAll('[data-hero-direction]'));
+  const track = hero.querySelector('.hero-slides');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let activeIndex = 0;
   let timerId = null;
@@ -36,6 +37,7 @@ function initHeroCarousel() {
 
   function goToSlide(index, restartTimer = false) {
     activeIndex = (index + slides.length) % slides.length;
+    track.style.transform = `translateX(-${activeIndex * 100}%)`;
 
     slides.forEach((slide, slideIndex) => {
       const isActive = slideIndex === activeIndex;
