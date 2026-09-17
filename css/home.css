@@ -383,12 +383,20 @@
   display: flex;
   gap: var(--space-sm);
   overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
   padding: 2px 2px 8px;
   scrollbar-width: thin;
 }
 
 .size-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: 1 0 auto;
+  scroll-snap-align: start;
   min-height: 46px;
   padding: 10px 22px;
   border: 1px solid var(--color-primary);
@@ -407,7 +415,11 @@
 }
 
 @media (min-width: 768px) {
-  .size-shopping-options { overflow: visible; }
+  .size-shopping-options {
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
   .size-pill { min-width: 0; }
 }
 
