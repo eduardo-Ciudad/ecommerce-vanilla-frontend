@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="footer-col footer-col-brand">
+        <div class="header-logo" data-test="logo">
+          <img class="header-logo-icon" src="assets/logo-tree.png" alt="">
+          <span class="header-logo-text">Gabi<span class="header-logo-accent">Kids</span></span>
+        </div>
+        <p data-test="description">Moda infantil com qualidade e carinho para vestir cada fase da infância com estilo e conforto.</p>
+        <div class="footer-social" data-test="social">
+          <a href="#" aria-label="Instagram">I</a><a href="#" aria-label="Facebook">F</a><a href="#" aria-label="WhatsApp">W</a>
+        </div>
+        <p class="footer-legal-info" data-test="legal">Vanda Julio Dias — CNPJ 42.941.150/0001-40<br>Operação exclusivamente digital (sem endereço físico de atendimento)</p>
+        <p class="footer-trust-badge">Troca grátis em até 7 dias · Devolução em até 30 dias</p>
+      </div>
+      <div class="footer-col" data-test="navigation">
+        <h4>Navegação</h4><a href="#">Home</a><a href="#">Loja</a><a href="#">Carrinho</a>
+      </div>
+      <div class="footer-col"><h4>Atendimento</h4><span>contato@gabikids.com.br</span></div>
+      <div class="footer-col"><h4>Legal</h4><a href="#">Política de Cookies</a></div>
+    </div>
+    <div class="footer-bottom">© 2026 GabiKids. Todos os direitos reservados.</div>
+  </footer>
+  <output id="results"></output>
+  <script>
+    addEventListener('load', () => {
+      const box = name => {
+        const r = document.querySelector(`[data-test="${name}"]`).getBoundingClientRect();
+        return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, width: r.width, height: r.height };
+      };
+      const logo = box('logo');
+      const description = box('description');
+      const social = box('social');
+      const legal = box('legal');
+      const navigation = box('navigation');
+      document.querySelector('#results').textContent = JSON.stringify({
+        viewport: innerWidth,
+        computed: {
+          position: getComputedStyle(document.querySelector('[data-test="logo"]')).position,
+          transform: getComputedStyle(document.querySelector('[data-test="logo"]')).transform
+        },
+        boxes: { logo, description, social, legal, navigation },
+        assertions: {
+          logoAboveDescription: logo.bottom <= description.top,
+          descriptionAboveSocial: description.bottom <= social.top,
+          socialAboveLegal: social.bottom <= legal.top,
+          brandAboveNavigation: legal.bottom <= navigation.top
+        }
+      });
+    });
+  </script>
+</body>
+</html>

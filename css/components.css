@@ -643,6 +643,10 @@ body {
 .footer-col-brand .header-logo {
   margin-bottom: var(--space-md);
   display: inline-flex;
+  position: static;
+  left: auto;
+  transform: none;
+  z-index: auto;
 }
 
 .footer-col-brand .header-logo-icon {
