@@ -25,6 +25,23 @@ function renderProductError(message) {
   `;
 }
 
+function renderProductNotFound() {
+  document.querySelector('[data-product-root]').innerHTML = `
+    <section class="not-found-section not-found-section--product" aria-labelledby="product-not-found-title">
+      <div class="not-found-glow" aria-hidden="true"></div>
+      <div class="not-found-number" aria-hidden="true">404</div>
+      <div class="not-found-content">
+        <p class="not-found-label">Erro 404</p>
+        <h1 class="not-found-title" id="product-not-found-title">Produto não encontrado</h1>
+        <p class="not-found-description">Esse produto não está mais disponível ou o link está incorreto.</p>
+        <div class="not-found-actions">
+          <a class="btn btn-primary not-found-button" href="shop.html">Ver a loja</a>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
 function productSku(product) {
   return `GK-${product.id.slice(0, 8).toUpperCase()}`;
 }
@@ -438,7 +455,7 @@ function wireProductInteractions(product) {
 async function initProductPage() {
   const id = getProductId();
   if (!id) {
-    renderProductError('Produto não encontrado.');
+    renderProductNotFound();
     return;
   }
 
@@ -446,6 +463,10 @@ async function initProductPage() {
     const product = await apiGet(`/products/${id}`);
     renderProduct(product);
   } catch (error) {
+    if (error.status === 404) {
+      renderProductNotFound();
+      return;
+    }
     renderProductError(error.message || 'Não foi possível carregar este produto.');
   }
 }

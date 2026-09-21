@@ -371,6 +371,7 @@ async function apiFetch(endpoint, options = {}) {
 }
 
 function resolveRootPath() {
+  if (window.GABIKIDS_ROOT_PATH) return window.GABIKIDS_ROOT_PATH;
   return window.location.pathname.includes('/admin/') ? '../' : '';
 }
 
