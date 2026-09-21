@@ -33,20 +33,34 @@
 
     <div class="shop-layout">
       <aside>
-        <button class="btn btn-secondary btn-block shop-filter-toggle" type="button" data-filter-toggle>
-          Filtrar por categoria
+        <button class="btn btn-secondary btn-block shop-filter-toggle" type="button"
+          aria-expanded="false" aria-controls="shop-filter-panel" data-filter-toggle>
+          Filtros
         </button>
-        <div class="shop-filter-panel" data-filter-panel>
-          <h3>Categorias</h3>
-          <ul class="category-filter-list" data-category-filter-list>
-            <li class="skeleton skeleton-row"></li>
-            <li class="skeleton skeleton-row"></li>
-            <li class="skeleton skeleton-row"></li>
-          </ul>
+        <div class="shop-filter-panel" id="shop-filter-panel" data-filter-panel>
+          <section class="shop-filter-section" aria-labelledby="shop-categories-title">
+            <h3 id="shop-categories-title">Categorias</h3>
+            <ul class="category-filter-list" data-category-filter-list>
+              <li class="skeleton skeleton-row"></li>
+              <li class="skeleton skeleton-row"></li>
+              <li class="skeleton skeleton-row"></li>
+            </ul>
+          </section>
+          <section class="shop-filter-section" aria-labelledby="shop-sizes-title">
+            <h3 id="shop-sizes-title">Tamanho</h3>
+            <div class="shop-filter-options" data-size-filter-options></div>
+          </section>
+          <section class="shop-filter-section" aria-labelledby="shop-brands-title">
+            <h3 id="shop-brands-title">Marca</h3>
+            <div class="shop-filter-options" data-brand-filter-options></div>
+          </section>
+          <button class="shop-clear-filters" type="button" data-clear-filters hidden>Limpar filtros</button>
         </div>
       </aside>
 
       <section>
+        <div class="shop-active-filters" data-active-filters hidden></div>
+        <p class="visually-hidden" aria-live="polite" aria-atomic="true" data-results-announcement></p>
         <div class="product-grid stagger-fade" data-product-grid>
           <div class="skeleton product-card-skeleton"></div>
           <div class="skeleton product-card-skeleton"></div>
