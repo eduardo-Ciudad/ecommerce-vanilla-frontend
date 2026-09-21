@@ -3,6 +3,25 @@ const API_BASE = ['localhost', '127.0.0.1'].includes(window.location.hostname)
   : 'https://gabikids.duckdns.org';
 const DEFAULT_API_TIMEOUT_MS = 15000;
 const DEFAULT_UPLOAD_TIMEOUT_MS = 60000;
+const HANDLING_DAYS = 2; // dias úteis para embalar e postar nos Correios
+
+function applyHandlingDays(days) {
+  if (Array.isArray(days)) return days.map(applyHandlingDays);
+  if (days === null || days === undefined || days === '') return days;
+
+  if (typeof days === 'string') {
+    const range = days.match(/^(\s*)(\d+(?:[.,]\d+)?)(\s+(?:a|até|-)\s+)(\d+(?:[.,]\d+)?)(\s*)$/i);
+    if (range) {
+      const min = Number(range[2].replace(',', '.'));
+      const max = Number(range[4].replace(',', '.'));
+      if (!Number.isFinite(min) || !Number.isFinite(max)) return days;
+      return `${range[1]}${min + HANDLING_DAYS}${range[3]}${max + HANDLING_DAYS}${range[5]}`;
+    }
+  }
+
+  const numericDays = Number(days);
+  return Number.isFinite(numericDays) ? numericDays + HANDLING_DAYS : days;
+}
 
 function logAppError(context, error, details = {}) {
   const {

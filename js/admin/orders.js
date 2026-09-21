@@ -6,7 +6,7 @@ function formatAdminOrderAddress(order) {
 
 function formatAdminOrderShipping(order) {
   if (!order.shippingMethod) return '—';
-  return `${escapeHtml(order.shippingMethod)} (até ${order.shippingDeadlineDays} dias) — ${formatPrice(order.shippingPrice)}`;
+  return `${escapeHtml(order.shippingMethod)} (até ${applyHandlingDays(order.shippingDeadlineDays)} dias) — ${formatPrice(order.shippingPrice)}`;
 }
 
 function renderOrderItemsList(items) {

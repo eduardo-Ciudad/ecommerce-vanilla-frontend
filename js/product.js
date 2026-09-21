@@ -282,7 +282,7 @@ function wireProductTabs() {
 function shippingOptionRow(option) {
   return `
     <div class="product-shipping-option">
-      <span>${escapeHtml(option.methodLabel)} — até ${option.deadlineDays} dias úteis</span>
+      <span>${escapeHtml(option.methodLabel)} — até ${applyHandlingDays(option.deadlineDays)} dias úteis</span>
       <strong>${formatPrice(option.price)}</strong>
     </div>
   `;

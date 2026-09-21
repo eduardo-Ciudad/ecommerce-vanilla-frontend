@@ -98,7 +98,7 @@ function shippingOptionRow(option, isSelected) {
     <li class="checkout-summary-item">
       <label style="display:flex;align-items:center;gap:var(--space-sm);cursor:pointer;">
         <input type="radio" name="selectedShipping" value="${escapeHtml(option.method)}" ${isSelected ? 'checked' : ''} />
-        <span>${escapeHtml(option.methodLabel)} — até ${option.deadlineDays} dias úteis</span>
+        <span>${escapeHtml(option.methodLabel)} — até ${applyHandlingDays(option.deadlineDays)} dias úteis</span>
       </label>
       <span>${formatPrice(option.price)}</span>
     </li>
@@ -432,7 +432,7 @@ function renderCheckout(order) {
           ${order.items.map(checkoutItemRow).join('')}
         </ul>
         <div class="checkout-summary-item">
-          <span>Frete — ${escapeHtml(order.shippingMethod)} (até ${order.shippingDeadlineDays} dias úteis)</span>
+          <span>Frete — ${escapeHtml(order.shippingMethod)} (até ${applyHandlingDays(order.shippingDeadlineDays)} dias úteis)</span>
           <span>${formatPrice(order.shippingPrice)}</span>
         </div>
         <div class="checkout-summary-total">
