@@ -566,6 +566,14 @@ body {
   .user-menu-trigger { width: auto; border-radius: var(--radius-full); padding-right: 10px; }
 }
 
+.color-swatch {
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(26,26,46,.18);
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
 /* ===== Footer ===== */
 .site-footer {
   background: var(--color-dark);
