@@ -443,6 +443,111 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function escapeAttr(str) {
+  return escapeHtml(str)
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeVariantValue(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase('pt-BR');
+}
+
+const VARIANT_COLOR_SWATCHES = {
+  amarelo: '#F4D35E',
+  azul: '#3264A8',
+  'azul claro': '#8EC5E8',
+  'azul bebe': '#A9D6F5',
+  'azul marinho': '#1D3557',
+  marinho: '#1D3557',
+  bege: '#D8C3A5',
+  branco: '#FFFFFF',
+  'off white': '#F7F3E8',
+  offwhite: '#F7F3E8',
+  cinza: '#9B9B9B',
+  'cinza mescla': '#A7A7A7',
+  mescla: '#A7A7A7',
+  chumbo: '#4A4A4A',
+  caqui: '#B7A477',
+  coral: '#F27D72',
+  creme: '#FFF0C7',
+  goiaba: '#E97A72',
+  jeans: '#4F7396',
+  laranja: '#F5851F',
+  lilas: '#B89ACD',
+  marrom: '#795548',
+  mostarda: '#D4A017',
+  pink: '#E83E8C',
+  preto: '#1A1A1A',
+  rosa: '#E9A6B8',
+  'rosa claro': '#F5C8D3',
+  'rosa bebe': '#F4C2C2',
+  'rosa pink': '#E83E8C',
+  roxo: '#76448A',
+  salmao: '#FA8072',
+  verde: '#4F8A5B',
+  'verde agua': '#7FCDBB',
+  'verde militar': '#596B3D',
+  'verde limao': '#A5CE3A',
+  vermelho: '#E63B2E',
+  vinho: '#722F37',
+};
+
+function variantColorSwatchMarkup(color) {
+  const normalized = normalizeVariantValue(color);
+  const fallbackName = normalized.split(/\s+/)[0];
+  const background = VARIANT_COLOR_SWATCHES[normalized]
+    || VARIANT_COLOR_SWATCHES[fallbackName]
+    || 'conic-gradient(#E63B2E, #F4D35E, #A5CE3A, #3264A8, #E83E8C, #E63B2E)';
+  return `<span class="color-swatch" style="background:${background}" aria-hidden="true"></span>`;
+}
+
+function variantDescription(item) {
+  const parts = [];
+  if (item?.size) parts.push(`Tamanho: ${item.size}`);
+  if (item?.color) parts.push(`Cor: ${item.color}`);
+  return parts.join(' · ');
+}
+
+function variantShortLabel(item) {
+  return [item?.size, item?.color].filter(Boolean).join(' · ');
+}
+
+function compareVariantSizes(a, b) {
+  const sizeA = normalizeVariantValue(a?.size ?? a);
+  const sizeB = normalizeVariantValue(b?.size ?? b);
+  const letterOrder = ['pp', 'p', 'm', 'g', 'gg', 'xg', 'xgg', 'eg', 'egg'];
+
+  function sortKey(size) {
+    if (size === 'rn') return [0, 0];
+
+    const babyLetter = size.match(/^(p|m|g)\s*bebe$/);
+    if (babyLetter) return [1, ['p', 'm', 'g'].indexOf(babyLetter[1])];
+
+    const months = size.match(/^(\d+(?:[.,]\d+)?)\s*(?:mes|meses)$/);
+    if (months) return [1, Number(months[1].replace(',', '.')) + 3];
+
+    const letterIndex = letterOrder.indexOf(size);
+    if (letterIndex !== -1) return [2, letterIndex];
+
+    if (/^\d+(?:[.,]\d+)?$/.test(size)) {
+      return [3, Number(size.replace(',', '.'))];
+    }
+
+    return [4, 0];
+  }
+
+  const keyA = sortKey(sizeA);
+  const keyB = sortKey(sizeB);
+  return keyA[0] - keyB[0]
+    || keyA[1] - keyB[1]
+    || sizeA.localeCompare(sizeB, 'pt-BR', { numeric: true });
+}
+
 function formatPrice(value) {
   return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
