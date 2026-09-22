@@ -147,6 +147,13 @@ function renderProduct(product) {
 
         <h1>${escapeHtml(product.name)}</h1>
 
+        <div class="product-variants product-colors" data-product-colors hidden>
+          <div class="product-variants-header">
+            <h3>Cor: <span data-selected-color></span></h3>
+          </div>
+          <div class="variant-chips" data-color-chips></div>
+        </div>
+
         <div class="product-variants">
           <div class="product-variants-header">
             <h3>Tamanho</h3>
@@ -359,6 +366,9 @@ async function loadRelatedProducts(product) {
 
 function wireProductInteractions(product) {
   const chipsContainer = document.querySelector('[data-variant-chips]');
+  const colorsBlock = document.querySelector('[data-product-colors]');
+  const colorChipsContainer = document.querySelector('[data-color-chips]');
+  const selectedColorEl = document.querySelector('[data-selected-color]');
   const priceEl = document.querySelector('[data-product-price]');
   const installmentEl = document.querySelector('[data-product-installment]');
   const stockEl = document.querySelector('[data-product-stock]');
@@ -366,25 +376,58 @@ function wireProductInteractions(product) {
   const addButton = document.querySelector('[data-add-to-cart]');
 
   let selectedVariant = null;
+  let selectedColor = null;
 
-  const variants = product.variants || [];
+  const variants = [...(product.variants || [])].sort(compareVariantSizes);
+  const colors = [...new Map(
+    variants
+      .filter((variant) => String(variant.color || '').trim())
+      .map((variant) => [normalizeVariantValue(variant.color), String(variant.color).trim()])
+  ).values()].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
 
-  chipsContainer.innerHTML = variants.length
-    ? variants
-        .map(
-          (variant) => `
-            <button type="button" class="variant-chip" data-variant-id="${variant.id}" ${variant.stock <= 0 ? 'disabled' : ''}>
-              ${escapeHtml(variant.size)}
-            </button>
-          `
-        )
-        .join('')
-    : '<p class="empty-state empty-state--inline">Sem variações cadastradas.</p>';
+  function resetVariantSelection() {
+    selectedVariant = null;
+    priceEl.textContent = 'Selecione um tamanho';
+    installmentEl.hidden = true;
+    installmentEl.textContent = '';
+    stockEl.innerHTML = '';
+    qtyInput.value = 1;
+    qtyInput.removeAttribute('max');
+    addButton.disabled = true;
+  }
+
+  function visibleVariants() {
+    if (!selectedColor) return variants;
+    const normalizedColor = normalizeVariantValue(selectedColor);
+    return variants.filter((variant) => (
+      !String(variant.color || '').trim()
+      || normalizeVariantValue(variant.color) === normalizedColor
+    ));
+  }
+
+  function renderSizeChips() {
+    const filteredVariants = visibleVariants();
+    chipsContainer.innerHTML = filteredVariants.length
+      ? filteredVariants.map((variant) => `
+          <button type="button" class="variant-chip" data-variant-id="${escapeAttr(variant.id)}"
+            ${Number(variant.stock) <= 0 ? 'disabled' : ''}>
+            ${escapeHtml(variant.size)}
+          </button>
+        `).join('')
+      : '<p class="empty-state empty-state--inline">Sem variações cadastradas.</p>';
+
+    chipsContainer.querySelectorAll('.variant-chip:not(:disabled)').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const variant = filteredVariants.find((item) => String(item.id) === chip.dataset.variantId);
+        selectVariant(variant);
+      });
+    });
+  }
 
   function selectVariant(variant) {
     selectedVariant = variant;
     chipsContainer.querySelectorAll('.variant-chip').forEach((chip) => {
-      chip.classList.toggle('is-selected', chip.dataset.variantId === variant.id);
+      chip.classList.toggle('is-selected', chip.dataset.variantId === String(variant.id));
     });
     priceEl.textContent = formatPrice(variant.price);
     installmentEl.hidden = false;
@@ -395,12 +438,57 @@ function wireProductInteractions(product) {
     addButton.disabled = variant.stock <= 0;
   }
 
-  chipsContainer.querySelectorAll('.variant-chip:not(:disabled)').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      const variant = variants.find((v) => v.id === chip.dataset.variantId);
-      selectVariant(variant);
+  function selectColor(color) {
+    const previousSize = selectedVariant?.size;
+    selectedColor = color;
+    selectedColorEl.textContent = color;
+    colorChipsContainer.querySelectorAll('[data-color-index]').forEach((chip) => {
+      chip.setAttribute('aria-pressed', String(colors[Number(chip.dataset.colorIndex)] === color));
     });
-  });
+    renderSizeChips();
+
+    const matchingVariant = previousSize
+      ? visibleVariants().find((variant) => (
+        Number(variant.stock) > 0
+        && normalizeVariantValue(variant.size) === normalizeVariantValue(previousSize)
+      ))
+      : null;
+    if (matchingVariant) {
+      selectVariant(matchingVariant);
+    } else {
+      resetVariantSelection();
+    }
+  }
+
+  if (colors.length) {
+    colorsBlock.hidden = false;
+    colorChipsContainer.innerHTML = colors.map((color, index) => {
+      const hasStock = variants.some((variant) => (
+        normalizeVariantValue(variant.color) === normalizeVariantValue(color)
+        && Number(variant.stock) > 0
+      ));
+      return `
+        <button type="button" class="variant-chip color-chip" data-color-index="${index}"
+          aria-pressed="false" ${hasStock ? '' : 'disabled'}>
+          ${variantColorSwatchMarkup(color)}
+          <span>${escapeHtml(color)}</span>
+        </button>
+      `;
+    }).join('');
+
+    colorChipsContainer.querySelectorAll('[data-color-index]:not(:disabled)').forEach((chip) => {
+      chip.addEventListener('click', () => selectColor(colors[Number(chip.dataset.colorIndex)]));
+    });
+
+    const firstAvailableColor = colors.find((color) => variants.some((variant) => (
+      normalizeVariantValue(variant.color) === normalizeVariantValue(color)
+      && Number(variant.stock) > 0
+    )));
+    if (firstAvailableColor) selectColor(firstAvailableColor);
+    else renderSizeChips();
+  } else {
+    renderSizeChips();
+  }
 
   document.querySelector('[data-qty-decrease]').addEventListener('click', () => {
     const value = Math.max(1, Number(qtyInput.value) - 1);
@@ -423,6 +511,7 @@ function wireProductInteractions(product) {
         productName: product.name,
         imageUrl: product.imageUrl,
         size: selectedVariant.size,
+        color: selectedVariant.color || null,
         price: selectedVariant.price,
         quantity: Number(qtyInput.value),
         stock: selectedVariant.stock,
