@@ -71,7 +71,7 @@ function renderCheckoutError(message) {
 function checkoutItemRow(item) {
   return `
     <li class="checkout-summary-item">
-      <span>${escapeHtml(item.productName)} (${escapeHtml(item.size)}) x${item.quantity}</span>
+      <span>${escapeHtml(item.productName)} (${escapeHtml(variantShortLabel(item))}) x${item.quantity}</span>
       <span>${formatPrice(item.unitPrice * item.quantity)}</span>
     </li>
   `;
@@ -480,7 +480,7 @@ function cartItemsTotal(cart) {
 function cartItemRow(item) {
   return `
     <li class="checkout-summary-item">
-      <span>${escapeHtml(item.productName)} (${escapeHtml(item.size)}) x${item.quantity}</span>
+      <span>${escapeHtml(item.productName)} (${escapeHtml(variantShortLabel(item))}) x${item.quantity}</span>
       <span>${formatPrice(item.price * item.quantity)}</span>
     </li>
   `;
