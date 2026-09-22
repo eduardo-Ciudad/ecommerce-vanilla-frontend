@@ -35,7 +35,7 @@ function renderEmptyOrders() {
 function renderOrderItem(item) {
   return `
     <li class="order-item-row">
-      <span>${escapeHtml(item.productName)} (${escapeHtml(item.size)})</span>
+      <span>${escapeHtml(item.productName)} (${escapeHtml(variantShortLabel(item))})</span>
       <span>${item.quantity}x ${formatPrice(item.unitPrice)}</span>
     </li>
   `;
