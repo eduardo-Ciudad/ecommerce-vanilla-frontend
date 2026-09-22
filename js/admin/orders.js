@@ -14,7 +14,7 @@ function renderOrderItemsList(items) {
     .map(
       (item) => `
         <div class="variant-manage-row">
-          <span>${escapeHtml(item.productName)} (${escapeHtml(item.size)})</span>
+          <span>${escapeHtml(item.productName)} (${escapeHtml(variantShortLabel(item))})</span>
           <span>${item.quantity}x ${formatPrice(item.unitPrice)}</span>
         </div>
       `
