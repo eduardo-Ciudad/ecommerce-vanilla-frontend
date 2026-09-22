@@ -23,6 +23,7 @@ const SHOP_BRANDS = [
 
 let allProducts = []; // apenas os produtos já carregados via "Carregar mais", não o catálogo inteiro
 let allCategories = [];
+let shopColors = [];
 let currentProductsPage = 0;
 let totalProductsPages = 1;
 let totalProductsElements = 0;
@@ -37,26 +38,45 @@ function getShopParams() {
     categoryId: params.get('category') || '',
     brand: params.get('brand') || '',
     sizeRange: params.get('sizeRange') || '',
+    color: params.get('color') || '',
     query: (params.get('q') || '').trim().toLowerCase(),
   };
 }
 
-function setShopParams({ categoryId, brand, sizeRange, query }) {
+function setShopParams({ categoryId, brand, sizeRange, color, query }) {
   const params = new URLSearchParams();
   if (categoryId) params.set('category', categoryId);
   if (brand) params.set('brand', brand);
   if (sizeRange) params.set('sizeRange', sizeRange);
+  if (color) params.set('color', color);
   if (query) params.set('q', query);
   const search = params.toString();
   history.replaceState(null, '', `shop.html${search ? `?${search}` : ''}`);
 }
 
-function buildProductsUrl(categoryId, brand, sizeRange, query, page) {
-  const categoryParam = categoryId ? `categoryId=${encodeURIComponent(categoryId)}&` : '';
-  const brandParam = brand ? `brand=${encodeURIComponent(brand)}&` : '';
-  const sizeRangeParam = sizeRange ? `sizeRange=${encodeURIComponent(sizeRange)}&` : '';
-  const queryParam = query ? `q=${encodeURIComponent(query)}&` : '';
-  return `/products?${categoryParam}${brandParam}${sizeRangeParam}${queryParam}page=${page}&size=${SHOP_PRODUCTS_PAGE_SIZE}`;
+function buildProductsUrl(params, page) {
+  const queryParams = new URLSearchParams();
+  if (params.categoryId) queryParams.set('categoryId', params.categoryId);
+  if (params.brand) queryParams.set('brand', params.brand);
+  if (params.sizeRange) queryParams.set('sizeRange', params.sizeRange);
+  if (params.color) queryParams.set('color', params.color);
+  if (params.query) queryParams.set('q', params.query);
+  queryParams.set('page', page);
+  queryParams.set('size', SHOP_PRODUCTS_PAGE_SIZE);
+  return `/products?${queryParams.toString()}`;
+}
+
+async function loadShopColors() {
+  try {
+    const colors = await apiGet('/products/colors');
+    if (!Array.isArray(colors)) return [];
+    return colors
+      .filter((color) => String(color || '').trim())
+      .map((color) => ({ value: String(color).trim(), label: String(color).trim() }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
+  } catch {
+    return [];
+  }
 }
 
 function renderProductsLoading() {
@@ -149,7 +169,7 @@ function initializeOpenCategoryGroup() {
 function categoryRadioMarkup(category, label, categoryId) {
   return `
     <label class="category-filter-item">
-      <input type="radio" name="category-filter" value="${escapeHtml(category.id)}"
+      <input type="radio" name="category-filter" value="${escapeAttr(category.id)}"
         ${categoryId === category.id ? 'checked' : ''} />
       <span>${escapeHtml(label)}</span>
     </label>
@@ -187,7 +207,10 @@ function renderCategoryFilterList() {
           aria-expanded="${isOpen}" aria-controls="${panelId}"
           data-category-group-toggle="${escapeHtml(root.id)}">
           <span>${escapeHtml(root.name)}</span>
-          <span class="shop-category-group-arrow" aria-hidden="true">⌄</span>
+          <svg class="shop-category-group-arrow" viewBox="0 0 24 24" width="18" height="18"
+            fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
         </button>
         <ul class="shop-category-children" id="${panelId}" ${isOpen ? '' : 'hidden'}>
           <li>${categoryRadioMarkup(root, `Ver tudo de ${root.name}`, categoryId)}</li>
@@ -221,12 +244,12 @@ function renderCategoryFilterList() {
   });
 }
 
-function renderFilterOptions(selector, options, activeValue, paramKey) {
+function renderFilterOptions(selector, options, activeValue, paramKey, renderPrefix = () => '') {
   const container = document.querySelector(selector);
   container.innerHTML = options.map((option) => `
     <button class="shop-chip" type="button" aria-pressed="${activeValue === option.value}"
-      data-filter-option="${paramKey}" data-filter-value="${option.value}">
-      ${escapeHtml(option.label)}
+      data-filter-option="${paramKey}" data-filter-value="${escapeAttr(option.value)}">
+      ${renderPrefix(option)}${escapeHtml(option.label)}
     </button>
   `).join('');
 
@@ -240,12 +263,25 @@ function renderFilterOptions(selector, options, activeValue, paramKey) {
   });
 }
 
+function renderColorFilterOptions(activeColor) {
+  const section = document.querySelector('[data-color-filter-section]');
+  section.hidden = shopColors.length === 0;
+  if (!shopColors.length) return;
+  renderFilterOptions(
+    '[data-color-filter-options]',
+    shopColors,
+    activeColor,
+    'color',
+    (option) => variantColorSwatchMarkup(option.value)
+  );
+}
+
 function getFilterLabel(options, value) {
   return options.find((option) => option.value === value)?.label || value;
 }
 
 function getActiveFilterItems() {
-  const { categoryId, brand, sizeRange, query } = getShopParams();
+  const { categoryId, brand, sizeRange, color, query } = getShopParams();
   const filters = [];
   const categoryContext = getActiveCategoryContext(categoryId);
 
@@ -263,6 +299,7 @@ function getActiveFilterItems() {
   if (sizeRange) {
     filters.push({ key: 'sizeRange', label: getFilterLabel(SHOP_SIZE_RANGES, sizeRange) });
   }
+  if (color) filters.push({ key: 'color', label: `Cor: ${getFilterLabel(shopColors, color)}` });
   if (brand) filters.push({ key: 'brand', label: getFilterLabel(SHOP_BRANDS, brand) });
   if (query) filters.push({ key: 'query', label: `Busca: ${query}` });
 
@@ -380,10 +417,11 @@ function preserveFocus(renderFn) {
 }
 
 function updateFilterControls() {
-  const { brand, sizeRange } = getShopParams();
+  const { brand, sizeRange, color } = getShopParams();
   preserveFocus(() => {
     renderCategoryFilterList();
     renderFilterOptions('[data-size-filter-options]', SHOP_SIZE_RANGES, sizeRange, 'sizeRange');
+    renderColorFilterOptions(color);
     renderFilterOptions('[data-brand-filter-options]', SHOP_BRANDS, brand, 'brand');
 
     const activeCount = getActiveFilterItems().length;
@@ -396,7 +434,7 @@ function updateFilterControls() {
 }
 
 function clearShopFilters() {
-  applyShopFilters({ categoryId: '', brand: '', sizeRange: '', query: '' });
+  applyShopFilters({ categoryId: '', brand: '', sizeRange: '', color: '', query: '' });
 }
 
 async function applyShopFilters(nextParams) {
@@ -408,8 +446,7 @@ async function applyShopFilters(nextParams) {
   updateBreadcrumb();
 
   try {
-    const { categoryId, brand, sizeRange, query } = getShopParams();
-    const response = await apiGet(buildProductsUrl(categoryId, brand, sizeRange, query, 0));
+    const response = await apiGet(buildProductsUrl(getShopParams(), 0));
     if (requestId !== productsRequestSequence) return;
 
     allProducts = response.content;
@@ -495,9 +532,8 @@ async function loadMoreProducts() {
   }
 
   try {
-    const { categoryId, brand, sizeRange, query } = getShopParams();
     const response = await apiGet(
-      buildProductsUrl(categoryId, brand, sizeRange, query, currentProductsPage + 1)
+      buildProductsUrl(getShopParams(), currentProductsPage + 1)
     );
     if (requestId !== productsRequestSequence) return;
 
@@ -542,7 +578,7 @@ async function resolveBlingCategoryParam() {
 async function initShopPage() {
   await resolveBlingCategoryParam();
   const grid = document.querySelector('[data-product-grid]');
-  const { categoryId, brand, sizeRange, query } = getShopParams();
+  const { categoryId } = getShopParams();
   initFilterToggle();
 
   const loadMoreBtn = document.querySelector('[data-load-more-btn]');
@@ -551,11 +587,13 @@ async function initShopPage() {
     .addEventListener('click', clearShopFilters);
 
   try {
-    const [categories, productsResponse] = await Promise.all([
+    const [categories, productsResponse, colors] = await Promise.all([
       apiGet('/categories'),
-      apiGet(buildProductsUrl(categoryId, brand, sizeRange, query, 0)),
+      apiGet(buildProductsUrl(getShopParams(), 0)),
+      loadShopColors(),
     ]);
     allCategories = categories;
+    shopColors = colors;
     applyShopSeo(categories);
     allProducts = productsResponse.content;
     currentProductsPage = productsResponse.page;
