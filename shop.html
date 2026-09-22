@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Loja | GabiKids</title>
-  <meta name="description" content="Confira todo o catálogo de moda infantil da GabiKids e filtre por categoria." />
+  <meta name="description" content="Confira todo o catálogo de moda infantil da GabiKids e filtre por categoria, tamanho, cor e marca." />
   <link rel="canonical" href="https://gabikids.vercel.app/shop.html" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:site_name" content="GabiKids" />
@@ -49,6 +49,10 @@
           <section class="shop-filter-section" aria-labelledby="shop-sizes-title">
             <h3 id="shop-sizes-title">Tamanho</h3>
             <div class="shop-filter-options" data-size-filter-options></div>
+          </section>
+          <section class="shop-filter-section" aria-labelledby="shop-colors-title" data-color-filter-section hidden>
+            <h3 id="shop-colors-title">Cor</h3>
+            <div class="shop-filter-options shop-filter-options--colors" data-color-filter-options></div>
           </section>
           <section class="shop-filter-section" aria-labelledby="shop-brands-title">
             <h3 id="shop-brands-title">Marca</h3>
@@ -95,7 +99,7 @@
       </div>
       <div class="footer-col">
         <h4>Atendimento</h4>
-        <span>contato@gabikids.com.br</span>
+        <a href="mailto:contato.gabikids@gmail.com">contato.gabikids@gmail.com</a>
         <a href="https://wa.me/5517996247172" target="_blank" rel="noopener">WhatsApp: (17) 99624-7172</a>
         <span>Seg a Sex, 9h às 18h</span>
       </div>
