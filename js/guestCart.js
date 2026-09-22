@@ -36,6 +36,7 @@ function addToGuestCart(item) {
       productName: item.productName,
       imageUrl: item.imageUrl,
       size: item.size,
+      color: item.color || null,
       price: Number(item.price),
       quantity: Math.min(stock, Math.max(1, Number(item.quantity))),
       stock,
