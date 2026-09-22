@@ -61,7 +61,7 @@ function renderCartItem(item) {
       <div class="cart-item-image">${imageContent}</div>
       <div class="cart-item-info">
         <span class="cart-item-name">${escapeHtml(item.productName)}</span>
-        <span class="cart-item-size">Tamanho: ${escapeHtml(item.size)}</span>
+        <span class="cart-item-size">${escapeHtml(variantDescription(item))}</span>
         <span class="cart-item-price">${formatPrice(item.price)} / unidade</span>
       </div>
       <div class="quantity-input cart-item-qty">
