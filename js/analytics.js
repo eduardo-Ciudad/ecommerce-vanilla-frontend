@@ -69,8 +69,4 @@
     gtag('consent', 'update', consentState(choice));
   };
 
-  var script = document.createElement('script');
-  script.async = true;
-  script.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
-  document.head.appendChild(script);
 })();
