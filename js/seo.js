@@ -28,7 +28,18 @@ function setStructuredData(id, data) {
     element.type = 'application/ld+json';
     document.head.appendChild(element);
   }
-  element.textContent = JSON.stringify(data);
+  element.textContent = JSON.stringify(removeUndefined(data));
+}
+
+function removeUndefined(value) {
+  if (Array.isArray(value)) return value.map(removeUndefined);
+  if (!value || typeof value !== 'object') return value;
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([, item]) => item !== undefined)
+      .map(([key, item]) => [key, removeUndefined(item)])
+  );
 }
 
 function applySeoMetadata({ title, description, url, image = SEO_DEFAULT_IMAGE, type = 'website' }) {
@@ -46,22 +57,30 @@ function applySeoMetadata({ title, description, url, image = SEO_DEFAULT_IMAGE, 
   upsertCanonical(url);
 }
 
-function minimumVariantPrice(product) {
-  const prices = (product.variants || [])
-    .map((variant) => Number(variant.price))
-    .filter(Number.isFinite);
-  return prices.length ? Math.min(...prices) : null;
-}
-
 function applyProductSeo(product) {
   const productUrl = `${SEO_SITE_URL}/product.html?id=${encodeURIComponent(product.id)}`;
   const description = (product.description || `${product.name} na GabiKids. Confira tamanhos, preço e disponibilidade.`)
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 160);
-  const image = product.imageUrl || SEO_DEFAULT_IMAGE;
-  const price = minimumVariantPrice(product);
-  const inStock = (product.variants || []).some((variant) => Number(variant.stock) > 0);
+  const productImages = Array.isArray(product.images)
+    ? product.images.map((item) => item?.url).filter(Boolean)
+    : [];
+  const images = productImages.length
+    ? productImages
+    : [product.imageUrl || SEO_DEFAULT_IMAGE];
+  const image = images[0];
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  const brandName = (product.specifications || [])
+    .find((specification) => String(specification?.name || '').trim() === 'Marca')
+    ?.value?.trim();
+  const variesBy = [];
+  if (variants.some((variant) => String(variant.size || '').trim())) {
+    variesBy.push('https://schema.org/size');
+  }
+  if (variants.some((variant) => String(variant.color || '').trim())) {
+    variesBy.push('https://schema.org/color');
+  }
   applySeoMetadata({
     title: `${product.name} | GabiKids`,
     description,
@@ -72,25 +91,40 @@ function applyProductSeo(product) {
 
   const productSchema = {
     '@context': 'https://schema.org',
-    '@type': 'Product',
+    '@type': 'ProductGroup',
     name: product.name,
     description,
-    image: [image],
-    sku: `GK-${String(product.id).slice(0, 8).toUpperCase()}`,
-    category: product.categoryName || undefined,
-    brand: { '@type': 'Brand', name: 'GabiKids' },
-  };
+    image: images,
+    url: productUrl,
+    productGroupID: product.id,
+    brand: brandName ? { '@type': 'Brand', name: brandName } : undefined,
+    variesBy: variesBy.length ? variesBy : undefined,
+    hasVariant: variants.map((variant) => {
+      const size = String(variant.size || '').trim();
+      const color = String(variant.color || '').trim();
+      const gtin = String(variant.gtin || '').trim();
 
-  if (price !== null) {
-    productSchema.offers = {
-      '@type': 'Offer',
-      url: productUrl,
-      priceCurrency: 'BRL',
-      price: price.toFixed(2),
-      availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      itemCondition: 'https://schema.org/NewCondition',
-    };
-  }
+      return {
+        '@type': 'Product',
+        name: [product.name, size && `Tam. ${size}`, color].filter(Boolean).join(' – '),
+        sku: variant.id,
+        gtin: gtin || undefined,
+        size: size || undefined,
+        color: color || undefined,
+        image,
+        offers: {
+          '@type': 'Offer',
+          url: `${productUrl}&variant=${encodeURIComponent(variant.id)}`,
+          priceCurrency: 'BRL',
+          price: Number(variant.price).toFixed(2),
+          availability: Number(variant.stock) > 0
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
+          itemCondition: 'https://schema.org/NewCondition',
+        },
+      };
+    }),
+  };
 
   setStructuredData('product-schema', productSchema);
   setStructuredData('breadcrumb-schema', {
