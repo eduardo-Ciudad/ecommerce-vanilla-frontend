@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 
-const siteUrl = (process.env.SITE_URL || 'https://gabikids.vercel.app').replace(/\/$/, '');
+const siteUrl = (process.env.SITE_URL || 'https://www.gabikidstore.com').replace(/\/$/, '');
 const apiUrl = (process.env.API_BASE_URL || 'https://gabikids.duckdns.org').replace(/\/$/, '');
 const pageSize = 100;
 const requestTimeoutMs = 10_000;

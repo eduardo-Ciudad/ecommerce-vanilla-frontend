@@ -1,4 +1,4 @@
-const SEO_SITE_URL = 'https://gabikids.vercel.app';
+const SEO_SITE_URL = 'https://www.gabikidstore.com';
 const SEO_DEFAULT_IMAGE = `${SEO_SITE_URL}/img/hero-banner.png`;
 
 function upsertMeta(selector, attributes) {

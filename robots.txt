@@ -12,4 +12,4 @@ Disallow: /resetar-senha.html
 Disallow: /confirmar-alteracao-senha.html
 Disallow: /verificar-email.html
 
-Sitemap: https://gabikids.vercel.app/sitemap.xml
+Sitemap: https://www.gabikidstore.com/sitemap.xml
