@@ -436,6 +436,11 @@ function wireProductInteractions(product) {
     qtyInput.value = 1;
     qtyInput.max = variant.stock;
     addButton.disabled = variant.stock <= 0;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('id', product.id);
+    url.searchParams.set('variant', variant.id);
+    history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
   }
 
   function selectColor(color) {
@@ -488,6 +493,16 @@ function wireProductInteractions(product) {
     else renderSizeChips();
   } else {
     renderSizeChips();
+  }
+
+  const requestedVariantId = new URLSearchParams(window.location.search).get('variant');
+  const requestedVariant = requestedVariantId
+    ? variants.find((variant) => String(variant.id) === requestedVariantId)
+    : null;
+  if (requestedVariant) {
+    const requestedColor = String(requestedVariant.color || '').trim();
+    if (requestedColor) selectColor(requestedColor);
+    selectVariant(requestedVariant);
   }
 
   document.querySelector('[data-qty-decrease]').addEventListener('click', () => {
