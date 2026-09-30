@@ -195,7 +195,7 @@ function renderProduct(product) {
         </form>
 
         <div class="product-benefits">
-          <span>${SHIPPING_ICON} Frete grátis acima de R$199</span>
+          <span>${SHIPPING_ICON} Frete grátis acima de R$ 150</span>
           <span>${EXCHANGE_ICON} Troca em 30 dias</span>
           <span>${SHIELD_ICON} Compra segura</span>
         </div>
