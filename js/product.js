@@ -54,22 +54,15 @@ function renderBreadcrumb(product) {
   }
 }
 
-function renderProduct(product) {
-  renderBreadcrumb(product);
-  applyProductSeo(product);
-
-  const root = document.querySelector('[data-product-root]');
-  const productImages = Array.isArray(product.images)
-    ? product.images.filter((image) => image?.url)
-    : [];
-  const mainImageUrl = productImages[0]?.url || product.imageUrl;
+function buildGalleryMarkup(product, images) {
+  const mainImageUrl = images[0]?.url || product.imageUrl;
   const imageContent = mainImageUrl
     ? `<img src="${escapeHtml(mainImageUrl)}" alt="${escapeHtml(product.name)}" data-product-main-image />`
     : productImagePlaceholder();
-  const thumbnailsContent = productImages.length
+  const thumbnailsContent = images.length
     ? `
       <div class="product-thumbnails" aria-label="Imagens do produto">
-        ${productImages.map((image, index) => `
+        ${images.map((image, index) => `
           <button
             type="button"
             class="product-thumbnail${index === 0 ? ' is-active' : ''}"
@@ -87,7 +80,7 @@ function renderProduct(product) {
       </div>
     `
     : '';
-  const galleryNavigationContent = productImages.length > 1
+  const galleryNavigationContent = images.length > 1
     ? `
       <button
         type="button"
@@ -107,6 +100,61 @@ function renderProduct(product) {
       </button>
     `
     : '';
+
+  return `
+        <div class="product-main-image">
+          ${productCardBadge(product)}
+          <span class="product-image-wishlist" aria-hidden="true">${ICONS.heart}</span>
+          <div class="product-image">${imageContent}</div>
+          ${galleryNavigationContent}
+        </div>
+        ${thumbnailsContent}
+  `;
+}
+
+function imagesForColor(product, color) {
+  const base = Array.isArray(product.images)
+    ? product.images.filter((image) => image?.url)
+    : [];
+  const normalizedColor = normalizeVariantValue(color);
+  if (!normalizedColor) return base;
+
+  const hasSpecificImages = base.some((image) => (
+    String(image.color || '').trim()
+    && normalizeVariantValue(image.color) === normalizedColor
+  ));
+  if (!hasSpecificImages) return base;
+
+  return base.filter((image) => (
+    !String(image.color || '').trim()
+    || normalizeVariantValue(image.color) === normalizedColor
+  ));
+}
+
+function renderGalleryForColor(product, color) {
+  const gallery = document.querySelector('.product-gallery');
+  if (!gallery) return;
+
+  const images = imagesForColor(product, color);
+  const currentUrls = Array.from(gallery.querySelectorAll('[data-product-thumbnail]'))
+    .map((thumbnail) => thumbnail.dataset.fullImage);
+  const nextUrls = images.map((image) => image.url);
+  const hasSameImages = currentUrls.length === nextUrls.length
+    && currentUrls.every((url, index) => url === nextUrls[index]);
+  if (hasSameImages) return;
+
+  gallery.innerHTML = buildGalleryMarkup(product, images);
+  wireProductGallery();
+}
+
+function renderProduct(product) {
+  renderBreadcrumb(product);
+  applyProductSeo(product);
+
+  const root = document.querySelector('[data-product-root]');
+  const productImages = Array.isArray(product.images)
+    ? product.images.filter((image) => image?.url)
+    : [];
   const specifications = Array.isArray(product.specifications)
     ? product.specifications
     : [];
@@ -130,13 +178,7 @@ function renderProduct(product) {
   root.innerHTML = `
     <div class="product-detail fade-in">
       <div class="product-gallery">
-        <div class="product-main-image">
-          ${productCardBadge(product)}
-          <span class="product-image-wishlist" aria-hidden="true">${ICONS.heart}</span>
-          <div class="product-image">${imageContent}</div>
-          ${galleryNavigationContent}
-        </div>
-        ${thumbnailsContent}
+        ${buildGalleryMarkup(product, productImages)}
       </div>
 
       <div class="product-info">
@@ -446,6 +488,7 @@ function wireProductInteractions(product) {
   function selectColor(color) {
     const previousSize = selectedVariant?.size;
     selectedColor = color;
+    renderGalleryForColor(product, color);
     selectedColorEl.textContent = color;
     colorChipsContainer.querySelectorAll('[data-color-index]').forEach((chip) => {
       chip.setAttribute('aria-pressed', String(colors[Number(chip.dataset.colorIndex)] === color));
