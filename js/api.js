@@ -636,13 +636,13 @@ function productCardBadge(product) {
   if (product.createdAt) {
     const ageDays = (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24);
     if (ageDays <= NEW_WINDOW_DAYS) {
-      return '<span class="product-card-badge">Novo</span>';
+      return '<span class="product-card-badge">Novidade</span>';
     }
   }
 
   const stock = totalVariantStock(product);
   if (stock > 0 && stock <= LOW_STOCK_THRESHOLD) {
-    return '<span class="product-card-badge product-card-badge--stock">Últimas un.</span>';
+    return '<span class="product-card-badge product-card-badge--stock">Últimas unidades</span>';
   }
 
   return '';
