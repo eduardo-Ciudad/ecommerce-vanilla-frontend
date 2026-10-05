@@ -631,8 +631,8 @@ function totalVariantStock(product) {
 
 function productCardBadge(product) {
   const NEW_WINDOW_DAYS = 14;
-  const LOW_STOCK_THRESHOLD = 5;
-
+  const LOW_STOCK_THRESHOLD = 2;
+  
   if (product.createdAt) {
     const ageDays = (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24);
     if (ageDays <= NEW_WINDOW_DAYS) {
