@@ -389,8 +389,12 @@
   -webkit-overflow-scrolling: touch;
   -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
   mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
-  padding: 2px 2px 8px;
-  scrollbar-width: thin;
+  padding: 2px;
+  scrollbar-width: none;
+}
+
+.size-shopping-options::-webkit-scrollbar {
+  display: none;
 }
 
 .size-pill {
