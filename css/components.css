@@ -1034,6 +1034,28 @@ body {
   text-overflow: ellipsis;
 }
 
+.product-card-colors {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  min-height: 14px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.product-card-colors .color-swatch {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+.product-card-colors-more {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
 .product-card-price {
   font-weight: 700;
   color: var(--color-primary);
@@ -1045,4 +1067,15 @@ body {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
   margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+  .product-card-colors {
+    gap: 4px;
+  }
+
+  .product-card-colors .color-swatch {
+    width: 12px;
+    height: 12px;
+  }
 }

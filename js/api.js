@@ -506,6 +506,39 @@ function variantColorSwatchMarkup(color) {
   return `<span class="color-swatch" style="background:${background}" aria-hidden="true"></span>`;
 }
 
+function productCardColors(product) {
+  const colors = [];
+  const seenColors = new Set();
+
+  for (const variant of product?.variants || []) {
+    const color = String(variant?.color ?? '').trim();
+    const normalizedColor = normalizeVariantValue(color);
+
+    if (!color || Number(variant?.stock) <= 0 || seenColors.has(normalizedColor)) continue;
+
+    seenColors.add(normalizedColor);
+    colors.push(color);
+  }
+
+  return colors;
+}
+
+function productCardColorsMarkup(product) {
+  const colors = productCardColors(product);
+  if (!colors.length) return '<div class="product-card-colors" aria-hidden="true"></div>';
+
+  const visibleColors = colors.length > 5 ? colors.slice(0, 4) : colors;
+  const swatches = visibleColors.map((color) => (
+    `<span class="product-card-color" title="${escapeAttr(color)}">${variantColorSwatchMarkup(color)}</span>`
+  ));
+
+  if (colors.length > 5) {
+    swatches.push(`<span class="product-card-colors-more">+${colors.length - 4}</span>`);
+  }
+
+  return `<div class="product-card-colors" role="img" aria-label="Cores disponíveis: ${escapeAttr(colors.join(', '))}">${swatches.join('')}</div>`;
+}
+
 function variantDescription(item) {
   const parts = [];
   if (item?.size) parts.push(`Tamanho: ${item.size}`);
@@ -635,6 +668,7 @@ function buildProductCard(product, rootPath = '') {
         <a href="${rootPath}product.html?id=${product.id}">
           <h3 class="product-card-name">${escapeHtml(product.name)}</h3>
         </a>
+        ${productCardColorsMarkup(product)}
         <span class="product-card-price">${priceLabel}</span>
         ${installmentLabel ? `<span class="product-card-installment">${installmentLabel}</span>` : ''}
       </div>
