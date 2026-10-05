@@ -80,6 +80,12 @@
   font-size: var(--text-lg);
 }
 
+.order-card-total-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
 .order-card-pay-row {
   display: flex;
   align-items: center;
@@ -110,6 +116,12 @@
 
 .order-products-list {
   margin: 0;
+}
+
+.order-coupon {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  white-space: nowrap;
 }
 
 .order-timeline {

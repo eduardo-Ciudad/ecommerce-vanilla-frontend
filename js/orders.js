@@ -77,6 +77,9 @@ function renderOrderCard(order) {
   const paymentBadge = order.paymentStatus
     ? `<span class="badge ${PAYMENT_STATUS_BADGE_CLASS[order.paymentStatus] || ''}">${PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}</span>`
     : '';
+  const couponRow = Number(order.discountAmount) > 0
+    ? `<div class="order-coupon">Cupom ${escapeHtml(order.couponCode)}: − ${formatPrice(order.discountAmount)}</div>`
+    : '';
 
   // Fica fora do <button> do acordeão: um <a> não pode ser aninhado dentro de um
   // elemento interativo sem quebrar o toggle e a navegação do link.
@@ -100,7 +103,10 @@ function renderOrderCard(order) {
           <span class="badge ${badgeClass}">${statusLabel}</span>
           ${paymentBadge}
         </div>
-        <span class="order-card-total">${formatPrice(order.total)}</span>
+        <div class="order-card-total-group">
+          <span class="order-card-total">${formatPrice(order.total)}</span>
+          ${couponRow}
+        </div>
         <svg class="order-card-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       ${payNowRow}

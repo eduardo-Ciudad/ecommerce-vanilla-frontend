@@ -41,6 +41,7 @@ function renderOrderDetailsContent(order) {
     <h4 class="modal-subtitle">Entrega</h4>
     <p>${formatAdminOrderAddress(order)}</p>
     <p>${formatAdminOrderShipping(order)}</p>
+    ${Number(order.discountAmount) > 0 ? `<p>Cupom: <strong>${escapeHtml(order.couponCode)}</strong> (− ${formatPrice(order.discountAmount)})</p>` : ''}
     <p><strong>Total do pedido: ${formatPrice(order.total)}</strong></p>
   `;
 }
