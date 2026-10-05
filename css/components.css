@@ -30,6 +30,24 @@ body {
   letter-spacing: 0.5px;
 }
 
+.topbar-short {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 8px 16px;
+  }
+
+  .topbar-full {
+    display: none;
+  }
+
+  .topbar-short {
+    display: inline;
+  }
+}
+
 /* ===== Navbar ===== */
 .site-header {
   position: relative;
@@ -1034,9 +1052,13 @@ body {
   color: var(--color-text);
   font-size: var(--text-lg);
   margin-top: 2px;
-  white-space: nowrap;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  min-height: calc(2 * 1.3em);
+  overflow-wrap: anywhere;
 }
 
 .product-card-colors {
