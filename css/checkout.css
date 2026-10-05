@@ -64,6 +64,37 @@
   color: var(--color-primary);
 }
 
+.checkout-coupon {
+  margin-bottom: var(--space-sm);
+}
+
+.checkout-coupon-controls {
+  display: flex;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.checkout-coupon-controls .form-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkout-coupon-controls .btn,
+.checkout-coupon-remove {
+  min-height: 40px;
+}
+
+.checkout-coupon-remove {
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+}
+
+.checkout-coupon-error:not(:empty) {
+  display: block;
+  margin-bottom: var(--space-sm);
+}
+
 /* ===== Tabs de pagamento ===== */
 .checkout-payment {
   background: var(--color-white);

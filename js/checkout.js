@@ -53,6 +53,18 @@ let pixPollSession = 0;
 let selectedAddressId = null;
 let selectedShippingMethod = null;
 let selectedShippingPrice = 0;
+let appliedCoupon = null;
+let cartPseudoOrder = null;
+
+function calculateCouponDiscount(subtotal, percent) {
+  const normalizedSubtotal = Math.max(0, Number(subtotal) || 0);
+  const discount = Math.round((normalizedSubtotal * Number(percent) + Number.EPSILON)) / 100;
+  return Math.min(normalizedSubtotal, discount);
+}
+
+function formatCouponPercent(percent) {
+  return Number(percent).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+}
 
 function getOrderId() {
   return new URLSearchParams(window.location.search).get('orderId');
@@ -351,15 +363,66 @@ function updateCheckoutTotal(order) {
   const totalEl = document.querySelector('[data-checkout-total]');
   const shippingRow = document.querySelector('[data-shipping-row]');
   const shippingPriceEl = document.querySelector('[data-shipping-price]');
+  const discountValueEl = document.querySelector('[data-discount-value]');
   if (!totalEl) return;
+
+  const subtotal = Number(order.total);
+  const discount = appliedCoupon
+    ? calculateCouponDiscount(subtotal, appliedCoupon.discountPercent)
+    : 0;
+  if (discountValueEl) discountValueEl.textContent = `− ${formatPrice(discount)}`;
 
   if (selectedShippingMethod) {
     shippingRow.hidden = false;
     shippingPriceEl.textContent = formatPrice(selectedShippingPrice);
-    totalEl.textContent = formatPrice(Number(order.total) + selectedShippingPrice);
+    totalEl.textContent = formatPrice(subtotal - discount + selectedShippingPrice);
   } else {
     shippingRow.hidden = true;
-    totalEl.textContent = formatPrice(order.total);
+    totalEl.textContent = formatPrice(subtotal - discount);
+  }
+}
+
+function removeAppliedCoupon({ errorMessage = '' } = {}) {
+  appliedCoupon = null;
+  const couponBlock = document.querySelector('[data-coupon-block]');
+  const discountRow = document.querySelector('[data-discount-row]');
+  const input = document.querySelector('[data-coupon-input]');
+  const errorEl = document.querySelector('[data-coupon-error]');
+  if (couponBlock) couponBlock.hidden = false;
+  if (discountRow) discountRow.hidden = true;
+  if (input) input.value = '';
+  if (errorEl) errorEl.textContent = errorMessage;
+  if (cartPseudoOrder) updateCheckoutTotal(cartPseudoOrder);
+}
+
+async function applyCoupon() {
+  const input = document.querySelector('[data-coupon-input]');
+  const button = document.querySelector('[data-coupon-apply]');
+  const errorEl = document.querySelector('[data-coupon-error]');
+  const code = input.value.trim();
+
+  errorEl.textContent = '';
+  if (!code) {
+    errorEl.textContent = 'Informe o código do cupom';
+    return;
+  }
+
+  button.disabled = true;
+  button.innerHTML = '<span class="spinner"></span>';
+  try {
+    appliedCoupon = await apiGet(`/coupons/validate?code=${encodeURIComponent(code)}`);
+    document.querySelector('[data-coupon-block]').hidden = true;
+    document.querySelector('[data-discount-row]').hidden = false;
+    document.querySelector('[data-discount-label]').innerHTML = `${escapeHtml(appliedCoupon.code)} −${formatCouponPercent(appliedCoupon.discountPercent)}%`;
+    updateCheckoutTotal(cartPseudoOrder);
+    showToast('Cupom aplicado', 'success');
+  } catch (error) {
+    appliedCoupon = null;
+    errorEl.textContent = error.message || 'Cupom inválido ou expirado';
+    updateCheckoutTotal(cartPseudoOrder);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Aplicar';
   }
 }
 
@@ -431,6 +494,12 @@ function renderCheckout(order) {
         <ul class="checkout-summary-items">
           ${order.items.map(checkoutItemRow).join('')}
         </ul>
+        ${Number(order.discountAmount) > 0 ? `
+          <div class="checkout-summary-item">
+            <span>Desconto (${escapeHtml(order.couponCode)})</span>
+            <span>− ${formatPrice(order.discountAmount)}</span>
+          </div>
+        ` : ''}
         <div class="checkout-summary-item">
           <span>Frete — ${escapeHtml(order.shippingMethod)} (até ${applyHandlingDays(order.shippingDeadlineDays)} dias úteis)</span>
           <span>${formatPrice(order.shippingPrice)}</span>
@@ -489,6 +558,8 @@ function cartItemRow(item) {
 function renderCheckoutFromCart(cart, addresses) {
   const root = document.querySelector('[data-checkout-root]');
   const pseudoOrder = { total: cartItemsTotal(cart) };
+  cartPseudoOrder = pseudoOrder;
+  appliedCoupon = null;
 
   root.innerHTML = `
     <div class="checkout-layout fade-in">
@@ -497,6 +568,17 @@ function renderCheckoutFromCart(cart, addresses) {
         <ul class="checkout-summary-items">
           ${cart.items.map(cartItemRow).join('')}
         </ul>
+        <div class="checkout-coupon" data-coupon-block>
+          <div class="checkout-coupon-controls">
+            <input class="form-control" type="text" placeholder="Cupom de desconto" maxlength="50" autocomplete="off" data-coupon-input />
+            <button class="btn btn-secondary" type="button" data-coupon-apply>Aplicar</button>
+          </div>
+        </div>
+        <div class="checkout-summary-item" data-discount-row hidden>
+          <span>Desconto (<span data-discount-label></span>) <button class="checkout-coupon-remove" type="button" data-coupon-remove>Remover</button></span>
+          <span data-discount-value></span>
+        </div>
+        <p class="form-error checkout-coupon-error" data-coupon-error></p>
         <div class="checkout-summary-item" data-shipping-row hidden>
           <span>Frete</span>
           <span data-shipping-price></span>
@@ -517,6 +599,14 @@ function renderCheckoutFromCart(cart, addresses) {
   `;
 
   renderAddressContent(pseudoOrder, addresses);
+  document.querySelector('[data-coupon-apply]').addEventListener('click', applyCoupon);
+  document.querySelector('[data-coupon-input]').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      applyCoupon();
+    }
+  });
+  document.querySelector('[data-coupon-remove]').addEventListener('click', () => removeAppliedCoupon());
   document.querySelector('[data-continue-btn]').addEventListener('click', () => createOrderAndProceed());
 }
 
@@ -531,10 +621,21 @@ async function createOrderAndProceed() {
   button.innerHTML = '<span class="spinner"></span>';
 
   try {
-    const order = await apiPost('/orders', { addressId: selectedAddressId, shippingMethod: selectedShippingMethod });
+    const order = await apiPost('/orders', {
+      addressId: selectedAddressId,
+      shippingMethod: selectedShippingMethod,
+      ...(appliedCoupon ? { couponCode: appliedCoupon.code } : {}),
+    });
     setCartCount(0);
     renderCheckout(order);
   } catch (error) {
+    if (appliedCoupon && error.status === 422 && /cupom/i.test(error.message || '')) {
+      removeAppliedCoupon({ errorMessage: error.message || 'Cupom inválido ou expirado' });
+      showToast('O cupom não é mais válido. Revise o total e tente novamente.', 'error');
+      button.disabled = false;
+      button.textContent = 'Continuar para pagamento';
+      return;
+    }
     showToast(error.message || 'Não foi possível finalizar o pedido', 'error');
     button.disabled = false;
     button.textContent = 'Continuar para pagamento';
