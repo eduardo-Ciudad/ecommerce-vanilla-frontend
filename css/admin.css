@@ -430,6 +430,14 @@
   gap: 6px;
 }
 
+.coupon-active-field label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 40px;
+  cursor: pointer;
+}
+
 .order-id-cell {
   display: flex;
   align-items: center;
