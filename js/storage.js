@@ -38,6 +38,15 @@ function decodeJwt(token) {
   }
 }
 
+function isJwtExpired(token, skewSeconds = 30) {
+  if (!token) return true;
+
+  const claims = decodeJwt(token);
+  return !claims
+    || typeof claims.exp !== 'number'
+    || claims.exp * 1000 <= Date.now() + skewSeconds * 1000;
+}
+
 function saveSession({ accessToken, refreshToken }) {
   localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
   localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
@@ -65,7 +74,20 @@ function setAccessToken(token) {
   localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
 }
 
+function setRefreshToken(token) {
+  localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
+}
+
+function clearSessionIfRefreshExpired() {
+  if (!getAccessToken()) return;
+
+  if (isJwtExpired(getRefreshToken())) {
+    clearSession();
+  }
+}
+
 function getCurrentUser() {
+  clearSessionIfRefreshExpired();
   const raw = readStorage(STORAGE_KEYS.USER);
   if (!raw) return null;
 
@@ -78,6 +100,7 @@ function getCurrentUser() {
 }
 
 function isAuthenticated() {
+  clearSessionIfRefreshExpired();
   return !!getAccessToken() && !!getCurrentUser();
 }
 

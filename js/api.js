@@ -297,6 +297,9 @@ async function refreshAccessToken(requestContext) {
         if (!data || typeof data.accessToken !== 'string') return false;
 
         setAccessToken(data.accessToken);
+        if (typeof data.refreshToken === 'string') {
+          setRefreshToken(data.refreshToken);
+        }
         return true;
       } catch (error) {
         if (error instanceof ApiTimeoutError || error instanceof ApiAbortError) {
