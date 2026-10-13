@@ -653,6 +653,26 @@
   font-size: var(--text-base);
 }
 
+.admin-order-item-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-order-item-details {
+  margin-top: 2px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.admin-order-item-code {
+  font-family: monospace;
+}
+
+.admin-order-item-price {
+  white-space: nowrap;
+}
+
 .variant-manage-form {
   display: grid;
   grid-template-columns: 1fr;

@@ -11,14 +11,23 @@ function formatAdminOrderShipping(order) {
 
 function renderOrderItemsList(items) {
   return items
-    .map(
-      (item) => `
+    .map((item) => {
+      const variantLabel = variantShortLabel(item);
+      const codes = [
+        item.sku ? `SKU: <span class="admin-order-item-code">${escapeHtml(item.sku)}</span>` : '',
+        item.gtin ? `EAN: <span class="admin-order-item-code">${escapeHtml(item.gtin)}</span>` : '',
+      ].filter(Boolean);
+
+      return `
         <div class="variant-manage-row">
-          <span>${escapeHtml(item.productName)} (${escapeHtml(variantShortLabel(item))})</span>
-          <span>${item.quantity}x ${formatPrice(item.unitPrice)}</span>
+          <div class="admin-order-item-info">
+            <span>${escapeHtml(item.productName)}${variantLabel ? ` (${escapeHtml(variantLabel)})` : ''}</span>
+            ${codes.length ? `<div class="admin-order-item-details">${codes.join(' · ')}</div>` : ''}
+          </div>
+          <span class="admin-order-item-price">${item.quantity}x ${formatPrice(item.unitPrice)}</span>
         </div>
-      `
-    )
+      `;
+    })
     .join('');
 }
 
