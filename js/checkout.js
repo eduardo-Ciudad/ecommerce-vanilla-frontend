@@ -796,6 +796,14 @@ async function initCardForm(order) {
                 token: cardFormData.token,
                 installments: cardFormData.installments,
                 cardIssuerId: cardFormData.payment_method_id,
+                issuerId: cardFormData.issuer_id ?? null,
+                payerDocType: cardFormData.payer?.identification?.type ?? null,
+                payerDocNumber: cardFormData.payer?.identification?.number ?? null,
+                deviceId:
+                  typeof window.MP_DEVICE_SESSION_ID === 'string' &&
+                  window.MP_DEVICE_SESSION_ID
+                    ? window.MP_DEVICE_SESSION_ID
+                    : null,
               });
               showPaymentResult(result);
             } catch (error) {
