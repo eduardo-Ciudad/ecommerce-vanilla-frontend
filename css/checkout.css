@@ -129,6 +129,18 @@
   border-bottom-color: var(--color-primary);
 }
 
+.payment-tab.is-unavailable:not(.is-active) {
+  opacity: 0.72;
+}
+
+.payment-tab-status {
+  display: inline-block;
+  margin-left: var(--space-2xs);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
 .payment-tab-icon {
   display: inline-flex;
   vertical-align: middle;
@@ -147,6 +159,34 @@
 .payment-panel.is-active {
   display: block;
   animation: fadeIn 0.2s ease both;
+}
+
+.card-unavailable-notice {
+  padding: var(--space-md);
+  color: var(--color-text-secondary);
+  background: var(--color-warning-bg);
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
+}
+
+.card-unavailable-notice p {
+  margin-bottom: var(--space-sm);
+}
+
+.card-unavailable-link {
+  display: inline-flex;
+  align-items: center;
+  min-width: 40px;
+  min-height: 44px;
+  color: var(--color-warning-text);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.card-unavailable-pix-button {
+  min-width: 40px;
+  min-height: 44px;
 }
 
 /* ===== Pix ===== */
