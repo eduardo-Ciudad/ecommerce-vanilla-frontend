@@ -11,14 +11,14 @@ function handleModalKeydown(event) {
   if (event.key === 'Escape') closeModal();
 }
 
-function openModal({ title, content, footer, onConfirm, confirmLabel = 'Confirmar', cancelLabel = 'Cancelar', showFooter = true }) {
+function openModal({ title, content, footer, onConfirm, confirmLabel = 'Confirmar', cancelLabel = 'Cancelar', showFooter = true, size }) {
   closeModal();
 
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
 
   const modal = document.createElement('div');
-  modal.className = 'modal';
+  modal.className = `modal${size === 'wide' ? ' modal--wide' : ''}`;
 
   const header = document.createElement('div');
   header.className = 'modal-header';
