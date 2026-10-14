@@ -673,6 +673,207 @@
   white-space: nowrap;
 }
 
+/* ===== Detalhes do pedido ===== */
+.admin-order-detail-summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.admin-order-detail-heading,
+.admin-order-detail-item-info,
+.admin-order-detail-item-price,
+.admin-order-detail-delivery,
+.admin-order-detail-delivery > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-order-detail-heading,
+.admin-order-detail-item-info {
+  min-width: 0;
+}
+
+.admin-order-detail-title-row,
+.admin-order-detail-badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.admin-order-detail-title-row > strong {
+  font-size: var(--text-xl);
+  overflow-wrap: anywhere;
+}
+
+.admin-order-detail-copy {
+  flex-shrink: 0;
+}
+
+.admin-order-detail-date {
+  margin-top: var(--space-2xs);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.admin-order-detail-section {
+  min-width: 0;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+}
+
+.admin-order-detail-items {
+  margin-bottom: var(--space-md);
+}
+
+.admin-order-detail-section-title {
+  margin-bottom: var(--space-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.admin-order-detail-item-list {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-order-detail-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+}
+
+.admin-order-detail-item-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.admin-order-detail-item-variant,
+.admin-order-detail-item-codes,
+.admin-order-detail-item-price > span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.admin-order-detail-item-variant,
+.admin-order-detail-item-codes {
+  margin-top: var(--space-2xs);
+  overflow-wrap: anywhere;
+}
+
+.admin-order-detail-item-codes {
+  font-family: monospace;
+  font-size: var(--text-xs);
+}
+
+.admin-order-detail-item-price {
+  align-items: flex-end;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.admin-order-detail-item-price > strong {
+  margin-top: var(--space-2xs);
+  color: var(--color-text);
+  font-size: var(--text-md);
+}
+
+.admin-order-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+}
+
+.admin-order-detail-receipt {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-order-detail-receipt > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.admin-order-detail-receipt dt,
+.admin-order-detail-receipt dd {
+  margin: 0;
+}
+
+.admin-order-detail-receipt dt {
+  min-width: 0;
+  color: var(--color-text-secondary);
+}
+
+.admin-order-detail-receipt dt > span {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.admin-order-detail-receipt dd {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.admin-order-detail-receipt .admin-order-detail-total {
+  margin-top: var(--space-2xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border-light);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.admin-order-detail-total dt,
+.admin-order-detail-total dd {
+  color: var(--color-text);
+}
+
+.admin-order-detail-delivery {
+  gap: var(--space-sm);
+}
+
+.admin-order-detail-delivery > div {
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+.admin-order-detail-delivery span {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.admin-order-detail-delivery strong,
+.admin-order-detail-delivery p {
+  overflow-wrap: anywhere;
+}
+
+.admin-order-detail-delivery p {
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .admin-order-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .admin-order-detail-summary {
+    flex-direction: column;
+  }
+}
+
 .variant-manage-form {
   display: grid;
   grid-template-columns: 1fr;
