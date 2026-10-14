@@ -33,9 +33,18 @@ function renderEmptyOrders() {
 }
 
 function renderOrderItem(item) {
+  const variantLabel = variantShortLabel(item);
+  const codes = [
+    item.sku ? `Cód.: ${escapeHtml(item.sku)}` : '',
+    item.gtin ? `EAN: ${escapeHtml(item.gtin)}` : '',
+  ].filter(Boolean);
+
   return `
     <li class="order-item-row">
-      <span>${escapeHtml(item.productName)} (${escapeHtml(variantShortLabel(item))})</span>
+      <span>
+        ${escapeHtml(item.productName)}${variantLabel ? ` (${escapeHtml(variantLabel)})` : ''}
+        ${codes.length ? `<span style="display: block; font-size: var(--text-xs); color: var(--color-text-muted);">${codes.join(' · ')}</span>` : ''}
+      </span>
       <span>${item.quantity}x ${formatPrice(item.unitPrice)}</span>
     </li>
   `;
