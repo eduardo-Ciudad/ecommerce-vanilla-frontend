@@ -1,8 +1,3 @@
-// Desativação temporária do cartão: eduardo-Ciudad/ecommerce#5.
-const CARD_PAYMENT_ENABLED = false;
-const SUPPORT_WHATSAPP_DISPLAY = '(17) 99624-7172';
-const SUPPORT_WHATSAPP_LINK = 'https://wa.me/5517996247172';
-
 const STATUS_DETAIL_MESSAGES = {
   accredited: 'Pagamento aprovado!',
   pending_contingency: 'Pagamento em processamento.',
@@ -522,20 +517,15 @@ function renderCheckout(order) {
 
       <section class="checkout-payment" data-checkout-payment>
         <div class="payment-tabs">
-          <button class="payment-tab${CARD_PAYMENT_ENABLED ? ' is-active' : ' is-unavailable'}" type="button" data-payment-tab="card"><span class="payment-tab-icon">${ICONS.creditCard}</span> Cartão de Crédito${CARD_PAYMENT_ENABLED ? '' : '<span class="payment-tab-status">Indisponível</span>'}</button>
-          <button class="payment-tab${CARD_PAYMENT_ENABLED ? '' : ' is-active'}" type="button" data-payment-tab="pix"><span class="payment-tab-icon">${ICONS.smartphone}</span> Pix</button>
+          <button class="payment-tab is-active" type="button" data-payment-tab="card"><span class="payment-tab-icon">${ICONS.creditCard}</span> Cartão de Crédito</button>
+          <button class="payment-tab" type="button" data-payment-tab="pix"><span class="payment-tab-icon">${ICONS.smartphone}</span> Pix</button>
         </div>
 
-        <div class="payment-panel${CARD_PAYMENT_ENABLED ? ' is-active' : ''}" data-payment-panel="card">
-          ${CARD_PAYMENT_ENABLED ? '<div id="mp-card-form"></div>' : `
-            <div class="card-unavailable-notice">
-              <p>Pagamento via cartão de crédito indisponível no momento. Para mais dúvidas, fale com a gente pelo WhatsApp: <a class="card-unavailable-link" href="${escapeHtml(SUPPORT_WHATSAPP_LINK)}" target="_blank" rel="noopener noreferrer">${escapeHtml(SUPPORT_WHATSAPP_DISPLAY)}</a>. Você pode concluir sua compra normalmente pelo Pix.</p>
-              <button class="btn btn-secondary card-unavailable-pix-button" type="button" data-switch-to-pix>Pagar com Pix</button>
-            </div>
-          `}
+        <div class="payment-panel is-active" data-payment-panel="card">
+          <div id="mp-card-form"></div>
         </div>
 
-        <div class="payment-panel${CARD_PAYMENT_ENABLED ? '' : ' is-active'}" data-payment-panel="pix">
+        <div class="payment-panel" data-payment-panel="pix">
           <div data-pix-content>
             <p class="pix-intro">Pague instantaneamente escaneando o QR Code ou copiando o código Pix.</p>
             <button class="btn btn-primary btn-block" type="button" data-pix-btn>Gerar Pix de ${formatPrice(order.total)}</button>
@@ -548,13 +538,8 @@ function renderCheckout(order) {
   `;
 
   wirePaymentTabs();
-  document.querySelector('[data-switch-to-pix]')?.addEventListener('click', () => {
-    document.querySelector('[data-payment-tab="pix"]').click();
-  });
   document.querySelector('[data-pix-btn]').addEventListener('click', () => handlePixPayment(order));
-  if (CARD_PAYMENT_ENABLED) {
-    initCardForm(order);
-  }
+  initCardForm(order);
 }
 
 function cartItemsTotal(cart) {
