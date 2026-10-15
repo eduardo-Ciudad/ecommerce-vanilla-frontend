@@ -1,5 +1,5 @@
 // Desativação temporária do cartão: eduardo-Ciudad/ecommerce#5.
-const CARD_PAYMENT_ENABLED = true;
+const CARD_PAYMENT_ENABLED = false;
 const SUPPORT_WHATSAPP_DISPLAY = '(17) 99624-7172';
 const SUPPORT_WHATSAPP_LINK = 'https://wa.me/5517996247172';
 
