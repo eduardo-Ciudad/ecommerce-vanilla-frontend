@@ -654,7 +654,7 @@ function productCardBadge(product) {
 function buildProductCard(product, rootPath = '') {
   const price = lowestVariantPrice(product);
   const priceLabel = price === null ? 'Indisponível' : formatPrice(price);
-  const installmentLabel = price !== null ? `ou 3x de ${formatPrice(price / 3)}` : '';
+  const installmentLabel = price !== null ? 'em até 6x no cartão' : '';
   const imageContent = product.imageUrl
     ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" />`
     : productImagePlaceholder();
