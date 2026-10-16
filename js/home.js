@@ -189,20 +189,9 @@ async function renderBestSellers() {
   }
 }
 
-function initNewsletterForm() {
-  const form = document.querySelector('[data-newsletter-form]');
-  if (!form) return;
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    showToast('Inscrição realizada com sucesso!', 'success');
-    form.reset();
-  });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   initHeroCarousel();
   renderVaralLinks();
   renderBestSellers();
   renderSummerEditorial();
-  initNewsletterForm();
 });
