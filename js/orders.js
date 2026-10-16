@@ -82,6 +82,8 @@ function renderOrderTimeline(order) {
 function renderOrderCard(order) {
   const statusLabel = ORDER_STATUS_LABELS[order.status] || order.status;
   const badgeClass = ORDER_STATUS_BADGE_CLASS[order.status] || '';
+  const paymentDeadline = formatPaymentDeadline(order.paymentDeadline);
+  const paymentRejected = order.paymentStatus === 'rejected';
 
   const paymentBadge = order.paymentStatus
     ? `<span class="badge ${PAYMENT_STATUS_BADGE_CLASS[order.paymentStatus] || ''}">${PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}</span>`
@@ -92,11 +94,12 @@ function renderOrderCard(order) {
 
   // Fica fora do <button> do acordeão: um <a> não pode ser aninhado dentro de um
   // elemento interativo sem quebrar o toggle e a navegação do link.
-  const payNowRow = order.status === 'PENDING' && !order.paymentStatus
+  const payNowRow = order.canPay === true
     ? `
       <div class="order-card-pay-row">
-        <a href="checkout.html?orderId=${order.id}" class="btn btn-primary btn-sm">Pagar agora</a>
+        <a href="checkout.html?orderId=${encodeURIComponent(order.id)}" class="btn btn-primary btn-sm">${paymentRejected ? 'Tentar pagar novamente' : 'Pagar agora'}</a>
         <button type="button" class="btn btn-ghost btn-sm" data-order-cancel>Cancelar pedido</button>
+        ${paymentRejected && paymentDeadline ? `<span class="text-secondary" style="flex-basis: 100%;">Pagamento recusado. Pague até ${paymentDeadline}.</span>` : ''}
       </div>
     `
     : '';
