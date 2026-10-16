@@ -76,6 +76,7 @@ function renderCheckoutError(message) {
       <div class="empty-state-icon">${ICONS.frown}</div>
       <p>${escapeHtml(message)}</p>
       <a class="btn btn-primary" href="cart.html">Voltar ao carrinho</a>
+      <a class="btn btn-secondary" href="orders.html">Ver meus pedidos</a>
     </div>
   `;
 }
@@ -487,6 +488,7 @@ function formatOrderDeliveryAddress(order) {
 
 function renderCheckout(order) {
   const root = document.querySelector('[data-checkout-root]');
+  const paymentDeadline = formatPaymentDeadline(order.paymentDeadline);
   root.innerHTML = `
     <div class="checkout-layout fade-in">
       <section class="checkout-summary">
@@ -516,6 +518,7 @@ function renderCheckout(order) {
       </section>
 
       <section class="checkout-payment" data-checkout-payment>
+        ${paymentDeadline ? `<p class="pix-intro">Pague até ${paymentDeadline} para garantir os itens reservados.</p>` : ''}
         <div class="payment-tabs">
           <button class="payment-tab is-active" type="button" data-payment-tab="card"><span class="payment-tab-icon">${ICONS.creditCard}</span> Cartão de Crédito</button>
           <button class="payment-tab" type="button" data-payment-tab="pix"><span class="payment-tab-icon">${ICONS.smartphone}</span> Pix</button>
@@ -626,6 +629,7 @@ async function createOrderAndProceed() {
       shippingMethod: selectedShippingMethod,
       ...(appliedCoupon ? { couponCode: appliedCoupon.code } : {}),
     });
+    history.replaceState(null, '', `checkout.html?orderId=${encodeURIComponent(order.id)}`);
     setCartCount(0);
     renderCheckout(order);
   } catch (error) {
@@ -805,7 +809,7 @@ async function initCardForm(order) {
                     ? window.MP_DEVICE_SESSION_ID
                     : null,
               });
-              showPaymentResult(result);
+              showPaymentResult(result, order.id);
             } catch (error) {
               showToast(error.message || 'Erro ao processar pagamento', 'error');
             }
@@ -837,7 +841,7 @@ async function handlePixPayment(order) {
     });
 
     if (result.status === 'approved') {
-      showPaymentResult(result);
+      showPaymentResult(result, order.id);
     } else if (result.pixQrCodeBase64) {
       renderPixResult(result, order);
     } else {
@@ -945,7 +949,7 @@ function startPixPolling(orderId) {
       const updated = orders.find((o) => o.id === orderId);
 
       if (updated && updated.paymentStatus === 'approved') {
-        showPaymentResult({ status: 'approved' });
+        showPaymentResult({ status: 'approved' }, orderId);
         return;
       }
     } catch (error) {
@@ -981,7 +985,7 @@ function startPixPolling(orderId) {
   pixPollTimeout = setTimeout(poll, PIX_POLL_DELAY_MS);
 }
 
-function showPaymentResult(result) {
+function showPaymentResult(result, orderId) {
   stopPixPolling();
 
   document.querySelector('[data-checkout-payment]').hidden = true;
@@ -992,14 +996,21 @@ function showPaymentResult(result) {
     : config.message;
 
   const actionButton = result.status === 'rejected'
-    ? '<button class="btn btn-primary" type="button" data-retry-btn>Tentar novamente</button>'
+    ? `
+      <button class="btn btn-primary" type="button" data-retry-btn>Tentar novamente</button>
+      <a class="btn btn-secondary" href="orders.html">Ver meus pedidos</a>
+    `
     : '<a class="btn btn-primary" href="orders.html">Ver meus pedidos</a>';
+  const rejectedReservationMessage = result.status === 'rejected'
+    ? '<p>Seu pedido continua reservado por alguns minutos. Você pode tentar outro cartão ou pagar com Pix.</p>'
+    : '';
 
   const resultSection = document.querySelector('[data-checkout-result]');
   resultSection.innerHTML = `
     <div class="checkout-result-icon ${config.modifierClass}">${config.icon}</div>
     <h2>${config.title}</h2>
     <p>${escapeHtml(message)}</p>
+    ${rejectedReservationMessage}
     ${actionButton}
   `;
   resultSection.hidden = false;
@@ -1007,7 +1018,14 @@ function showPaymentResult(result) {
 
   const retryBtn = resultSection.querySelector('[data-retry-btn]');
   if (retryBtn) {
-    retryBtn.addEventListener('click', () => window.location.reload());
+    retryBtn.addEventListener('click', () => {
+      if (orderId) {
+        window.location.href = `checkout.html?orderId=${encodeURIComponent(orderId)}`;
+        return;
+      }
+
+      window.location.reload();
+    });
   }
 }
 
@@ -1031,6 +1049,15 @@ async function initCheckoutPage() {
       if (!order) {
         showToast('Pedido não encontrado', 'error');
         window.location.href = 'orders.html';
+        return;
+      }
+
+      if (order.canPay !== true) {
+        if (order.status === 'PAID') {
+          renderCheckoutError('Este pedido já foi pago.');
+        } else {
+          renderCheckoutError('O prazo para pagar este pedido expirou ou já existe um pagamento em andamento. Confira em Meus pedidos.');
+        }
         return;
       }
 
