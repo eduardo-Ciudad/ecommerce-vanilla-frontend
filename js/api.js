@@ -588,6 +588,18 @@ function formatPrice(value) {
   return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+function formatPaymentDeadline(paymentDeadline) {
+  if (!paymentDeadline) return '';
+
+  const deadline = new Date(paymentDeadline);
+  if (Number.isNaN(deadline.getTime())) return '';
+
+  return deadline.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 function lowestVariantPrice(product) {
   if (!product.variants || !product.variants.length) return null;
   return Math.min(...product.variants.map((v) => Number(v.price)));
@@ -612,7 +624,8 @@ const ADMIN_ORDER_STATUS_BADGE_CLASS = {
 const PAYMENT_STATUS_LABELS = {
   approved: 'Pago',
   pending: 'Aguardando pagamento',
-  rejected: 'Pagamento recusado',
+  rejected: 'Recusado',
+  cancelled: 'Cancelado',
   in_process: 'Processando pagamento',
 };
 
@@ -620,6 +633,7 @@ const PAYMENT_STATUS_BADGE_CLASS = {
   approved: 'badge-paid',
   pending: 'badge-pending',
   rejected: 'badge-cancelled',
+  cancelled: 'badge-cancelled',
   in_process: 'badge-pending',
 };
 
