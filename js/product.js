@@ -473,7 +473,7 @@ function wireProductInteractions(product) {
     });
     priceEl.textContent = formatPrice(variant.price);
     installmentEl.hidden = false;
-    installmentEl.textContent = `ou 3x de ${formatPrice(variant.price / 3)} sem juros`;
+    installmentEl.textContent = 'ou em até 6x no cartão';
     stockEl.innerHTML = `${CLOCK_ICON} ${variant.stock} unidades disponíveis`;
     qtyInput.value = 1;
     qtyInput.max = variant.stock;
