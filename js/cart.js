@@ -36,10 +36,10 @@ function renderCart(cart) {
         </div>
         <div class="cart-summary-row">
           <span>Frete</span>
-          <span>Grátis</span>
+          <span class="text-secondary">Calculado no checkout</span>
         </div>
         <div class="cart-summary-row cart-summary-total">
-          <span>Total</span>
+          <span>Subtotal dos produtos</span>
           <span data-cart-total>${formatPrice(cartTotal(cart))}</span>
         </div>
         <button class="btn btn-primary btn-block" type="button" data-checkout-btn>Finalizar Pedido</button>
