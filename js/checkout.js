@@ -56,6 +56,51 @@ let selectedShippingPrice = 0;
 let appliedCoupon = null;
 let cartPseudoOrder = null;
 
+function isValidCpf(digits) {
+  const cpf = String(digits ?? '').replace(/\D/g, '');
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+
+  const calculateDigit = (length) => {
+    let sum = 0;
+    for (let index = 0; index < length; index += 1) {
+      sum += Number(cpf[index]) * (length + 1 - index);
+    }
+    const remainder = (sum * 10) % 11;
+    return remainder === 10 ? 0 : remainder;
+  };
+
+  return calculateDigit(9) === Number(cpf[9])
+    && calculateDigit(10) === Number(cpf[10]);
+}
+
+function formatCpf(value) {
+  return String(value ?? '')
+    .replace(/\D/g, '')
+    .slice(0, 11)
+    .replace(/^(\d{3})(\d)/, '$1.$2')
+    .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+}
+
+function setPixCpfError(message = '') {
+  const input = document.querySelector('[data-pix-cpf]');
+  const errorEl = document.querySelector('[data-pix-cpf-error]');
+  if (!input || !errorEl) return;
+
+  errorEl.textContent = message;
+  input.setAttribute('aria-invalid', message ? 'true' : 'false');
+}
+
+function wirePixCpfInput() {
+  const input = document.querySelector('[data-pix-cpf]');
+  if (!input) return;
+
+  input.addEventListener('input', () => {
+    input.value = formatCpf(input.value);
+    setPixCpfError();
+  });
+}
+
 function calculateCouponDiscount(subtotal, percent) {
   const normalizedSubtotal = Math.max(0, Number(subtotal) || 0);
   const discount = Math.round((normalizedSubtotal * Number(percent) + Number.EPSILON)) / 100;
@@ -531,6 +576,11 @@ function renderCheckout(order) {
         <div class="payment-panel" data-payment-panel="pix">
           <div data-pix-content>
             <p class="pix-intro">Pague instantaneamente escaneando o QR Code ou copiando o código Pix.</p>
+            <div class="form-group pix-payer-document">
+              <label for="pix-payer-cpf">CPF do pagador</label>
+              <input class="form-control" id="pix-payer-cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00" aria-describedby="pix-payer-cpf-error" data-pix-cpf />
+              <p class="form-error" id="pix-payer-cpf-error" aria-live="polite" data-pix-cpf-error></p>
+            </div>
             <button class="btn btn-primary btn-block" type="button" data-pix-btn>Gerar Pix de ${formatPrice(order.total)}</button>
           </div>
         </div>
@@ -541,6 +591,7 @@ function renderCheckout(order) {
   `;
 
   wirePaymentTabs();
+  wirePixCpfInput();
   document.querySelector('[data-pix-btn]').addEventListener('click', () => handlePixPayment(order));
   initCardForm(order);
 }
@@ -831,6 +882,16 @@ async function initCardForm(order) {
 
 async function handlePixPayment(order) {
   const pixBtn = document.querySelector('[data-pix-btn]');
+  const cpfInput = document.querySelector('[data-pix-cpf]');
+  const cpfDigits = cpfInput.value.replace(/\D/g, '');
+
+  setPixCpfError();
+  if (!isValidCpf(cpfDigits)) {
+    setPixCpfError('Informe um CPF válido');
+    cpfInput.focus();
+    return;
+  }
+
   pixBtn.disabled = true;
   pixBtn.innerHTML = '<span class="spinner"></span> Gerando Pix...';
 
@@ -838,6 +899,8 @@ async function handlePixPayment(order) {
     const result = await apiPost('/payments/process', {
       orderId: order.id,
       paymentMethod: 'pix',
+      payerDocType: 'CPF',
+      payerDocNumber: cpfDigits,
     });
 
     if (result.status === 'approved') {
@@ -850,6 +913,7 @@ async function handlePixPayment(order) {
       pixBtn.textContent = `Gerar Pix de ${formatPrice(order.total)}`;
     }
   } catch (error) {
+    if (error.status === 400) setPixCpfError(error.message || 'Informe um CPF válido');
     showToast(error.message || 'Erro ao gerar Pix', 'error');
     pixBtn.disabled = false;
     pixBtn.textContent = `Gerar Pix de ${formatPrice(order.total)}`;

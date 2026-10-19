@@ -156,6 +156,11 @@
   margin-bottom: var(--space-md);
 }
 
+.pix-payer-document {
+  max-width: 360px;
+  margin-bottom: var(--space-md);
+}
+
 .pix-status {
   display: flex;
   align-items: center;
