@@ -430,6 +430,22 @@
   gap: 6px;
 }
 
+.bling-status-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.bling-status-cell small {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.bling-resend-btn {
+  min-height: 28px;
+  padding: 4px 8px;
+}
+
 .coupon-active-field label {
   display: inline-flex;
   align-items: center;
@@ -728,6 +744,35 @@
 
 .admin-order-detail-items {
   margin-bottom: var(--space-md);
+}
+
+.admin-order-detail-bling {
+  margin-top: var(--space-md);
+}
+
+.admin-order-detail-data {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-order-detail-data > div {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.35fr) minmax(0, 1fr);
+  gap: var(--space-sm);
+}
+
+.admin-order-detail-data dt,
+.admin-order-detail-data dd {
+  margin: 0;
+}
+
+.admin-order-detail-data dt {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.admin-order-detail-data dd {
+  overflow-wrap: anywhere;
 }
 
 .admin-order-detail-section-title {
