@@ -621,6 +621,23 @@ const ADMIN_ORDER_STATUS_BADGE_CLASS = {
   CANCELLED: 'badge-cancelled',
 };
 
+function blingStatusDetails(status) {
+  if (status === 'SENT') return { label: 'Enviado', badgeClass: 'badge-paid' };
+  if (status === 'PENDING' || status === 'PROCESSING') {
+    return { label: 'Enviando', badgeClass: 'badge-pending' };
+  }
+  if (status === 'FAILED') return { label: 'Falhou', badgeClass: 'badge-cancelled' };
+  return { label: 'Não enviado', badgeClass: 'badge-inactive' };
+}
+
+function renderBlingStatusBadge(bling) {
+  const details = blingStatusDetails(bling?.status ?? null);
+  const title = bling?.status === 'FAILED' && bling.error
+    ? ` title="${escapeAttr(bling.error)}"`
+    : '';
+  return `<span class="badge ${details.badgeClass}"${title}>${details.label}</span>`;
+}
+
 const PAYMENT_STATUS_LABELS = {
   approved: 'Pago',
   pending: 'Aguardando pagamento',
