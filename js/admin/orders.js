@@ -1,22 +1,5 @@
 let adminOrders = [];
 
-function blingStatusDetails(status) {
-  if (status === 'SENT') return { label: 'Enviado', badgeClass: 'badge-paid' };
-  if (status === 'PENDING' || status === 'PROCESSING') {
-    return { label: 'Enviando', badgeClass: 'badge-pending' };
-  }
-  if (status === 'FAILED') return { label: 'Falhou', badgeClass: 'badge-cancelled' };
-  return { label: 'Não enviado', badgeClass: 'badge-inactive' };
-}
-
-function renderBlingStatusBadge(bling) {
-  const details = blingStatusDetails(bling?.status ?? null);
-  const title = bling?.status === 'FAILED' && bling.error
-    ? ` title="${escapeAttr(bling.error)}"`
-    : '';
-  return `<span class="badge ${details.badgeClass}"${title}>${details.label}</span>`;
-}
-
 function canResendOrderToBling(order) {
   return order.bling?.status === 'FAILED'
     || (order.bling?.status == null && ['PAID', 'SHIPPED', 'DELIVERED'].includes(order.status));
@@ -287,7 +270,7 @@ async function resendOrderToBling(button) {
 async function loadAdminOrders() {
   const tbody = document.querySelector('[data-admin-orders-tbody]');
   try {
-    const response = await apiGet('/orders/admin?page=0&size=1000');
+    const response = await apiGet('/orders/admin?page=0&size=1000&sort=createdAt,desc');
     adminOrders = response.content;
     renderAdminOrdersTable(adminOrders);
   } catch (error) {
