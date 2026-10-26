@@ -82,14 +82,24 @@
         <div class="skeleton skeleton-block-sm"></div>
       </div>
 
-      <div class="admin-table-wrapper">
+      <section class="dashboard-attention" data-dashboard-attention aria-label="Pontos de atenção">
+        <div class="skeleton skeleton-row"></div>
+      </section>
+
+      <section class="admin-table-wrapper dashboard-sales" aria-labelledby="dashboard-sales-title">
+        <div class="admin-table-header dashboard-sales-header">
+          <span id="dashboard-sales-title">Vendas — últimos 30 dias</span>
+          <strong data-dashboard-sales-total></strong>
+        </div>
+        <div class="dashboard-chart" data-dashboard-chart>
+          <div class="skeleton dashboard-chart-skeleton"></div>
+        </div>
+      </section>
+
+      <div class="admin-table-wrapper dashboard-recent-orders">
         <div class="admin-table-header">
           <span>Pedidos Recentes</span>
         </div>
-        <p class="admin-note">
-          Mostra apenas os pedidos da própria conta admin — a API não expõe um endpoint para listar pedidos de
-          todos os clientes da loja.
-        </p>
         <table class="admin-table">
           <thead>
             <tr>
@@ -97,11 +107,12 @@
               <th>Data</th>
               <th>Status</th>
               <th>Pagamento</th>
+              <th>Bling</th>
               <th>Total</th>
             </tr>
           </thead>
           <tbody data-recent-orders-tbody>
-            <tr><td colspan="5"><div class="skeleton skeleton-row"></div></td></tr>
+            <tr><td colspan="6"><div class="skeleton skeleton-row"></div></td></tr>
           </tbody>
         </table>
       </div>
