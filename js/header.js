@@ -100,8 +100,8 @@ function buildHeaderMarkup() {
 
   return `
     <div class="topbar">
-      <span class="topbar-full">Frete Grátis em compras acima de R$ 150 · Troca fácil em 30 dias</span>
-      <span class="topbar-short">Frete grátis acima de R$ 150</span>
+      <span class="topbar-full">Envio para todo o Brasil · Troca fácil em 30 dias</span>
+      <span class="topbar-short">Troca fácil em 30 dias</span>
     </div>
     ${showVerificationWarning ? `<div class="topbar topbar--warning">Seu email ainda não foi verificado. <a href="${headerLink('auth.html')}">Reenviar verificação</a></div>` : ''}
     <header class="site-header" data-site-header>
