@@ -49,8 +49,17 @@ function triggerImageUpload(productId) {
   input.click();
 }
 
-function adminProductSku(product) {
-  return `GK-${product.id.slice(0, 8).toUpperCase()}`;
+function adminProductSkus(product) {
+  const skus = Array.isArray(product.variants)
+    ? product.variants
+      .map((variant) => String(variant.sku || '').trim())
+      .filter(Boolean)
+    : [];
+
+  if (!skus.length) return '—';
+  if (skus.length === 1) return escapeHtml(skus[0]);
+
+  return `<span title="${escapeAttr(skus.join(', '))}">${escapeHtml(skus[0])} e mais ${skus.length - 1}</span>`;
 }
 
 function renderProductsTable() {
@@ -79,7 +88,7 @@ function renderProductsTable() {
               </div>
               <div>
                 <div>${escapeHtml(product.name)}</div>
-                <div class="admin-product-name-sku">SKU: ${adminProductSku(product)}</div>
+                <div class="admin-product-name-sku">SKU: ${adminProductSkus(product)}</div>
               </div>
             </div>
           </td>
