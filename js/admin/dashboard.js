@@ -56,12 +56,10 @@ function renderSalesChart(dailySales) {
   const sales = Array.isArray(dailySales) ? dailySales : [];
   const totalRevenue = sales.reduce((sum, day) => sum + Number(day.revenue || 0), 0);
   total.textContent = formatPrice(totalRevenue);
-
   if (!sales.length || sales.every((day) => Number(day.revenue) === 0)) {
     chart.innerHTML = '<div class="empty-state">Nenhuma venda nos últimos 30 dias</div>';
     return;
   }
-
   const width = 900;
   const height = 230;
   const chartHeight = 180;
@@ -70,28 +68,32 @@ function renderSalesChart(dailySales) {
   const barWidth = Math.max(4, slotWidth - 8);
   const bars = sales.map((day, index) => {
     const revenue = Number(day.revenue || 0);
-    const barHeight = revenue > 0 ? Math.max(2, (revenue / maxRevenue) * chartHeight) : 2;
+    const siteRevenue = Number(day.site?.revenue || 0);
+    const localRevenue = Number(day.local?.revenue || 0);
+    const siteHeight = siteRevenue > 0 ? Math.max(2, (siteRevenue / maxRevenue) * chartHeight) : 0;
+    const localHeight = localRevenue > 0 ? Math.max(2, (localRevenue / maxRevenue) * chartHeight) : 0;
     const x = index * slotWidth + (slotWidth - barWidth) / 2;
-    const y = chartHeight - barHeight;
     const dateLabel = formatDashboardDate(day.date);
-    const orderCount = Number(day.orders || 0);
-    const orderLabel = `${orderCount} ${orderCount === 1 ? 'pedido' : 'pedidos'}`;
-    const fill = revenue > 0 ? 'var(--color-primary)' : 'var(--color-border)';
+    const title = `${dateLabel} — Site: ${formatPrice(siteRevenue)} — Loja física: ${formatPrice(localRevenue)}`;
     const xLabel = index % 5 === 0 || index === sales.length - 1
-      ? `<text class="dashboard-chart-label" x="${x + barWidth / 2}" y="${height - 8}" text-anchor="middle">${dateLabel}</text>`
+      ? `<text class="dashboard-chart-label" x="${x + barWidth / 2}" y="${height - 8}" text-anchor="middle">${escapeHtml(dateLabel)}</text>`
       : '';
-    return `
-      <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="2" fill="${fill}">
-        <title>${escapeHtml(`${dateLabel} — ${orderLabel} — ${formatPrice(revenue)}`)}</title>
-      </rect>${xLabel}
-    `;
+    if (!revenue) return `<rect x="${x}" y="${chartHeight - 2}" width="${barWidth}" height="2" rx="2" fill="var(--color-border)"><title>${escapeHtml(title)}</title></rect>${xLabel}`;
+    return `<rect x="${x}" y="${chartHeight - siteHeight}" width="${barWidth}" height="${siteHeight}" fill="var(--color-primary-dark)"><title>${escapeHtml(title)}</title></rect><rect x="${x}" y="${chartHeight - siteHeight - localHeight}" width="${barWidth}" height="${localHeight}" rx="2" fill="var(--color-accent-orange)"><title>${escapeHtml(title)}</title></rect>${xLabel}`;
   }).join('');
+  chart.innerHTML = `<div class="dashboard-chart-legend"><span><i class="dashboard-chart-legend-site"></i>Site</span><span><i class="dashboard-chart-legend-local"></i>Loja física</span></div><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Gráfico de vendas dos últimos 30 dias" preserveAspectRatio="xMidYMid meet">${bars}</svg>`;
+}
 
-  chart.innerHTML = `
-    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Gráfico de vendas dos últimos 30 dias" preserveAspectRatio="xMidYMid meet">
-      ${bars}
-    </svg>
-  `;
+function renderChannelSummary(orders) {
+  const container = document.querySelector('[data-dashboard-channel]');
+  const site = orders.site || {};
+  const local = orders.local || {};
+  const siteRevenue = Number(site.revenueThisMonth || 0);
+  const localRevenue = Number(local.revenueThisMonth || 0);
+  const revenueTotal = siteRevenue + localRevenue;
+  const sitePercent = revenueTotal ? Math.round((siteRevenue / revenueTotal) * 100) : 0;
+  const localPercent = revenueTotal ? 100 - sitePercent : 0;
+  container.innerHTML = `<h2 id="dashboard-channel-title">Por canal no mês</h2><div class="dashboard-channel-bar" role="img" aria-label="Site ${escapeAttr(sitePercent)}%, loja física ${escapeAttr(localPercent)}%"><span class="dashboard-channel-bar-site" style="width:${escapeAttr(sitePercent)}%"></span><span class="dashboard-channel-bar-local" style="width:${escapeAttr(localPercent)}%"></span></div><div class="dashboard-channel-grid"><div class="dashboard-channel-block dashboard-channel-site"><h3>Site · ${escapeHtml(sitePercent)}%</h3><div class="dashboard-channel-metrics"><div><span>Receita</span><strong>${formatPrice(siteRevenue)}</strong></div><div><span>Pedidos</span><strong>${escapeHtml(site.paidThisMonth || 0)}</strong></div><div><span>Ticket médio</span><strong>${formatPrice(site.averageTicketThisMonth || 0)}</strong></div></div></div><div class="dashboard-channel-block dashboard-channel-local"><h3>Loja física · ${escapeHtml(localPercent)}%</h3><div class="dashboard-channel-metrics"><div><span>Receita</span><strong>${formatPrice(localRevenue)}</strong></div><div><span>Pedidos</span><strong>${escapeHtml(local.paidThisMonth || 0)}</strong></div><div><span>Ticket médio</span><strong>${formatPrice(local.averageTicketThisMonth || 0)}</strong></div></div></div></div>`;
 }
 
 function dashboardBlingCell(order) {
@@ -102,7 +104,7 @@ function dashboardBlingCell(order) {
 function renderRecentOrders(orders) {
   const tbody = document.querySelector('[data-recent-orders-tbody]');
   if (!orders.length) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Nenhum pedido encontrado.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">Nenhum pedido encontrado.</div></td></tr>';
     return;
   }
 
@@ -111,7 +113,10 @@ function renderRecentOrders(orders) {
       <td>${escapeHtml(String(order.id).slice(0, 8))}...</td>
       <td>${escapeHtml(new Date(order.createdAt).toLocaleDateString('pt-BR'))}</td>
       <td><span class="badge ${ADMIN_ORDER_STATUS_BADGE_CLASS[order.status] || ''}">${ADMIN_ORDER_STATUS_LABELS[order.status] || escapeHtml(order.status)}</span></td>
-      <td>${order.paymentStatus
+      <td>${renderChannelBadge(order.channel)}</td>
+      <td>${order.channel === 'LOCAL'
+        ? `<div class="admin-payment-cell"><span class="admin-payment-method">${escapeHtml(paymentMethodLabel(order.paymentMethod))}</span><span class="badge badge-paid">Pago</span></div>`
+        : order.paymentStatus
         ? `<span class="badge ${PAYMENT_STATUS_BADGE_CLASS[order.paymentStatus] || ''}">${PAYMENT_STATUS_LABELS[order.paymentStatus] || escapeHtml(order.paymentStatus)}</span>`
         : '<span class="badge badge-pending">Não iniciado</span>'}</td>
       <td>${dashboardBlingCell(order)}</td>
@@ -171,13 +176,15 @@ async function initDashboard() {
       dashboardCard('box', 'success', stats.products.active, 'Produtos ativos', `${stats.products.variants} variantes`, 'products.html'),
     ].join('');
     renderDashboardAttention(stats);
+    renderChannelSummary(stats.orders);
     renderSalesChart(stats.dailySales);
     renderRecentOrders(ordersResponse.content || []);
   } catch (error) {
     grid.innerHTML = '<p class="empty-state">Não foi possível carregar os dados do dashboard.</p>';
     attention.innerHTML = '';
     chart.innerHTML = '<div class="empty-state">Não foi possível carregar o gráfico de vendas.</div>';
-    recentOrdersTbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Não foi possível carregar os pedidos.</div></td></tr>';
+    document.querySelector('[data-dashboard-channel]').innerHTML = '<div class="empty-state">Não foi possível carregar os dados por canal.</div>';
+    recentOrdersTbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">Não foi possível carregar os pedidos.</div></td></tr>';
     showToast(error.message || 'Erro ao carregar dashboard', 'error');
   }
 }
