@@ -1,5 +1,23 @@
 let adminOrders = [];
 
+function renderAdminPayment(order) {
+  const method = `<span class="admin-payment-method">${escapeHtml(paymentMethodLabel(order.paymentMethod))}</span>`;
+  if (order.channel === 'LOCAL') {
+    return `<div class="admin-payment-cell">${method}<span class="badge badge-paid">Pago</span></div>`;
+  }
+  const status = order.paymentStatus
+    ? `<span class="badge ${PAYMENT_STATUS_BADGE_CLASS[order.paymentStatus] || ''}">${PAYMENT_STATUS_LABELS[order.paymentStatus] || escapeHtml(order.paymentStatus)}</span>`
+    : '<span class="badge badge-pending">Não iniciado</span>';
+  return `<div class="admin-payment-cell">${method}${status}</div>`;
+}
+
+function renderAdminCustomer(order) {
+  if (order.channel === 'LOCAL') {
+    return order.customerName ? escapeHtml(order.customerName) : '<span class="admin-customer-anonymous">Venda anônima</span>';
+  }
+  return order.recipientName ? escapeHtml(order.recipientName) : '—';
+}
+
 function canResendOrderToBling(order) {
   return order.bling?.status === 'FAILED'
     || (order.bling?.status == null && ['PAID', 'SHIPPED', 'DELIVERED'].includes(order.status));
@@ -47,6 +65,7 @@ function renderBlingDetails(bling) {
 }
 
 function formatAdminOrderAddress(order, multiline = false) {
+  if (order.channel === 'LOCAL') return '—';
   if (!order.recipientStreet) return '—';
   const complement = order.recipientComplement ? `, ${escapeHtml(order.recipientComplement)}` : '';
   const streetLine = `${escapeHtml(order.recipientStreet)}, ${escapeHtml(order.recipientNumber)}${complement} — ${escapeHtml(order.recipientNeighborhood)}`;
@@ -55,6 +74,7 @@ function formatAdminOrderAddress(order, multiline = false) {
 }
 
 function formatAdminOrderShipping(order, includePrice = true) {
+  if (order.channel === 'LOCAL') return '—';
   if (!order.shippingMethod) return '—';
   const description = `${escapeHtml(order.shippingMethod)} (até ${applyHandlingDays(order.shippingDeadlineDays)} dias)`;
   return includePrice ? `${description} — ${formatPrice(order.shippingPrice)}` : description;
@@ -94,9 +114,7 @@ function renderOrderDetailsContent(order) {
     0
   );
   const discountAmount = Number(order.discountAmount);
-  const paymentStatus = order.paymentStatus
-    ? `<span class="badge ${PAYMENT_STATUS_BADGE_CLASS[order.paymentStatus] || ''}">${PAYMENT_STATUS_LABELS[order.paymentStatus] || escapeHtml(order.paymentStatus)}</span>`
-    : '<span class="badge badge-pending">Não iniciado</span>';
+  const isLocal = order.channel === 'LOCAL';
 
   return `
     <div class="admin-order-detail-summary">
@@ -109,7 +127,8 @@ function renderOrderDetailsContent(order) {
       </div>
       <div class="admin-order-detail-badges">
         <span class="badge ${ADMIN_ORDER_STATUS_BADGE_CLASS[order.status] || ''}">${ADMIN_ORDER_STATUS_LABELS[order.status] || escapeHtml(order.status)}</span>
-        ${paymentStatus}
+        ${renderChannelBadge(order.channel)}
+        ${renderAdminPayment(order)}
       </div>
     </div>
 
@@ -123,19 +142,13 @@ function renderOrderDetailsContent(order) {
         <h4 class="admin-order-detail-section-title">Resumo</h4>
         <dl class="admin-order-detail-receipt">
           <div><dt>Subtotal dos itens</dt><dd>${formatPrice(itemsSubtotal)}</dd></div>
-          ${discountAmount > 0 ? `<div><dt>Desconto (${escapeHtml(order.couponCode)})</dt><dd>− ${formatPrice(discountAmount)}</dd></div>` : ''}
-          <div><dt>Frete <span>${formatAdminOrderShipping(order, false)}</span></dt><dd>${formatPrice(order.shippingPrice)}</dd></div>
+          ${discountAmount > 0 ? `<div><dt>Desconto${order.couponCode ? ` (${escapeHtml(order.couponCode)})` : ''}</dt><dd>− ${formatPrice(discountAmount)}</dd></div>` : ''}
+          ${isLocal ? '' : `<div><dt>Frete <span>${formatAdminOrderShipping(order, false)}</span></dt><dd>${formatPrice(order.shippingPrice)}</dd></div>`}
           <div class="admin-order-detail-total"><dt>Total</dt><dd>${formatPrice(order.total)}</dd></div>
         </dl>
       </section>
 
-      <section class="admin-order-detail-section">
-        <h4 class="admin-order-detail-section-title">Entrega</h4>
-        <div class="admin-order-detail-delivery">
-          <div><span>Destinatário</span><strong>${escapeHtml(order.recipientName)}</strong></div>
-          <div><span>Endereço</span><p>${formatAdminOrderAddress(order, true)}</p></div>
-        </div>
-      </section>
+      ${isLocal ? `<section class="admin-order-detail-section"><h4 class="admin-order-detail-section-title">Venda no balcão</h4><div class="admin-order-detail-delivery"><div><span>Cliente</span><strong>${order.customerName ? escapeHtml(order.customerName) : 'Venda anônima'}</strong></div><div><span>Forma de pagamento</span><strong>${escapeHtml(paymentMethodLabel(order.paymentMethod))}</strong></div></div></section>` : `<section class="admin-order-detail-section"><h4 class="admin-order-detail-section-title">Entrega</h4><div class="admin-order-detail-delivery"><div><span>Destinatário</span><strong>${escapeHtml(order.recipientName)}</strong></div><div><span>Endereço</span><p>${formatAdminOrderAddress(order, true)}</p></div></div></section>`}
     </div>
 
     ${renderBlingDetails(order.bling)}
@@ -188,7 +201,7 @@ function renderAdminOrdersTable(orders) {
   const tbody = document.querySelector('[data-admin-orders-tbody]');
 
   if (!orders.length) {
-    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state">Nenhum pedido encontrado nesta conta.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state">Nenhum pedido encontrado nesta conta.</div></td></tr>';
     return;
   }
 
@@ -199,11 +212,9 @@ function renderAdminOrdersTable(orders) {
           <td>${renderOrderIdCell(order.id, false)}</td>
           <td>${new Date(order.createdAt).toLocaleDateString('pt-BR')}</td>
           <td><span class="badge ${ADMIN_ORDER_STATUS_BADGE_CLASS[order.status] || ''}">${ADMIN_ORDER_STATUS_LABELS[order.status] || escapeHtml(order.status)}</span></td>
-          <td>
-            ${order.paymentStatus
-              ? `<span class="badge ${PAYMENT_STATUS_BADGE_CLASS[order.paymentStatus] || ''}">${PAYMENT_STATUS_LABELS[order.paymentStatus] || escapeHtml(order.paymentStatus)}</span>`
-              : '<span class="badge badge-pending">Não iniciado</span>'}
-          </td>
+          <td>${renderChannelBadge(order.channel)}</td>
+          <td>${renderAdminCustomer(order)}</td>
+          <td>${renderAdminPayment(order)}</td>
           <td>${renderBlingTableCell(order)}</td>
           <td>${formatPrice(order.total)}</td>
           <td>${order.items.length}</td>
@@ -274,7 +285,7 @@ async function loadAdminOrders() {
     adminOrders = response.content;
     renderAdminOrdersTable(adminOrders);
   } catch (error) {
-    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state">Não foi possível carregar os pedidos.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state">Não foi possível carregar os pedidos.</div></td></tr>';
     showToast(error.message || 'Erro ao carregar pedidos', 'error');
   }
 }
