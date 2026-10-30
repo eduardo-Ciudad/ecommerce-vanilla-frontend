@@ -638,6 +638,26 @@ function renderBlingStatusBadge(bling) {
   return `<span class="badge ${details.badgeClass}"${title}>${details.label}</span>`;
 }
 
+const PAYMENT_METHOD_LABELS = {
+  pix: 'Pix',
+  credit_card: 'Cartão de crédito',
+  cash: 'Dinheiro',
+  local_pix: 'Pix',
+  card_machine: 'Maquininha',
+  payment_link: 'Link de pagamento',
+  store_credit: 'Fiado',
+};
+
+function paymentMethodLabel(method) {
+  return PAYMENT_METHOD_LABELS[method] || method || '—';
+}
+
+function renderChannelBadge(channel) {
+  return channel === 'LOCAL'
+    ? '<span class="badge badge-channel-local">Loja</span>'
+    : '<span class="badge badge-channel-site">Site</span>';
+}
+
 const PAYMENT_STATUS_LABELS = {
   approved: 'Pago',
   pending: 'Aguardando pagamento',
