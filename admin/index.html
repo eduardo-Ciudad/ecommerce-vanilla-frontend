@@ -40,6 +40,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1.5"/><circle cx="19" cy="21" r="1.5"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.7L21 8H6"/></svg>
           Pedidos
         </a>
+        <a href="local-sale.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10h18M5 10v10h14V10M4 4h16l1 6H3l1-6z"/><path d="M8 14h3v6M15 14h2"/></svg>
+          Venda no balcão
+        </a>
         <a href="coupons.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.6 12.3L12.7 20a2 2 0 01-2.8 0l-7-7a2 2 0 010-2.8L10.8 2.5 20.6 3l.5 9.3z"/><circle cx="15.5" cy="7.5" r="1"/><path d="M8 9h.01M13 14h.01M8.5 14.5l4-6"/></svg>
           Cupons
@@ -63,6 +67,8 @@
           <h1>Dashboard</h1>
           <p class="admin-page-subtitle">Visão geral da sua loja</p>
         </div>
+        <div class="admin-page-actions">
+          <a class="btn btn-primary" href="local-sale.html">Nova venda no balcão</a>
         <div class="admin-topbar">
           <form class="admin-topbar-search" data-admin-search-form>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -73,6 +79,7 @@
           </button>
           <div class="admin-avatar" data-admin-avatar>AD</div>
         </div>
+        </div>
       </div>
 
       <div class="dashboard-grid" data-dashboard-grid>
@@ -81,6 +88,10 @@
         <div class="skeleton skeleton-block-sm"></div>
         <div class="skeleton skeleton-block-sm"></div>
       </div>
+
+      <section class="dashboard-channel" data-dashboard-channel aria-labelledby="dashboard-channel-title">
+        <div class="skeleton skeleton-block-sm"></div>
+      </section>
 
       <section class="dashboard-attention" data-dashboard-attention aria-label="Pontos de atenção">
         <div class="skeleton skeleton-row"></div>
@@ -106,13 +117,14 @@
               <th>ID</th>
               <th>Data</th>
               <th>Status</th>
+              <th>Canal</th>
               <th>Pagamento</th>
               <th>Bling</th>
               <th>Total</th>
             </tr>
           </thead>
           <tbody data-recent-orders-tbody>
-            <tr><td colspan="6"><div class="skeleton skeleton-row"></div></td></tr>
+            <tr><td colspan="7"><div class="skeleton skeleton-row"></div></td></tr>
           </tbody>
         </table>
       </div>
