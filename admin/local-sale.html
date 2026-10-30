@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>Venda no balcão | Painel Admin GabiKids</title>
+  <meta name="description" content="Registre vendas feitas na loja física da GabiKids." />
+  <link rel="icon" href="../assets/logo-tree.png" type="image/png" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+</head>
+<body>
+  <div class="admin-layout" data-admin-guarded hidden>
+    <button class="admin-menu-toggle" data-admin-menu-toggle aria-label="Abrir menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h16"/></svg></button>
+    <aside class="admin-sidebar" data-admin-sidebar>
+      <div class="admin-sidebar-logo"><img class="header-logo-icon" src="../assets/logo-tree.png" alt="" /><span class="header-logo-text">Gabi<span class="header-logo-accent">Kids</span></span></div>
+      <div class="admin-sidebar-subtitle">Painel Administrativo</div>
+      <nav class="admin-nav">
+        <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+        <a href="categories.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.6 12.3L12.7 20a2 2 0 01-2.8 0l-7-7a2 2 0 010-2.8L10.8 2.5 20.6 3l.5 9.3z"/><circle cx="15.5" cy="7.5" r="1.5"/></svg>Categorias</a>
+        <a href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4M4 7l8 4M4 7v10l8 4m0-10v10"/></svg>Produtos</a>
+        <a href="orders.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1.5"/><circle cx="19" cy="21" r="1.5"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.7L21 8H6"/></svg>Pedidos</a>
+        <a href="local-sale.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10h18M5 10v10h14V10M4 4h16l1 6H3l1-6z"/><path d="M8 14h3v6M15 14h2"/></svg>Venda no balcão</a>
+        <a href="coupons.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.6 12.3L12.7 20a2 2 0 01-2.8 0l-7-7a2 2 0 010-2.8L10.8 2.5 20.6 3l.5 9.3z"/><circle cx="15.5" cy="7.5" r="1"/><path d="M8 9h.01M13 14h.01M8.5 14.5l4-6"/></svg>Cupons</a>
+      </nav>
+      <div class="admin-sidebar-footer"><a href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>Voltar à loja</a><button type="button" data-admin-logout><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sair</button></div>
+    </aside>
+
+    <main class="admin-content local-sale-page">
+      <div class="admin-page-header">
+        <div><h1>Venda no balcão</h1><p class="admin-page-subtitle">Registre a venda feita na loja. O estoque do site baixa na hora e o pedido vai para o Bling.</p></div>
+        <a class="btn btn-secondary" href="orders.html">Ver vendas da loja</a>
+      </div>
+      <section class="local-sale-success" data-sale-success aria-live="polite" hidden></section>
+
+      <div class="local-sale-layout">
+        <div class="local-sale-main">
+          <section class="local-sale-card" aria-labelledby="sale-search-title">
+            <h2 id="sale-search-title">Adicionar produto</h2>
+            <div class="form-group form-group--tight">
+              <label for="local-sale-search">Buscar produto</label>
+              <input class="form-control" id="local-sale-search" type="search" autocomplete="off" placeholder="Nome do produto, SKU ou código de barras" />
+            </div>
+            <div class="local-sale-results" data-sale-results aria-live="polite"><p class="empty-state empty-state--spacious">Digite o nome de um produto para buscar.</p></div>
+          </section>
+
+          <section class="local-sale-card" aria-labelledby="sale-items-title">
+            <h2 id="sale-items-title">Itens da venda</h2>
+            <div class="local-sale-items" data-sale-items><p class="empty-state empty-state--spacious">Busque um produto acima e clique em Adicionar.</p></div>
+          </section>
+        </div>
+
+        <aside class="local-sale-summary" aria-labelledby="sale-summary-title">
+          <div class="local-sale-card">
+            <h2 id="sale-summary-title">Resumo</h2>
+            <div class="form-group">
+              <label for="sale-customer">Cliente (opcional)</label>
+              <input class="form-control" id="sale-customer" type="text" maxlength="100" placeholder="Ex.: Cris vizinha" />
+              <p class="form-hint">Só para você saber para quem foi. Em branco, a venda fica anônima.</p>
+            </div>
+            <fieldset class="local-sale-payment"><legend>Forma de pagamento</legend><div class="local-sale-payment-grid" data-sale-payments></div></fieldset>
+            <div class="local-sale-warning" data-store-credit-warning hidden>Fiado entra no Bling como Crediário (conta a receber) e conta no faturamento do mês.</div>
+            <div class="form-group">
+              <label for="sale-discount">Desconto (R$)</label>
+              <div class="local-sale-money-input"><span>R$</span><input class="form-control" id="sale-discount" type="text" inputmode="decimal" placeholder="0,00" aria-describedby="sale-discount-error" /></div>
+              <p class="form-error" id="sale-discount-error" data-discount-error></p>
+            </div>
+            <dl class="local-sale-totals"><div><dt>Subtotal</dt><dd data-sale-subtotal>R$ 0,00</dd></div><div><dt>Desconto</dt><dd data-sale-discount-total>− R$ 0,00</dd></div><div class="local-sale-total"><dt>Total</dt><dd data-sale-total>R$ 0,00</dd></div></dl>
+            <button class="btn btn-primary btn-block local-sale-submit" type="button" data-sale-submit disabled>Registrar venda</button>
+            <p class="local-sale-note">Sem frete, sem endereço e sem nota fiscal.</p>
+          </div>
+        </aside>
+      </div>
+      <div class="local-sale-mobile-bar">
+        <div><span>Total</span><strong data-sale-total-mobile>R$ 0,00</strong></div>
+        <button class="btn btn-primary" type="button" data-sale-submit-mobile disabled>Registrar venda</button>
+      </div>
+    </main>
+  </div>
+  <script src="../js/storage.js"></script><script src="../js/api.js"></script><script src="../js/toast.js"></script><script src="../js/modal.js"></script><script src="../js/auth.js"></script><script src="../js/admin/local-sale.js"></script>
+</body>
+</html>
