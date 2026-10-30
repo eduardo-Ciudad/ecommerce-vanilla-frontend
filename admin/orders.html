@@ -40,6 +40,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1.5"/><circle cx="19" cy="21" r="1.5"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.7L21 8H6"/></svg>
           Pedidos
         </a>
+        <a href="local-sale.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10h18M5 10v10h14V10M4 4h16l1 6H3l1-6z"/><path d="M8 14h3v6M15 14h2"/></svg>
+          Venda no balcão
+        </a>
         <a href="coupons.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.6 12.3L12.7 20a2 2 0 01-2.8 0l-7-7a2 2 0 010-2.8L10.8 2.5 20.6 3l.5 9.3z"/><circle cx="15.5" cy="7.5" r="1"/><path d="M8 9h.01M13 14h.01M8.5 14.5l4-6"/></svg>
           Cupons
@@ -58,8 +62,10 @@
     </aside>
 
     <main class="admin-content">
-      <h1>Pedidos</h1>
-      <p class="admin-page-subtitle">Gerencie os pedidos da loja</p>
+      <div class="admin-page-header">
+        <div><h1>Pedidos</h1><p class="admin-page-subtitle">Gerencie os pedidos da loja</p></div>
+        <a class="btn btn-primary" href="local-sale.html">Nova venda no balcão</a>
+      </div>
 
       <p class="admin-note">
         A API do backend só expõe <code>GET /orders</code> filtrado pelo usuário autenticado — não existe um endpoint
@@ -75,6 +81,8 @@
               <th>ID</th>
               <th>Data</th>
               <th>Status</th>
+              <th>Canal</th>
+              <th>Cliente</th>
               <th>Pagamento</th>
               <th>Bling</th>
               <th>Total</th>
@@ -85,7 +93,7 @@
             </tr>
           </thead>
           <tbody data-admin-orders-tbody>
-            <tr><td colspan="10"><div class="skeleton skeleton-row"></div></td></tr>
+            <tr><td colspan="12"><div class="skeleton skeleton-row"></div></td></tr>
           </tbody>
         </table>
       </div>
