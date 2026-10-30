@@ -42,10 +42,6 @@ function renderProductNotFound() {
   `;
 }
 
-function productSku(product) {
-  return `GK-${product.id.slice(0, 8).toUpperCase()}`;
-}
-
 function renderBreadcrumb(product) {
   document.querySelector('[data-breadcrumb-current]').textContent = product.name;
   const categoryCrumb = document.querySelector('[data-breadcrumb-category]');
@@ -184,7 +180,7 @@ function renderProduct(product) {
       <div class="product-info">
         <div class="product-meta-row">
           <span class="badge product-category-badge">${escapeHtml(product.categoryName || '')}</span>
-          <span class="product-sku">SKU: ${productSku(product)}</span>
+          <span class="product-sku" data-product-sku hidden></span>
         </div>
 
         <h1>${escapeHtml(product.name)}</h1>
@@ -414,6 +410,7 @@ function wireProductInteractions(product) {
   const priceEl = document.querySelector('[data-product-price]');
   const installmentEl = document.querySelector('[data-product-installment]');
   const stockEl = document.querySelector('[data-product-stock]');
+  const skuEl = document.querySelector('[data-product-sku]');
   const qtyInput = document.querySelector('[data-qty-input]');
   const addButton = document.querySelector('[data-add-to-cart]');
 
@@ -429,6 +426,8 @@ function wireProductInteractions(product) {
 
   function resetVariantSelection() {
     selectedVariant = null;
+    skuEl.hidden = true;
+    skuEl.innerHTML = '';
     priceEl.textContent = 'Selecione um tamanho';
     installmentEl.hidden = true;
     installmentEl.textContent = '';
@@ -468,6 +467,9 @@ function wireProductInteractions(product) {
 
   function selectVariant(variant) {
     selectedVariant = variant;
+    const sku = String(variant.sku || '').trim();
+    skuEl.hidden = !sku;
+    skuEl.innerHTML = sku ? `SKU: ${escapeHtml(sku)}` : '';
     chipsContainer.querySelectorAll('.variant-chip').forEach((chip) => {
       chip.classList.toggle('is-selected', chip.dataset.variantId === String(variant.id));
     });
