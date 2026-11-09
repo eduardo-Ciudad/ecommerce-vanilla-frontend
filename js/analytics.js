@@ -9,6 +9,8 @@
   'use strict';
 
   var GA_MEASUREMENT_ID = 'G-9N9W6K9Q47';
+  var GOOGLE_ADS_ID = 'AW-18538098111';
+  var GOOGLE_ADS_CONVERSION_SEND_TO = 'AW-18538098111/H6OiCNL5i7QdEL_b04dF';
   var CONSENT_KEY = 'cookie_consent';
   var CONSENT_DATE_KEY = 'cookie_consent_date';
   var MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000;
@@ -47,11 +49,12 @@
   }
 
   function consentState(choice) {
+    var granted = choice === 'all';
     return {
-      analytics_storage: choice === 'all' ? 'granted' : 'denied',
-      ad_storage: 'denied',
-      ad_user_data: 'denied',
-      ad_personalization: 'denied'
+      analytics_storage: granted ? 'granted' : 'denied',
+      ad_storage: granted ? 'granted' : 'denied',
+      ad_user_data: granted ? 'granted' : 'denied',
+      ad_personalization: granted ? 'granted' : 'denied'
     };
   }
 
@@ -64,6 +67,35 @@
     page_location: redactUrl(window.location.href),
     page_referrer: redactUrl(document.referrer)
   });
+  gtag('config', GOOGLE_ADS_ID);
+
+  window.trackAdsPurchaseConversion = function (order) {
+    if (typeof window.gtag !== 'function' || readStoredConsent() !== 'all') return;
+
+    var orderId = order && order.id;
+    var total = Number(order && order.total);
+    if (!orderId || !Number.isFinite(total)) return;
+
+    var storageKey = 'gk_ads_conv_' + orderId;
+    try {
+      if (localStorage.getItem(storageKey)) return;
+    } catch (e) {
+      return;
+    }
+
+    window.gtag('event', 'conversion', {
+      send_to: GOOGLE_ADS_CONVERSION_SEND_TO,
+      value: Number(total.toFixed(2)),
+      currency: 'BRL',
+      transaction_id: orderId
+    });
+
+    try {
+      localStorage.setItem(storageKey, '1');
+    } catch (e) {
+      // O bloqueio do storage não deve interromper o checkout.
+    }
+  };
 
   window.gabiAnalyticsConsent = function (choice) {
     gtag('consent', 'update', consentState(choice));

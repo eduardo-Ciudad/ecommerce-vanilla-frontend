@@ -860,7 +860,7 @@ async function initCardForm(order) {
                     ? window.MP_DEVICE_SESSION_ID
                     : null,
               });
-              showPaymentResult(result, order.id);
+              showPaymentResult(result, order);
             } catch (error) {
               showToast(error.message || 'Erro ao processar pagamento', 'error');
             }
@@ -904,7 +904,7 @@ async function handlePixPayment(order) {
     });
 
     if (result.status === 'approved') {
-      showPaymentResult(result, order.id);
+      showPaymentResult(result, order);
     } else if (result.pixQrCodeBase64) {
       renderPixResult(result, order);
     } else {
@@ -1013,7 +1013,7 @@ function startPixPolling(orderId) {
       const updated = orders.find((o) => o.id === orderId);
 
       if (updated && updated.paymentStatus === 'approved') {
-        showPaymentResult({ status: 'approved' }, orderId);
+        showPaymentResult({ status: 'approved' }, updated);
         return;
       }
     } catch (error) {
@@ -1049,8 +1049,12 @@ function startPixPolling(orderId) {
   pixPollTimeout = setTimeout(poll, PIX_POLL_DELAY_MS);
 }
 
-function showPaymentResult(result, orderId) {
+function showPaymentResult(result, order) {
   stopPixPolling();
+
+  if (result.status === 'approved' && typeof window.trackAdsPurchaseConversion === 'function') {
+    window.trackAdsPurchaseConversion(order);
+  }
 
   document.querySelector('[data-checkout-payment]').hidden = true;
 
@@ -1083,8 +1087,8 @@ function showPaymentResult(result, orderId) {
   const retryBtn = resultSection.querySelector('[data-retry-btn]');
   if (retryBtn) {
     retryBtn.addEventListener('click', () => {
-      if (orderId) {
-        window.location.href = `checkout.html?orderId=${encodeURIComponent(orderId)}`;
+      if (order?.id) {
+        window.location.href = `checkout.html?orderId=${encodeURIComponent(order.id)}`;
         return;
       }
 
