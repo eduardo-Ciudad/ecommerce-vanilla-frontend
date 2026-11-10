@@ -82,6 +82,52 @@ function formatCpf(value) {
     .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
 }
 
+function formatPhone(value) {
+  const digits = String(value ?? '').replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 10) {
+    return digits
+      .replace(/^(\d{2})(\d)/, '($1) $2')
+      .replace(/^(\(\d{2}\) \d{4})(\d)/, '$1-$2');
+  }
+  return digits
+    .replace(/^(\d{2})(\d)/, '($1) $2')
+    .replace(/^(\(\d{2}\) \d{5})(\d)/, '$1-$2');
+}
+
+function setPayerPhoneError(message = '') {
+  document.querySelectorAll('[data-payer-phone]').forEach((input) => {
+    const errorEl = input.parentElement.querySelector('[data-payer-phone-error]');
+    if (errorEl) errorEl.textContent = message;
+    input.setAttribute('aria-invalid', message ? 'true' : 'false');
+  });
+}
+
+function wirePayerPhoneInputs() {
+  const inputs = [...document.querySelectorAll('[data-payer-phone]')];
+  inputs.forEach((input) => {
+    input.addEventListener('input', () => {
+      const value = formatPhone(input.value);
+      inputs.forEach((otherInput) => { otherInput.value = value; });
+      setPayerPhoneError();
+    });
+  });
+}
+
+function getValidPayerPhone(input) {
+  const digits = input.value.replace(/\D/g, '');
+  setPayerPhoneError();
+  if (!/^\d{10,11}$/.test(digits)) {
+    setPayerPhoneError('Informe um celular com DDD');
+    input.focus();
+    return null;
+  }
+  return digits;
+}
+
+function isPayerPhoneValidationError(error) {
+  return /payerPhone|payer phone|celular|telefone/i.test(error?.message || '');
+}
+
 function setPixCpfError(message = '') {
   const input = document.querySelector('[data-pix-cpf]');
   const errorEl = document.querySelector('[data-pix-cpf-error]');
@@ -571,6 +617,11 @@ function renderCheckout(order) {
 
         <div class="payment-panel is-active" data-payment-panel="card">
           <div id="mp-card-form"></div>
+          <div class="form-group pix-payer-document">
+            <label for="card-payer-phone">Celular (WhatsApp)</label>
+            <input class="form-control" id="card-payer-phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(17) 99999-9999" required aria-describedby="card-payer-phone-error" data-payer-phone />
+            <p class="form-error" id="card-payer-phone-error" aria-live="polite" data-payer-phone-error></p>
+          </div>
         </div>
 
         <div class="payment-panel" data-payment-panel="pix">
@@ -580,6 +631,11 @@ function renderCheckout(order) {
               <label for="pix-payer-cpf">CPF do pagador</label>
               <input class="form-control" id="pix-payer-cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00" aria-describedby="pix-payer-cpf-error" data-pix-cpf />
               <p class="form-error" id="pix-payer-cpf-error" aria-live="polite" data-pix-cpf-error></p>
+            </div>
+            <div class="form-group pix-payer-document">
+              <label for="pix-payer-phone">Celular (WhatsApp)</label>
+              <input class="form-control" id="pix-payer-phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(17) 99999-9999" required aria-describedby="pix-payer-phone-error" data-payer-phone />
+              <p class="form-error" id="pix-payer-phone-error" aria-live="polite" data-payer-phone-error></p>
             </div>
             <button class="btn btn-primary btn-block" type="button" data-pix-btn>Gerar Pix de ${formatPrice(order.total)}</button>
           </div>
@@ -592,6 +648,7 @@ function renderCheckout(order) {
 
   wirePaymentTabs();
   wirePixCpfInput();
+  wirePayerPhoneInputs();
   document.querySelector('[data-pix-btn]').addEventListener('click', () => handlePixPayment(order));
   initCardForm(order);
 }
@@ -844,6 +901,10 @@ async function initCardForm(order) {
         callbacks: {
           onReady: () => {},
           onSubmit: async (cardFormData) => {
+            const phoneInput = document.getElementById('card-payer-phone');
+            const payerPhone = getValidPayerPhone(phoneInput);
+            if (!payerPhone) return;
+
             try {
               const result = await apiPost('/payments/process', {
                 orderId: order.id,
@@ -854,6 +915,7 @@ async function initCardForm(order) {
                 issuerId: cardFormData.issuer_id ?? null,
                 payerDocType: cardFormData.payer?.identification?.type ?? null,
                 payerDocNumber: cardFormData.payer?.identification?.number ?? null,
+                payerPhone,
                 deviceId:
                   typeof window.MP_DEVICE_SESSION_ID === 'string' &&
                   window.MP_DEVICE_SESSION_ID
@@ -862,6 +924,9 @@ async function initCardForm(order) {
               });
               showPaymentResult(result, order);
             } catch (error) {
+              if (isPayerPhoneValidationError(error)) {
+                setPayerPhoneError(error.message || 'Informe um celular com DDD');
+              }
               showToast(error.message || 'Erro ao processar pagamento', 'error');
             }
           },
@@ -883,6 +948,7 @@ async function initCardForm(order) {
 async function handlePixPayment(order) {
   const pixBtn = document.querySelector('[data-pix-btn]');
   const cpfInput = document.querySelector('[data-pix-cpf]');
+  const phoneInput = document.getElementById('pix-payer-phone');
   const cpfDigits = cpfInput.value.replace(/\D/g, '');
 
   setPixCpfError();
@@ -891,6 +957,9 @@ async function handlePixPayment(order) {
     cpfInput.focus();
     return;
   }
+
+  const payerPhone = getValidPayerPhone(phoneInput);
+  if (!payerPhone) return;
 
   pixBtn.disabled = true;
   pixBtn.innerHTML = '<span class="spinner"></span> Gerando Pix...';
@@ -901,6 +970,7 @@ async function handlePixPayment(order) {
       paymentMethod: 'pix',
       payerDocType: 'CPF',
       payerDocNumber: cpfDigits,
+      payerPhone,
     });
 
     if (result.status === 'approved') {
@@ -913,7 +983,11 @@ async function handlePixPayment(order) {
       pixBtn.textContent = `Gerar Pix de ${formatPrice(order.total)}`;
     }
   } catch (error) {
-    if (error.status === 400) setPixCpfError(error.message || 'Informe um CPF válido');
+    if (isPayerPhoneValidationError(error)) {
+      setPayerPhoneError(error.message || 'Informe um celular com DDD');
+    } else if (error.status === 400) {
+      setPixCpfError(error.message || 'Informe um CPF válido');
+    }
     showToast(error.message || 'Erro ao gerar Pix', 'error');
     pixBtn.disabled = false;
     pixBtn.textContent = `Gerar Pix de ${formatPrice(order.total)}`;
