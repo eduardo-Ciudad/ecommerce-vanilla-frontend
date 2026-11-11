@@ -13,6 +13,91 @@ let localSaleSearchTimer = null;
 let localSaleSubmitting = false;
 let localSaleSearchResults = [];
 
+const LOCAL_SALE_CUSTOMER_FIELDS = {
+  customerName: ['sale-customer', '[data-customer-name-error]'],
+  customerPhone: ['sale-customer-phone', '[data-customer-phone-error]'],
+  customerDocument: ['sale-customer-document', '[data-customer-document-error]'],
+};
+
+function setLocalSaleFieldError(field, message = '') {
+  const config = LOCAL_SALE_CUSTOMER_FIELDS[field];
+  if (!config) return;
+  const [inputId, errorSelector] = config;
+  const input = document.getElementById(inputId);
+  input.setAttribute('aria-invalid', message ? 'true' : 'false');
+  input.closest('.form-group')?.classList.toggle('has-error', Boolean(message));
+  document.querySelector(errorSelector).textContent = message;
+}
+
+function clearLocalSaleCustomerErrors() {
+  Object.keys(LOCAL_SALE_CUSTOMER_FIELDS).forEach((field) => setLocalSaleFieldError(field));
+}
+
+function validateLocalSaleCustomer() {
+  const nameInput = document.getElementById('sale-customer');
+  const phoneInput = document.getElementById('sale-customer-phone');
+  const documentInput = document.getElementById('sale-customer-document');
+  const customerName = nameInput.value.trim();
+  const customerPhone = phoneInput.value.replace(/\D/g, '');
+  const customerDocument = documentInput.value.replace(/\D/g, '');
+  clearLocalSaleCustomerErrors();
+
+  if (!customerName) setLocalSaleFieldError('customerName', 'Informe o nome do cliente.');
+  else if (customerName.length > 100) setLocalSaleFieldError('customerName', 'O nome deve ter no máximo 100 caracteres.');
+  if (!isValidPhone(customerPhone)) setLocalSaleFieldError('customerPhone', 'Informe um celular com DDD.');
+  if (customerDocument && !isValidCpf(customerDocument)) setLocalSaleFieldError('customerDocument', 'Informe um CPF válido.');
+
+  const firstInvalid = Object.values(LOCAL_SALE_CUSTOMER_FIELDS)
+    .map(([inputId]) => document.getElementById(inputId))
+    .find((input) => input.getAttribute('aria-invalid') === 'true');
+  if (firstInvalid) {
+    firstInvalid.focus();
+    return null;
+  }
+  return { customerName, customerPhone, customerDocument: customerDocument || null };
+}
+
+function showLocalSaleBackendFieldErrors(error) {
+  if (error.status !== 400) return false;
+  const fields = new Set(Object.keys(LOCAL_SALE_CUSTOMER_FIELDS));
+  let displayed = false;
+  const visit = (value, key = '') => {
+    if (typeof value === 'string' && fields.has(key)) {
+      setLocalSaleFieldError(key, value);
+      displayed = true;
+    } else if (Array.isArray(value)) {
+      value.forEach((entry) => {
+        const entryField = entry?.field || entry?.propertyPath || entry?.name;
+        if (entry && typeof entry === 'object' && fields.has(entryField)) {
+          const message = entry.message || entry.defaultMessage || entry.error;
+          if (typeof message === 'string') {
+            setLocalSaleFieldError(entryField, message);
+            displayed = true;
+          }
+        } else visit(entry, key);
+      });
+    } else if (value && typeof value === 'object') {
+      Object.entries(value).forEach(([childKey, childValue]) => visit(childValue, childKey));
+    }
+  };
+  visit(error.data);
+  if (!displayed) {
+    const message = error.message || '';
+    const fieldPatterns = {
+      customerName: /customerName|nome(?: do cliente)?/i,
+      customerPhone: /customerPhone|celular|telefone/i,
+      customerDocument: /customerDocument|cpf|documento/i,
+    };
+    fields.forEach((field) => {
+      if (fieldPatterns[field].test(message)) {
+        setLocalSaleFieldError(field, message);
+        displayed = true;
+      }
+    });
+  }
+  return displayed;
+}
+
 function parseLocalSaleDiscount() {
   const input = document.getElementById('sale-discount').value.trim();
   if (!input) return 0;
@@ -191,6 +276,9 @@ function resetLocalSaleForm() {
   localSaleItems = [];
   localSalePaymentMethod = '';
   document.getElementById('sale-customer').value = '';
+  document.getElementById('sale-customer-phone').value = '';
+  document.getElementById('sale-customer-document').value = '';
+  clearLocalSaleCustomerErrors();
   document.getElementById('sale-discount').value = '';
   document.querySelector('[data-store-credit-warning]').hidden = true;
   document.querySelectorAll('[data-payment-method]').forEach((button) => button.setAttribute('aria-pressed', 'false'));
@@ -200,13 +288,16 @@ function resetLocalSaleForm() {
 async function submitLocalSale() {
   if (localSaleSubmitting) return;
   const discount = parseLocalSaleDiscount();
-  const customerName = document.getElementById('sale-customer').value.trim();
+  const customer = validateLocalSaleCustomer();
+  if (!customer) return;
   const paymentLabel = LOCAL_SALE_PAYMENT_OPTIONS.find(([value]) => value === localSalePaymentMethod)?.[1] || '';
   const payload = {
     items: localSaleItems.map((item) => ({ variantId: item.id, quantity: item.quantity })),
     paymentMethod: localSalePaymentMethod,
+    customerName: customer.customerName,
+    customerPhone: customer.customerPhone,
+    customerDocument: customer.customerDocument,
   };
-  if (customerName) payload.customerName = customerName;
   if (discount > 0) payload.discountAmount = discount;
 
   const buttons = document.querySelectorAll('[data-sale-submit], [data-sale-submit-mobile]');
@@ -226,6 +317,7 @@ async function submitLocalSale() {
     banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
     showToast('Venda registrada com sucesso', 'success');
   } catch (error) {
+    showLocalSaleBackendFieldErrors(error);
     showToast(error.message || 'Não foi possível registrar a venda', 'error');
   } finally {
     localSaleSubmitting = false;
@@ -239,6 +331,18 @@ function initLocalSalePage() {
   renderLocalSalePayments();
   renderLocalSaleItems();
   const searchInput = document.getElementById('local-sale-search');
+  const customerNameInput = document.getElementById('sale-customer');
+  const customerPhoneInput = document.getElementById('sale-customer-phone');
+  const customerDocumentInput = document.getElementById('sale-customer-document');
+  customerNameInput.addEventListener('input', () => setLocalSaleFieldError('customerName'));
+  customerPhoneInput.addEventListener('input', () => {
+    customerPhoneInput.value = formatPhone(customerPhoneInput.value);
+    setLocalSaleFieldError('customerPhone');
+  });
+  customerDocumentInput.addEventListener('input', () => {
+    customerDocumentInput.value = formatCpf(customerDocumentInput.value);
+    setLocalSaleFieldError('customerDocument');
+  });
   searchInput.addEventListener('input', () => {
     clearTimeout(localSaleSearchTimer);
     const term = searchInput.value.trim();

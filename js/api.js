@@ -40,11 +40,12 @@ function logAppError(context, error, details = {}) {
 }
 
 class ApiError extends Error {
-  constructor(message, status = null, code = 'API_ERROR') {
+  constructor(message, status = null, code = 'API_ERROR', data = null) {
     super(message);
     this.name = this.constructor.name;
     this.status = status;
     this.code = code;
+    this.data = data;
   }
 }
 
@@ -72,19 +73,20 @@ class ApiContractError extends ApiError {
   }
 }
 
-async function parseErrorMessage(response) {
+async function parseErrorResponse(response) {
   try {
     const data = await response.json();
-    if (typeof data.error === 'string') return data.error;
+    if (typeof data.error === 'string') return { message: data.error, data };
     const fieldMessages = Object.values(data).filter((v) => typeof v === 'string');
-    if (fieldMessages.length) return fieldMessages.join(' ');
+    if (fieldMessages.length) return { message: fieldMessages.join(' '), data };
+    return { message: `Erro ${response.status} ao comunicar com o servidor`, data };
   } catch (error) {
     logAppError('api.error_response.parse', error, {
       code: 'API_ERROR_BODY_PARSE_FAILED',
       responseStatus: response.status,
     });
   }
-  return `Erro ${response.status} ao comunicar com o servidor`;
+  return { message: `Erro ${response.status} ao comunicar com o servidor`, data: null };
 }
 
 function createRequestContext(timeoutMs, externalSignal) {
@@ -363,8 +365,8 @@ async function apiFetch(endpoint, options = {}) {
     }
 
     if (!response.ok) {
-      const message = await parseErrorMessage(response);
-      throw new ApiError(message, response.status);
+      const errorResponse = await parseErrorResponse(response);
+      throw new ApiError(errorResponse.message, response.status, 'API_ERROR', errorResponse.data);
     }
 
     return await parseSuccessResponse(response, endpoint, config.method);
@@ -430,8 +432,8 @@ async function apiUploadFile(endpoint, file, options = {}) {
     }
 
     if (!response.ok) {
-      const message = await parseErrorMessage(response);
-      throw new ApiError(message, response.status);
+      const errorResponse = await parseErrorResponse(response);
+      throw new ApiError(errorResponse.message, response.status, 'API_ERROR', errorResponse.data);
     }
 
     return await parseSuccessResponse(response, endpoint, config.method);
