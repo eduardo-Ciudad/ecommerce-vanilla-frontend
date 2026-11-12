@@ -749,6 +749,7 @@ function productCardSecondaryImageUrl(product) {
 }
 
 const productCardProductRegistry = new Map();
+const PRODUCT_VIEW_TRANSITION_STORAGE_KEY = 'gabiKidsProductViewTransition';
 
 function productCardQuickAddMarkup(product, productUrl) {
   if (typeof getQuickAddOptions !== 'function') return '';
@@ -857,6 +858,31 @@ document.addEventListener('pointerenter', (event) => {
 }, true);
 
 document.addEventListener('click', (event) => {
+  const productLink = event.target.closest?.('.product-card-image, .product-card-body a');
+  if (productLink && event.button === 0
+    && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+    const card = productLink.closest('.product-card');
+    const primaryImage = card?.querySelector('.product-card-image-primary');
+    if (card && primaryImage) {
+      document.querySelectorAll('[data-product-main-image], [style]').forEach((element) => {
+        if (element.matches('[data-product-main-image]')) {
+          element.style.viewTransitionName = 'none';
+        } else if (element.style.viewTransitionName === 'product-hero') {
+          element.style.viewTransitionName = '';
+        }
+      });
+      primaryImage.style.viewTransitionName = 'product-hero';
+      try {
+        sessionStorage.setItem(PRODUCT_VIEW_TRANSITION_STORAGE_KEY, JSON.stringify({
+          productId: String(card.dataset.productId),
+          imageUrl: primaryImage.currentSrc || primaryImage.src,
+        }));
+      } catch {
+        primaryImage.style.viewTransitionName = '';
+      }
+    }
+  }
+
   const quickButton = event.target.closest?.('[data-quick-variant]');
   if (quickButton) {
     event.preventDefault();
@@ -887,6 +913,15 @@ document.addEventListener('click', (event) => {
   if (!productId || typeof toggleWishlistProduct !== 'function') return;
   const isWishlisted = toggleWishlistProduct(productId);
   syncProductCardWishlist(productId, isWishlisted, { animate: isWishlisted });
+});
+
+window.addEventListener('pageshow', (event) => {
+  document.querySelectorAll('.product-card-image-primary').forEach((image) => {
+    image.style.viewTransitionName = '';
+  });
+  if (event.persisted) {
+    try { sessionStorage.removeItem(PRODUCT_VIEW_TRANSITION_STORAGE_KEY); } catch { /* noop */ }
+  }
 });
 
 document.addEventListener('wishlist-changed', (event) => {
