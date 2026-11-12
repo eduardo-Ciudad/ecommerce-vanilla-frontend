@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(node --check js/orders.js)",
+      "Bash(node --check js/admin/products.js)",
+      "Bash(node \"C:\\\\Users\\\\eduar\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-eduar-minimoda-frontend\\\\aeee76b4-79bd-4897-a600-7b829d61f6bd\\\\scratchpad\\\\static-server.js\" . 5173)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} admin/products.html\\\\n\" http://localhost:5173/admin/products.html)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} js/admin/products.js\\\\n\" http://localhost:5173/js/admin/products.js)",
+      "Bash(kill %1)",
+      "Bash(node --check js/admin/dashboard.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} admin/index.html\\\\n\" http://localhost:5173/admin/index.html)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} css/admin.css\\\\n\" http://localhost:5173/css/admin.css)",
+      "Bash(mkdir -p design-reference)",
+      "Bash(cp \"uploads/GabiKids Admin.dc.html\" \"design-reference/GabiKids_Admin_dc.html\")",
+      "Bash(cp \"uploads/GabiKids Auth.dc.html\" \"design-reference/GabiKids_Auth_dc.html\")",
+      "Bash(cp \"uploads/GabiKids Homepage v2.dc.html\" \"design-reference/GabiKids_Homepage_v2_dc.html\")",
+      "Bash(cp \"uploads/GabiKids Homepage.dc.html\" \"design-reference/GabiKids_Homepage_dc.html\")",
+      "Bash(cd c:/Users/eduar/minimoda-frontend *)",
+      "Bash(grep -ohE \"class=\\\\\\\\\\\\\\\\?[\\\\\"'][^\\\\\"']*\\\\\\\\\\\\\\\\?[\\\\\"']|classList\\\\.\\(add|toggle|remove\\)\\\\\\('[^']*'\\\\\\)|className = '[^']*'\" js/*.js js/admin/*.js)",
+      "Bash(grep -n \"toast \\\\`\\\\|toast toast-\\\\|className = \\\\`\" js/toast.js js/modal.js)",
+      "Bash(node --check js/header.js)",
+      "Bash(node --check js/api.js)",
+      "Bash(node --check js/home.js)",
+      "Bash(git log *)",
+      "Bash(grep -v '^$')",
+      "Bash(grep -n \"content: \\\\`\" -A2 js/admin/categories.js js/admin/products.js)",
+      "Bash(grep -iE \"\\\\.env|credential|secret|\\\\.pem$|\\\\.key$\")",
+      "Bash(grep -n 'src=\"\\\\${product.imageUrl}\"' js/api.js js/product.js js/admin/products.js)",
+      "Bash(cd .. && ls -la)"
+    ]
+  }
+}
