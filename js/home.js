@@ -1,5 +1,6 @@
 const HOME_PRODUCT_PREVIEW_COUNT = 8;
 const HERO_SLIDE_INTERVAL = 4000;
+const HERO_INTRO_DURATION = 900;
 const HOME_EDITORIAL_BLING_PRODUCT_IDS = [
   16686012475,
   16686012678,
@@ -19,6 +20,15 @@ function initHeroCarousel() {
   let activeIndex = 0;
   let timerId = null;
   let isPointerOverHero = false;
+  let isIntroComplete = false;
+
+  function restartDotProgress() {
+    dots.forEach((dot) => dot.classList.remove('is-progressing'));
+    if (reducedMotion.matches) return;
+    const activeDot = dots[activeIndex];
+    void activeDot?.offsetWidth;
+    activeDot?.classList.add('is-progressing');
+  }
 
   function stopTimer() {
     if (timerId === null) return;
@@ -26,9 +36,10 @@ function initHeroCarousel() {
     timerId = null;
   }
 
-  function startTimer() {
+  function startTimer(restartProgress = true) {
     stopTimer();
-    if (reducedMotion.matches || isPointerOverHero) return;
+    if (reducedMotion.matches || isPointerOverHero || !isIntroComplete) return;
+    if (restartProgress) restartDotProgress();
 
     timerId = window.setInterval(() => {
       goToSlide(activeIndex + 1);
@@ -51,7 +62,9 @@ function initHeroCarousel() {
       dot.setAttribute('aria-current', String(isActive));
     });
 
-    if (restartTimer) startTimer();
+    if (isIntroComplete) restartDotProgress();
+
+    if (restartTimer) startTimer(false);
   }
 
   dots.forEach((dot, index) => {
@@ -71,17 +84,35 @@ function initHeroCarousel() {
 
   hero.addEventListener('mouseenter', () => {
     isPointerOverHero = true;
+    hero.classList.add('is-autoplay-paused');
     stopTimer();
   });
 
   hero.addEventListener('mouseleave', () => {
     isPointerOverHero = false;
+    hero.classList.remove('is-autoplay-paused');
     startTimer();
   });
 
-  reducedMotion.addEventListener('change', startTimer);
+  reducedMotion.addEventListener('change', () => {
+    if (reducedMotion.matches) {
+      stopTimer();
+      dots.forEach((dot) => dot.classList.remove('is-progressing'));
+      return;
+    }
+    startTimer();
+  });
   goToSlide(0);
-  startTimer();
+  if (reducedMotion.matches) {
+    document.documentElement.classList.remove('js-hero-intro');
+    isIntroComplete = true;
+  } else {
+    window.setTimeout(() => {
+      document.documentElement.classList.remove('js-hero-intro');
+      isIntroComplete = true;
+      startTimer();
+    }, HERO_INTRO_DURATION);
+  }
 }
 
 function normalizeText(value) {
