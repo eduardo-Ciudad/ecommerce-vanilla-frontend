@@ -51,10 +51,6 @@ function renderBreadcrumb(product) {
 }
 
 function buildGalleryMarkup(product, images) {
-  const mainImageUrl = images[0]?.url || product.imageUrl;
-  const imageContent = mainImageUrl
-    ? `<img src="${escapeHtml(mainImageUrl)}" alt="${escapeHtml(product.name)}" data-product-main-image />`
-    : productImagePlaceholder();
   const thumbnailsContent = images.length
     ? `
       <div class="product-thumbnails" aria-label="Imagens do produto">
@@ -101,11 +97,50 @@ function buildGalleryMarkup(product, images) {
         <div class="product-main-image">
           ${productCardBadge(product)}
           <span class="product-image-wishlist" aria-hidden="true">${ICONS.heart}</span>
-          <div class="product-image">${imageContent}</div>
+          <div class="product-image" data-product-image-slot></div>
           ${galleryNavigationContent}
         </div>
         ${thumbnailsContent}
   `;
+}
+
+function productImageUrlsMatch(currentUrl, nextUrl) {
+  if (!currentUrl || !nextUrl) return false;
+  try {
+    return new URL(currentUrl, window.location.href).href === new URL(nextUrl, window.location.href).href;
+  } catch {
+    return currentUrl === nextUrl;
+  }
+}
+
+async function updateProductMainImage(mainImage, imageUrl, productName) {
+  mainImage.alt = productName || '';
+  if (!imageUrl) {
+    mainImage.hidden = true;
+    mainImage.style.viewTransitionName = 'none';
+    return;
+  }
+
+  mainImage.hidden = false;
+  if (productImageUrlsMatch(mainImage.currentSrc || mainImage.src, imageUrl)) return;
+
+  const requestedUrl = String(imageUrl);
+  mainImage.dataset.pendingSrc = requestedUrl;
+  const preload = new Image();
+  preload.src = requestedUrl;
+  try { await preload.decode(); } catch { /* O src ainda é aplicado para manter o fallback do navegador. */ }
+  await (window.productPageViewTransitionFinished || Promise.resolve());
+  if (!mainImage.isConnected || mainImage.dataset.pendingSrc !== requestedUrl) return;
+  mainImage.src = requestedUrl;
+}
+
+function mountProductMainImage(gallery, mainImage, product, images) {
+  const slot = gallery.querySelector('[data-product-image-slot]');
+  if (!slot || !mainImage) return;
+  slot.append(mainImage);
+  const imageUrl = images[0]?.url || product.imageUrl;
+  if (!imageUrl) slot.insertAdjacentHTML('beforeend', productImagePlaceholder());
+  updateProductMainImage(mainImage, imageUrl, product.name);
 }
 
 function imagesForColor(product, color) {
@@ -130,6 +165,7 @@ function imagesForColor(product, color) {
 function renderGalleryForColor(product, color) {
   const gallery = document.querySelector('.product-gallery');
   if (!gallery) return;
+  const mainImage = gallery.querySelector('[data-product-main-image]');
 
   const images = imagesForColor(product, color);
   const currentUrls = Array.from(gallery.querySelectorAll('[data-product-thumbnail]'))
@@ -140,6 +176,7 @@ function renderGalleryForColor(product, color) {
   if (hasSameImages) return;
 
   gallery.innerHTML = buildGalleryMarkup(product, images);
+  mountProductMainImage(gallery, mainImage, product, images);
   wireProductGallery();
 }
 
@@ -148,6 +185,7 @@ function renderProduct(product) {
   applyProductSeo(product);
 
   const root = document.querySelector('[data-product-root]');
+  const mainImage = root.querySelector('[data-product-main-image]');
   const productImages = Array.isArray(product.images)
     ? product.images.filter((image) => image?.url)
     : [];
@@ -276,6 +314,8 @@ function renderProduct(product) {
       <div class="product-grid" data-related-grid></div>
     </div>
   `;
+
+  mountProductMainImage(root.querySelector('.product-gallery'), mainImage, product, productImages);
 
   wireProductGallery();
   wireProductInteractions(product);
