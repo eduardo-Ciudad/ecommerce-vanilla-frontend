@@ -422,6 +422,21 @@ function wireProductInteractions(product) {
 
   let selectedVariant = null;
   let selectedColor = null;
+  let addSuccessTimeout = null;
+  let addButtonOriginalContent = null;
+
+  function syncAddButtonState() {
+    addButton.disabled = !selectedVariant || Number(selectedVariant.stock) <= 0;
+  }
+
+  function restoreAddButtonSuccess() {
+    if (addSuccessTimeout) clearTimeout(addSuccessTimeout);
+    addSuccessTimeout = null;
+    addButton.classList.remove('is-success');
+    if (addButtonOriginalContent !== null) addButton.innerHTML = addButtonOriginalContent;
+    addButtonOriginalContent = null;
+    syncAddButtonState();
+  }
 
   const variants = [...(product.variants || [])].sort(compareVariantSizes);
   const colors = [...new Map(
@@ -431,6 +446,7 @@ function wireProductInteractions(product) {
   ).values()].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
 
   function resetVariantSelection() {
+    if (addSuccessTimeout) restoreAddButtonSuccess();
     selectedVariant = null;
     skuEl.hidden = true;
     skuEl.innerHTML = '';
@@ -464,6 +480,10 @@ function wireProductInteractions(product) {
         `).join('')
       : '<p class="empty-state empty-state--inline">Sem variações cadastradas.</p>';
 
+    if (filteredVariants.length) {
+      chipsContainer.insertAdjacentHTML('afterbegin', '<span class="variant-selection-indicator" aria-hidden="true"></span>');
+    }
+
     chipsContainer.querySelectorAll('.variant-chip:not(:disabled)').forEach((chip) => {
       chip.addEventListener('click', () => {
         const variant = filteredVariants.find((item) => String(item.id) === chip.dataset.variantId);
@@ -473,6 +493,7 @@ function wireProductInteractions(product) {
   }
 
   function selectVariant(variant) {
+    if (addSuccessTimeout) restoreAddButtonSuccess();
     selectedVariant = variant;
     const sku = String(variant.sku || '').trim();
     skuEl.hidden = !sku;
@@ -486,13 +507,28 @@ function wireProductInteractions(product) {
     stockEl.innerHTML = `${CLOCK_ICON} ${variant.stock} unidades disponíveis`;
     qtyInput.value = 1;
     qtyInput.max = variant.stock;
-    addButton.disabled = variant.stock <= 0;
+    syncAddButtonState();
     document.querySelector('[data-shipping-form]').dataset.unitPrice = variant.price;
+    requestAnimationFrame(updateSizeSelectionIndicator);
 
     const url = new URL(window.location.href);
     url.searchParams.set('id', product.id);
     url.searchParams.set('variant', variant.id);
     history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  function updateSizeSelectionIndicator() {
+    const indicator = chipsContainer.querySelector('.variant-selection-indicator');
+    const selected = chipsContainer.querySelector('.variant-chip.is-selected');
+    const chips = [...chipsContainer.querySelectorAll('.variant-chip')];
+    if (!indicator || !selected || !chips.length) return;
+    const isSingleLine = chips.every((chip) => chip.offsetTop === chips[0].offsetTop);
+    indicator.hidden = !isSingleLine;
+    chipsContainer.classList.toggle('has-sliding-indicator', isSingleLine);
+    if (!isSingleLine) return;
+    indicator.style.width = `${selected.offsetWidth}px`;
+    indicator.style.height = `${selected.offsetHeight}px`;
+    indicator.style.transform = `translate(${selected.offsetLeft}px, ${selected.offsetTop}px)`;
   }
 
   function selectColor(color) {
@@ -571,42 +607,26 @@ function wireProductInteractions(product) {
 
   addButton.addEventListener('click', async () => {
     if (!selectedVariant) return;
-
-    if (!isAuthenticated()) {
-      addToGuestCart({
-        variantId: selectedVariant.id,
-        productId: product.id,
-        productName: product.name,
-        imageUrl: product.imageUrl,
-        size: selectedVariant.size,
-        color: selectedVariant.color || null,
-        price: selectedVariant.price,
-        quantity: Number(qtyInput.value),
-        stock: selectedVariant.stock,
-      });
-      setCartCount(guestCartCount());
-      showToast('Produto adicionado ao carrinho!', 'success');
-      return;
-    }
-
     addButton.disabled = true;
     const originalContent = addButton.innerHTML;
+    addButtonOriginalContent = originalContent;
     addButton.innerHTML = '<span class="spinner"></span>';
 
     try {
-      const cart = await apiPost('/cart/items', {
-        variantId: selectedVariant.id,
-        quantity: Number(qtyInput.value),
-      });
-      setCartCount(sumCartQuantity(cart));
-      showToast('Produto adicionado ao carrinho!', 'success');
+      const items = await cartService.addItem(product, selectedVariant, Number(qtyInput.value));
+      cartService.syncCartBadge(items);
+      addButton.classList.add('is-success');
+      addButton.innerHTML = '<span class="ms is-filled" aria-hidden="true">check_circle</span><span>Adicionado à sacola</span>';
+      const displayedImage = document.querySelector('[data-product-main-image]');
+      runAddToCartFeedback(addButton, displayedImage?.currentSrc || displayedImage?.src || product.imageUrl);
+      addSuccessTimeout = setTimeout(restoreAddButtonSuccess, 1600);
     } catch (error) {
       showToast(error.message || 'Não foi possível adicionar ao carrinho', 'error');
-    } finally {
-      addButton.disabled = false;
-      addButton.innerHTML = originalContent;
+      restoreAddButtonSuccess();
     }
   });
+
+  window.addEventListener('resize', updateSizeSelectionIndicator);
 }
 
 async function initProductPage() {

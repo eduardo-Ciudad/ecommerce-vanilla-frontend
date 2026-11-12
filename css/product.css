@@ -236,12 +236,15 @@
 }
 
 .variant-chips {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
 .variant-chip {
+  position: relative;
+  z-index: 1;
   min-width: 48px;
   height: 44px;
   padding: 0 16px;
@@ -253,7 +256,26 @@
   font-size: var(--text-md);
   font-weight: 600;
   color: var(--color-text-secondary);
-  transition: var(--transition);
+  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.variant-chip:active:not(:disabled) { transform: scale(.94); }
+
+.variant-selection-indicator {
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  top: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-dark);
+  transform-origin: left top;
+  transition: transform var(--spring-dur) var(--spring), width var(--spring-dur) var(--spring);
+  pointer-events: none;
+}
+
+.variant-chips.has-sliding-indicator .variant-chip.is-selected {
+  background: transparent;
+  border-color: transparent;
 }
 
 .variant-chip:hover:not(:disabled) {
@@ -376,6 +398,14 @@
   border-radius: 8px;
   background: var(--color-primary);
 }
+
+.product-add-btn.is-success,
+.product-add-btn.is-success:hover {
+  background-color: #2E6B35;
+  color: #FFFFFF;
+}
+
+.product-add-btn.is-success .ms { font-size: 22px; }
 
 .product-add-btn:hover:not(:disabled) {
   background: var(--color-primary-dark);
