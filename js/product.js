@@ -345,7 +345,7 @@ function shippingOptionRow(option) {
   return `
     <div class="product-shipping-option">
       <span>${escapeHtml(option.methodLabel)} — até ${applyHandlingDays(option.deadlineDays)} dias úteis</span>
-      <strong>${formatPrice(option.price)}</strong>
+      <strong>${option.freeShipping ? 'Grátis' : formatPrice(option.price)}</strong>
     </div>
   `;
 }
@@ -367,7 +367,13 @@ function wireShippingForm() {
     result.innerHTML = '<p class="empty-state empty-state--inline"><span class="spinner"></span> Calculando frete...</p>';
 
     try {
-      const options = await apiGet(`/shipping/calculate?cep=${encodeURIComponent(digits)}`);
+      const unitPrice = Number(form.dataset.unitPrice) || 0;
+      const quantity = Number(document.querySelector('[data-qty-input]')?.value) || 1;
+      const subtotal = unitPrice * quantity;
+      const subtotalParam = Number.isFinite(subtotal) && subtotal > 0
+        ? `&subtotal=${encodeURIComponent(subtotal.toFixed(2))}`
+        : '';
+      const options = await apiGet(`/shipping/calculate?cep=${encodeURIComponent(digits)}${subtotalParam}`);
       result.innerHTML = options.length
         ? options.map(shippingOptionRow).join('')
         : '<p class="empty-state empty-state--inline">Não foi possível calcular o frete para este CEP.</p>';
@@ -435,6 +441,7 @@ function wireProductInteractions(product) {
     qtyInput.value = 1;
     qtyInput.removeAttribute('max');
     addButton.disabled = true;
+    document.querySelector('[data-shipping-form]').dataset.unitPrice = '';
   }
 
   function visibleVariants() {
@@ -480,6 +487,7 @@ function wireProductInteractions(product) {
     qtyInput.value = 1;
     qtyInput.max = variant.stock;
     addButton.disabled = variant.stock <= 0;
+    document.querySelector('[data-shipping-form]').dataset.unitPrice = variant.price;
 
     const url = new URL(window.location.href);
     url.searchParams.set('id', product.id);
