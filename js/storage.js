@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   USER: 'user',
   CART_COUNT: 'cartCount',
   GUEST_CART: 'guestCart',
+  WISHLIST: 'wishlist',
 };
 
 function readStorage(key) {
@@ -125,4 +126,65 @@ function getCartCount() {
 function setCartCount(count) {
   localStorage.setItem(STORAGE_KEYS.CART_COUNT, String(count));
   document.dispatchEvent(new CustomEvent('cart-count-changed', { detail: count }));
+}
+
+function getWishlistProductIds() {
+  const raw = readStorage(STORAGE_KEYS.WISHLIST);
+  if (!raw) return [];
+  let ids = [];
+  if (typeof parseWishlistProductIds === 'function') {
+    ids = parseWishlistProductIds(raw);
+  } else {
+    try {
+      const parsed = JSON.parse(raw);
+      ids = Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+      ids = [];
+    }
+  }
+  if (!ids.length && raw !== '[]') {
+    removeStorage(STORAGE_KEYS.WISHLIST);
+  }
+  return ids;
+}
+
+function setWishlistProductIds(productIds, { notify = true } = {}) {
+  const ids = [...new Set((Array.isArray(productIds) ? productIds : []).map(String))];
+  try {
+    localStorage.setItem(STORAGE_KEYS.WISHLIST, JSON.stringify(ids));
+  } catch {
+    return ids;
+  }
+  if (notify) {
+    document.dispatchEvent(new CustomEvent('wishlist-changed', { detail: { ids } }));
+  }
+  return ids;
+}
+
+function removeWishlistProductIds(productIds) {
+  const removals = new Set((Array.isArray(productIds) ? productIds : []).map(String));
+  return setWishlistProductIds(
+    getWishlistProductIds().filter((id) => !removals.has(id)),
+  );
+}
+
+function isProductWishlisted(productId) {
+  return getWishlistProductIds().includes(String(productId));
+}
+
+function toggleWishlistProduct(productId) {
+  const normalizedId = String(productId);
+  const ids = getWishlistProductIds();
+  const existingIndex = ids.indexOf(normalizedId);
+  const isWishlisted = existingIndex === -1;
+
+  if (isWishlisted) ids.push(normalizedId);
+  else ids.splice(existingIndex, 1);
+
+  setWishlistProductIds(ids, { notify: false });
+
+  document.dispatchEvent(new CustomEvent('wishlist-changed', {
+    detail: { productId: normalizedId, isWishlisted },
+  }));
+  return isWishlisted;
 }

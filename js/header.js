@@ -1,5 +1,19 @@
 const HEADER_CATEGORY_PREVIEW_COUNT = 6;
 
+function materialSymbol(name, { filled = false } = {}) {
+  return `<span class="ms${filled ? ' is-filled' : ''}" aria-hidden="true">${name}</span>`;
+}
+
+function isHeaderSectionActive(section) {
+  const page = window.location.pathname.split('/').pop() || 'index.html';
+  if (section === 'cart') return page === 'cart.html';
+  if (section === 'wishlist') return page === 'favoritos.html';
+  if (section === 'account') {
+    return ['auth.html', 'orders.html', 'enderecos.html'].includes(page);
+  }
+  return false;
+}
+
 const ICONS = {
   chevronDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>',
   menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>',
@@ -88,13 +102,14 @@ async function initFreeShippingMessages() {
 function buildHeaderMarkup() {
   const user = getCurrentUser();
   const cartCount = getCartCount();
+  const wishlistCount = getWishlistProductIds().length;
   const showVerificationWarning = user && !user.emailVerified;
 
   const userMenu = user
     ? `
       <div class="user-menu" data-user-menu>
         <button class="user-menu-trigger" data-user-trigger aria-label="Minha conta">
-          ${ICONS.user}
+          ${materialSymbol('person', { filled: isHeaderSectionActive('account') })}
           <span class="user-menu-name">${escapeHtml(user.name || user.email)}</span>
         </button>
         <div class="user-menu-dropdown">
@@ -113,7 +128,7 @@ function buildHeaderMarkup() {
         aria-label="Minha conta"
         hidden
       >
-        ${ICONS.user}
+        ${materialSymbol('person', { filled: isHeaderSectionActive('account') })}
       </a>
     `;
 
@@ -154,7 +169,7 @@ function buildHeaderMarkup() {
           </div>
         </nav>
         <form class="header-search" data-search-form>
-          ${ICONS.search}
+          ${materialSymbol('search')}
           <input class="form-control" type="search" name="q" placeholder="Buscar produtos..." aria-label="Buscar produtos" />
         </form>
         <div class="header-actions">
@@ -166,19 +181,23 @@ function buildHeaderMarkup() {
             aria-expanded="false"
             hidden
           >
-            ${ICONS.search}
+            ${materialSymbol('search')}
           </button>
           ${adminLink}
+          <a class="header-icon-btn" href="${headerLink('favoritos.html')}" aria-label="Favoritos">
+            ${materialSymbol('favorite', { filled: isHeaderSectionActive('wishlist') })}
+            <span class="cart-badge wishlist-badge" data-wishlist-badge${wishlistCount ? '' : ' hidden'}>${wishlistCount}</span>
+          </a>
           ${userMenu}
-          <a class="header-icon-btn" href="${headerLink('cart.html')}" aria-label="Carrinho">
-            ${ICONS.cart}
+          <a class="header-icon-btn" data-cart-trigger href="${headerLink('cart.html')}" aria-label="Sacola">
+            ${materialSymbol('shopping_bag', { filled: isHeaderSectionActive('cart') })}
             <span class="cart-badge" data-cart-badge${cartCount ? '' : ' hidden'}>${cartCount}</span>
           </a>
         </div>
       </div>
       <div class="header-mobile-search">
         <form data-search-form-mobile>
-          ${ICONS.search}
+          ${materialSymbol('search')}
           <input type="search" name="q" placeholder="Buscar produtos..." aria-label="Buscar produtos" class="form-control" />
         </form>
       </div>
@@ -356,6 +375,14 @@ function initHeader() {
     if (!badge) return;
     badge.textContent = event.detail;
     badge.hidden = !event.detail;
+  });
+
+  document.addEventListener('wishlist-changed', () => {
+    const badge = document.querySelector('[data-wishlist-badge]');
+    if (!badge) return;
+    const count = getWishlistProductIds().length;
+    badge.textContent = count;
+    badge.hidden = count === 0;
   });
 }
 
