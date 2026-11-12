@@ -175,8 +175,63 @@
   transition: var(--transition);
 }
 
-.hero-dot:hover::before,
 .hero-dot.is-active::before {
+  width: 28px;
+  border-radius: 999px;
+}
+
+.hero-dot::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 14px;
+  width: 28px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--color-white);
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hero-dot.is-active.is-progressing::after {
+  opacity: 1;
+  animation: hero-dot-progress 4s linear forwards;
+}
+
+.hero.is-autoplay-paused .hero-dot.is-progressing::after { animation-play-state: paused; }
+
+@keyframes hero-dot-progress { to { transform: scaleX(1); } }
+
+.js-hero-intro .hero-slide:first-child.is-active .hero-title,
+.js-hero-intro .hero-slide:first-child.is-active .hero-subtitle,
+.js-hero-intro .hero-slide:first-child.is-active .hero-actions,
+.js-hero-intro .hero-dots {
+  opacity: 0;
+  transform: translateY(16px);
+  animation:
+    hero-intro-opacity 420ms var(--ease-out) forwards,
+    hero-intro-transform var(--spring-dur) var(--spring) forwards;
+}
+
+.js-hero-intro .hero-slide:first-child.is-active .hero-title { animation-delay: 0ms; }
+.js-hero-intro .hero-slide:first-child.is-active .hero-subtitle { animation-delay: 70ms; }
+.js-hero-intro .hero-slide:first-child.is-active .hero-actions { animation-delay: 140ms; }
+.js-hero-intro .hero-dots { animation-delay: 210ms; }
+
+.js-hero-intro .hero-slide:first-child .hero-slide-image {
+  animation: hero-image-open 900ms var(--ease-out) forwards;
+}
+
+@keyframes hero-intro-opacity { to { opacity: 1; } }
+@keyframes hero-intro-transform { to { transform: translateY(0); } }
+@keyframes hero-image-open {
+  from { clip-path: inset(3% round 24px); transform: scale(1.04); }
+  to { clip-path: inset(0 round 0); transform: scale(1); }
+}
+
+.hero-dot:hover::before {
   background: var(--color-white);
 }
 
@@ -288,6 +343,12 @@
 @media (prefers-reduced-motion: reduce) {
   .hero-slides {
     transition: none;
+  }
+
+  .hero-dot.is-active::after {
+    opacity: 1;
+    transform: scaleX(1);
+    animation: none;
   }
 }
 
