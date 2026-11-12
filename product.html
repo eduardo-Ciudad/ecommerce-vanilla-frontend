@@ -38,7 +38,42 @@
 
     <div data-product-root>
       <div class="product-detail">
-        <div class="skeleton skeleton-square"></div>
+        <div class="product-prefill-gallery skeleton skeleton-square">
+          <img data-product-main-image alt="" />
+          <script>
+            (() => {
+              const key = 'gabiKidsProductViewTransition';
+              const image = document.currentScript.previousElementSibling;
+              let data = null;
+              try {
+                data = JSON.parse(sessionStorage.getItem(key) || 'null');
+                sessionStorage.removeItem(key);
+              } catch {
+                data = null;
+              }
+              const productId = new URLSearchParams(location.search).get('id');
+              if (data && String(data.productId) === String(productId) && data.imageUrl) {
+                image.src = data.imageUrl;
+                image.dataset.transitionPrefill = 'true';
+              } else {
+                image.style.viewTransitionName = 'none';
+              }
+              let resolvePageTransition;
+              window.productPageViewTransitionFinished = 'onpagereveal' in window
+                ? new Promise((resolve) => { resolvePageTransition = resolve; })
+                : Promise.resolve();
+              window.addEventListener('pagereveal', (event) => {
+                if (!image.complete || !image.naturalWidth) image.style.viewTransitionName = 'none';
+                Promise.resolve(event.viewTransition?.finished).catch(() => {}).then(resolvePageTransition);
+              }, { once: true });
+              window.addEventListener('pageshow', (event) => {
+                if (!event.persisted) return;
+                image.style.viewTransitionName = 'none';
+                try { sessionStorage.removeItem(key); } catch { /* noop */ }
+              });
+            })();
+          </script>
+        </div>
         <div>
           <div class="skeleton skeleton-text-sm"></div>
           <div class="skeleton skeleton-text-lg"></div>
@@ -89,6 +124,7 @@
   </footer>
 
   <script src="js/cartRules.js"></script>
+  <script src="js/motionRules.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/guestCart.js"></script>
   <script src="js/api.js"></script>
