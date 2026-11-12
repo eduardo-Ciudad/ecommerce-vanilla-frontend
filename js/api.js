@@ -532,7 +532,7 @@ function variantColorSwatchMarkup(color) {
   const fallbackName = normalized.split(/\s+/)[0];
   const background = VARIANT_COLOR_SWATCHES[normalized]
     || VARIANT_COLOR_SWATCHES[fallbackName]
-    || 'conic-gradient(#E63B2E, #F4D35E, #A5CE3A, #3264A8, #E83E8C, #E63B2E)';
+    || '#C9C1B3';
   return `<span class="color-swatch" style="background:${background}" aria-hidden="true"></span>`;
 }
 
@@ -555,18 +555,18 @@ function productCardColors(product) {
 
 function productCardColorsMarkup(product) {
   const colors = productCardColors(product);
-  if (!colors.length) return '<div class="product-card-colors" aria-hidden="true"></div>';
+  if (!colors.length) return '';
 
-  const visibleColors = colors.length > 5 ? colors.slice(0, 4) : colors;
+  const visibleColors = colors.slice(0, 3);
   const swatches = visibleColors.map((color) => (
     `<span class="product-card-color" title="${escapeAttr(color)}">${variantColorSwatchMarkup(color)}</span>`
   ));
 
-  if (colors.length > 5) {
-    swatches.push(`<span class="product-card-colors-more">+${colors.length - 4}</span>`);
+  if (colors.length > 3) {
+    swatches.push(`<span class="product-card-colors-more">+${colors.length - 3}</span>`);
   }
 
-  return `<div class="product-card-colors" role="img" aria-label="Cores disponíveis: ${escapeAttr(colors.join(', '))}">${swatches.join('')}</div>`;
+  return `<div class="product-card-colors" role="img" aria-label="${colors.length} ${colors.length === 1 ? 'cor disponível' : 'cores disponíveis'}">${swatches.join('')}</div>`;
 }
 
 function variantDescription(item) {
@@ -729,30 +729,173 @@ function productCardBadge(product) {
   return '';
 }
 
+function isTemporaryBlingImageUrl(imageUrl) {
+  if (!imageUrl) return false;
+
+  try {
+    const url = new URL(imageUrl, window.location.href);
+    const hostLooksLikeBling = /bling/i.test(url.hostname);
+    const hasExpiration = ['expires', 'expiration', 'x-amz-expires', 'x-amz-signature', 'signature', 'token']
+      .some((name) => url.searchParams.has(name));
+    return hostLooksLikeBling || hasExpiration;
+  } catch {
+    return true;
+  }
+}
+
+function productCardSecondaryImageUrl(product) {
+  const imageUrl = product?.images?.[1]?.url;
+  return imageUrl && !isTemporaryBlingImageUrl(imageUrl) ? imageUrl : '';
+}
+
+const productCardProductRegistry = new Map();
+
+function productCardQuickAddMarkup(product, productUrl) {
+  if (typeof getQuickAddOptions !== 'function') return '';
+  const options = getQuickAddOptions(product, compareVariantSizes);
+  if (options.type === 'none') return '';
+  if (options.type === 'choose') {
+    return `
+      <div class="product-card-quick-add">
+        <a class="product-card-quick-choose" href="${productUrl}">Escolher cor e tamanho</a>
+      </div>`;
+  }
+  const visibleSizes = options.sizes.slice(0, 5);
+  const wideRemaining = options.sizes.length - visibleSizes.length;
+  const narrowRemaining = options.sizes.length - Math.min(4, options.sizes.length);
+  return `
+    <div class="product-card-quick-add">
+      <span>Adicionar rápido</span>
+      <div class="product-card-quick-sizes">
+        ${visibleSizes.map((option, index) => `
+          <button class="product-card-quick-size${index === 4 ? ' product-card-quick-size--fifth' : ''}" type="button" data-quick-variant="${escapeAttr(option.variantId)}" aria-label="Adicionar tamanho ${escapeAttr(option.size)}">
+            ${escapeHtml(option.size)}
+          </button>`).join('')}
+        ${wideRemaining > 0 ? `<a class="product-card-quick-more product-card-quick-more--wide" href="${productUrl}" aria-label="Ver mais ${wideRemaining} tamanhos">+${wideRemaining}</a>` : ''}
+        ${narrowRemaining > 0 ? `<a class="product-card-quick-more product-card-quick-more--narrow" href="${productUrl}" aria-label="Ver mais ${narrowRemaining} tamanhos">+${narrowRemaining}</a>` : ''}
+      </div>
+    </div>`;
+}
+
 function buildProductCard(product, rootPath = '') {
   const price = lowestVariantPrice(product);
   const priceLabel = price === null ? 'Indisponível' : formatPrice(price);
   const installmentLabel = price !== null ? 'em até 6x no cartão' : '';
   const imageContent = product.imageUrl
-    ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" />`
+    ? `<img class="product-card-image-primary" src="${escapeAttr(product.imageUrl)}" alt="${escapeAttr(product.name)}" loading="lazy" decoding="async" />`
     : productImagePlaceholder();
+  const secondaryImageUrl = productCardSecondaryImageUrl(product);
+  const isWishlisted = typeof isProductWishlisted === 'function' && isProductWishlisted(product.id);
+  const productUrl = `${rootPath}product.html?id=${encodeURIComponent(product.id)}`;
+  productCardProductRegistry.set(String(product.id), product);
 
   return `
-    <article class="product-card fade-in">
-      <a href="${rootPath}product.html?id=${product.id}" class="product-card-image">
-        ${productCardBadge(product)}
-        <span class="product-card-wishlist" aria-hidden="true">${ICONS.heart}</span>
-        ${imageContent}
-      </a>
+    <article class="product-card fade-in" data-product-id="${escapeAttr(product.id)}">
+      <div class="product-card-image-wrap"${secondaryImageUrl ? ` data-secondary-image-url="${escapeAttr(secondaryImageUrl)}"` : ''}>
+        <a href="${productUrl}" class="product-card-image">
+          ${productCardBadge(product)}
+          ${imageContent}
+        </a>
+        <button class="product-card-wishlist" type="button" aria-label="${isWishlisted ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}" aria-pressed="${isWishlisted}">
+          <span class="ms${isWishlisted ? ' is-filled' : ''}" aria-hidden="true">favorite</span>
+        </button>
+        ${productCardQuickAddMarkup(product, productUrl)}
+      </div>
       <div class="product-card-body">
         <span class="product-card-category">${escapeHtml(product.categoryName || '')}</span>
-        <a href="${rootPath}product.html?id=${product.id}">
+        <a href="${productUrl}">
           <h3 class="product-card-name">${escapeHtml(product.name)}</h3>
         </a>
-        ${productCardColorsMarkup(product)}
-        <span class="product-card-price">${priceLabel}</span>
+        <div class="product-card-price-row">
+          <span class="product-card-price">${priceLabel}</span>
+          ${productCardColorsMarkup(product)}
+        </div>
         ${installmentLabel ? `<span class="product-card-installment">${installmentLabel}</span>` : ''}
       </div>
     </article>
   `;
 }
+
+function loadProductCardSecondaryImage(imageWrap) {
+  const imageUrl = imageWrap.dataset.secondaryImageUrl;
+  if (!imageUrl || imageWrap.dataset.secondaryImageLoaded) return;
+
+  imageWrap.dataset.secondaryImageLoaded = 'true';
+  const image = document.createElement('img');
+  image.className = 'product-card-image-secondary';
+  image.loading = 'lazy';
+  image.decoding = 'async';
+  image.alt = '';
+  image.addEventListener('error', () => image.remove(), { once: true });
+  image.addEventListener('load', () => {
+    requestAnimationFrame(() => image.classList.add('is-ready'));
+  }, { once: true });
+  image.src = imageUrl;
+  imageWrap.querySelector('.product-card-image')?.append(image);
+}
+
+function syncProductCardWishlist(productId, isWishlisted, { animate = false } = {}) {
+  document.querySelectorAll(`.product-card[data-product-id="${CSS.escape(String(productId))}"] .product-card-wishlist`)
+    .forEach((button) => {
+      const icon = button.querySelector('.ms');
+      button.setAttribute('aria-pressed', String(isWishlisted));
+      button.setAttribute('aria-label', isWishlisted ? 'Remover dos favoritos' : 'Adicionar aos favoritos');
+      icon?.classList.toggle('is-filled', isWishlisted);
+      if (isWishlisted && animate) {
+        button.classList.remove('is-added');
+        void button.offsetWidth;
+        button.classList.add('is-added');
+      }
+    });
+}
+
+document.addEventListener('pointerenter', (event) => {
+  const imageWrap = event.target.closest?.('.product-card-image-wrap');
+  if (imageWrap && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    loadProductCardSecondaryImage(imageWrap);
+  }
+}, true);
+
+document.addEventListener('click', (event) => {
+  const quickButton = event.target.closest?.('[data-quick-variant]');
+  if (quickButton) {
+    event.preventDefault();
+    event.stopPropagation();
+    const card = quickButton.closest('.product-card');
+    const product = productCardProductRegistry.get(String(card?.dataset.productId));
+    const variant = product?.variants?.find((item) => String(item.id) === quickButton.dataset.quickVariant);
+    if (!product || !variant || quickButton.disabled || typeof cartService === 'undefined') return;
+    quickButton.disabled = true;
+    cartService.addItem(product, variant, 1)
+      .then((items) => {
+        cartService.syncCartBadge(items);
+        runAddToCartFeedback(quickButton, product.imageUrl);
+      })
+      .catch((error) => {
+        showToast(error.message || 'Não foi possível adicionar ao carrinho', 'error');
+      })
+      .finally(() => { quickButton.disabled = false; });
+    return;
+  }
+
+  const button = event.target.closest?.('.product-card-wishlist');
+  if (!button) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+  const productId = button.closest('.product-card')?.dataset.productId;
+  if (!productId || typeof toggleWishlistProduct !== 'function') return;
+  const isWishlisted = toggleWishlistProduct(productId);
+  syncProductCardWishlist(productId, isWishlisted, { animate: isWishlisted });
+});
+
+document.addEventListener('wishlist-changed', (event) => {
+  const { productId, isWishlisted } = event.detail || {};
+  if (productId) syncProductCardWishlist(productId, isWishlisted);
+});
+
+document.addEventListener('animationend', (event) => {
+  if (event.target.matches?.('.product-card-wishlist.is-added')) {
+    event.target.classList.remove('is-added');
+  }
+});

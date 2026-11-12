@@ -98,10 +98,13 @@
 .hero-actions .btn-primary {
   background: var(--color-white);
   color: var(--color-dark);
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.08), 0 1px 2px rgba(8,44,50,.18), 0 3px 8px rgba(8,44,50,.12);
 }
 
 .hero-actions .btn-primary:hover:not(:disabled) {
   background: var(--color-primary-surface);
+  color: var(--color-dark);
+  transform: translateY(-1px);
 }
 
 .hero-arrow {
@@ -262,6 +265,7 @@
     background: var(--color-white);
     color: var(--color-primary-dark);
   }
+
 
   .hero-arrow {
     top: auto;

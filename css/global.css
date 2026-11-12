@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&icon_names=add,check_circle,close,delete,favorite,local_shipping,person,remove,search,shopping_bag&display=block');
 
 :root {
   /* Cores principais */
@@ -91,6 +92,15 @@
   --card-hover-image-transform: scale(1.04);
   --card-hover-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
 
+  /* Movimento */
+  --dur-fast: 150ms;
+  --dur: 220ms;
+  --ease-out: cubic-bezier(.22,1,.36,1);
+  --spring: linear(0, 0.024, 0.087, 0.175, 0.278, 0.387, 0.496, 0.6, 0.696, 0.78, 0.853, 0.914, 0.962, 1, 1.028, 1.048, 1.06, 1.066, 1.068, 1.066, 1.062, 1.056, 1.049, 1.041, 1.034, 1.027, 1.02, 1.015, 1.01, 1.006, 1.002, 1, 0.998, 0.997, 0.996, 0.995, 0.995, 0.996, 0.996, 0.996, 1);
+  --spring-dur: 460ms;
+  --spring-bouncy: linear(0, 0.03, 0.109, 0.219, 0.346, 0.478, 0.606, 0.723, 0.827, 0.913, 0.982, 1.034, 1.071, 1.094, 1.106, 1.108, 1.104, 1.095, 1.082, 1.068, 1.054, 1.04, 1.028, 1.017, 1.008, 1.001, 0.995, 0.992, 0.989, 0.988, 0.988, 0.989, 0.99, 0.991, 0.993, 0.994, 0.996, 0.997, 0.998, 0.999, 1);
+  --spring-bouncy-dur: 600ms;
+
   /* Layout */
   --max-width: 1280px;
   --max-width-hero: 1440px;
@@ -136,6 +146,17 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+}
+
+.ms {
+  font-family: 'Material Symbols Rounded';
+  font-feature-settings: 'liga';
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  transition: font-variation-settings var(--dur) var(--ease-out);
+}
+
+.ms.is-filled {
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }
 
 input,
@@ -231,7 +252,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-md);
   font-weight: 600;
   font-size: var(--text-md);
-  transition: var(--transition);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur) var(--ease-out), background-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
   white-space: nowrap;
 }
 
@@ -241,22 +262,44 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary {
-  background: var(--color-dark);
+  background-color: var(--color-primary-dark);
+  background-image: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 60%);
   color: var(--color-white);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(0,0,0,.18), 0 1px 2px rgba(14,92,102,.20), 0 3px 8px rgba(14,92,102,.10);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-dark-alt);
+  background-color: var(--color-primary-dark);
+  color: var(--color-white);
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(0,0,0,.18), 0 2px 4px rgba(14,92,102,.16), 0 6px 12px rgba(14,92,102,.10);
 }
 
 .btn-secondary {
   background: var(--color-white);
-  color: var(--color-text);
-  border: 1.5px solid var(--color-border);
+  color: var(--color-primary-dark);
+  border: 0;
+  box-shadow: inset 0 0 0 1px #D5E3E4, 0 1px 2px rgba(22,50,58,.06);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  border-color: var(--color-dark);
+  color: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 0 1px #C4D9DB, 0 2px 4px rgba(22,50,58,.06), 0 6px 12px rgba(22,50,58,.08);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px) scale(.98);
+  box-shadow: inset 0 2px 3px rgba(22,50,58,.18);
+}
+
+.btn:focus-visible {
+  outline: 3px solid rgba(41,191,207,.6);
+  outline-offset: 2px;
+}
+
+a.btn:hover {
+  text-decoration: none;
 }
 
 .btn-ghost {
@@ -291,6 +334,17 @@ h1, h2, h3, h4, h5, h6 {
 
 .text-secondary {
   color: var(--color-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
 }
 
 /* ===== Badges / status ===== */
