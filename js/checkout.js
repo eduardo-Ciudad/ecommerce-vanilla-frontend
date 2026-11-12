@@ -53,8 +53,10 @@ let pixPollSession = 0;
 let selectedAddressId = null;
 let selectedShippingMethod = null;
 let selectedShippingPrice = 0;
+let selectedShippingIsFree = false;
 let appliedCoupon = null;
 let cartPseudoOrder = null;
+let selectedShippingCep = null;
 
 function setPayerPhoneError(message = '') {
   document.querySelectorAll('[data-payer-phone]').forEach((input) => {
@@ -166,7 +168,7 @@ function shippingOptionRow(option, isSelected) {
         <input type="radio" name="selectedShipping" value="${escapeHtml(option.method)}" ${isSelected ? 'checked' : ''} />
         <span>${escapeHtml(option.methodLabel)} — até ${applyHandlingDays(option.deadlineDays)} dias úteis</span>
       </label>
-      <span>${formatPrice(option.price)}</span>
+      <span>${option.freeShipping ? 'Grátis' : formatPrice(option.price)}</span>
     </li>
   `;
 }
@@ -428,7 +430,7 @@ function updateCheckoutTotal(order) {
 
   if (selectedShippingMethod) {
     shippingRow.hidden = false;
-    shippingPriceEl.textContent = formatPrice(selectedShippingPrice);
+    shippingPriceEl.textContent = selectedShippingIsFree ? 'Grátis' : formatPrice(selectedShippingPrice);
     totalEl.textContent = formatPrice(subtotal - discount + selectedShippingPrice);
   } else {
     shippingRow.hidden = true;
@@ -446,7 +448,10 @@ function removeAppliedCoupon({ errorMessage = '' } = {}) {
   if (discountRow) discountRow.hidden = true;
   if (input) input.value = '';
   if (errorEl) errorEl.textContent = errorMessage;
-  if (cartPseudoOrder) updateCheckoutTotal(cartPseudoOrder);
+  if (cartPseudoOrder) {
+    updateCheckoutTotal(cartPseudoOrder);
+    if (selectedShippingCep) loadShippingOptions(cartPseudoOrder, selectedShippingCep);
+  }
 }
 
 async function applyCoupon() {
@@ -469,6 +474,7 @@ async function applyCoupon() {
     document.querySelector('[data-discount-row]').hidden = false;
     document.querySelector('[data-discount-label]').innerHTML = `${escapeHtml(appliedCoupon.code)} −${formatCouponPercent(appliedCoupon.discountPercent)}%`;
     updateCheckoutTotal(cartPseudoOrder);
+    if (selectedShippingCep) await loadShippingOptions(cartPseudoOrder, selectedShippingCep);
     showToast('Cupom aplicado', 'success');
   } catch (error) {
     appliedCoupon = null;
@@ -485,12 +491,17 @@ async function loadShippingOptions(order, cep) {
 
   selectedShippingMethod = null;
   selectedShippingPrice = 0;
+  selectedShippingIsFree = false;
+  selectedShippingCep = cep;
   togglePaymentSection(false);
   updateCheckoutTotal(order);
   container.innerHTML = '<p class="pix-status"><span class="spinner"></span> Calculando frete...</p>';
 
   try {
-    const options = await apiGet(`/shipping/calculate?cep=${encodeURIComponent(cep)}`);
+    const subtotal = Number(order.total) - (appliedCoupon
+      ? calculateCouponDiscount(order.total, appliedCoupon.discountPercent)
+      : 0);
+    const options = await apiGet(`/shipping/calculate?cep=${encodeURIComponent(cep)}&subtotal=${encodeURIComponent(subtotal.toFixed(2))}`);
     if (!options.length) {
       container.innerHTML = '<p class="empty-state empty-state--inline">Não foi possível calcular o frete para este CEP.</p>';
       return;
@@ -499,6 +510,7 @@ async function loadShippingOptions(order, cep) {
     container.innerHTML = `<ul class="checkout-summary-items" data-shipping-list>${options.map((o, i) => shippingOptionRow(o, i === 0)).join('')}</ul>`;
     selectedShippingMethod = options[0].method;
     selectedShippingPrice = Number(options[0].price);
+    selectedShippingIsFree = options[0].freeShipping === true;
     updateCheckoutTotal(order);
     togglePaymentSection(true);
 
@@ -507,6 +519,7 @@ async function loadShippingOptions(order, cep) {
         const option = options.find((o) => o.method === radio.value);
         selectedShippingMethod = option.method;
         selectedShippingPrice = Number(option.price);
+        selectedShippingIsFree = option.freeShipping === true;
         updateCheckoutTotal(order);
       });
     });
@@ -557,7 +570,7 @@ function renderCheckout(order) {
         ` : ''}
         <div class="checkout-summary-item">
           <span>Frete — ${escapeHtml(order.shippingMethod)} (até ${applyHandlingDays(order.shippingDeadlineDays)} dias úteis)</span>
-          <span>${formatPrice(order.shippingPrice)}</span>
+          <span>${Number(order.shippingPrice) === 0 ? 'Grátis' : formatPrice(order.shippingPrice)}</span>
         </div>
         <div class="checkout-summary-total">
           <span>Total</span>
