@@ -1,4 +1,5 @@
 let currentCart = null;
+let freeShippingRule = null;
 
 function renderEmptyCart() {
   document.querySelector('[data-cart-root]').innerHTML = `
@@ -34,6 +35,12 @@ function renderCart(cart) {
           <span>Subtotal</span>
           <span data-cart-subtotal>${formatPrice(cartTotal(cart))}</span>
         </div>
+        <div class="free-shipping-progress" data-free-shipping-progress hidden>
+          <p data-free-shipping-progress-message></p>
+          <div class="free-shipping-progress-track" role="progressbar" aria-label="Progresso para frete grátis" aria-valuemin="0" aria-valuemax="100">
+            <span data-free-shipping-progress-bar></span>
+          </div>
+        </div>
         <div class="cart-summary-row">
           <span>Frete</span>
           <span class="text-secondary">Calculado no checkout</span>
@@ -48,7 +55,27 @@ function renderCart(cart) {
   `;
 
   wireCartItemEvents();
+  updateFreeShippingProgress(cartTotal(cart));
   document.querySelector('[data-checkout-btn]').addEventListener('click', handleCheckout);
+}
+
+function updateFreeShippingProgress(subtotal) {
+  const container = document.querySelector('[data-free-shipping-progress]');
+  if (!container || !freeShippingRule) return;
+
+  const threshold = freeShippingRule.threshold;
+  const progress = threshold > 0 ? Math.min(100, Math.max(0, (subtotal / threshold) * 100)) : 100;
+  const remaining = Math.max(0, threshold - subtotal);
+  const message = container.querySelector('[data-free-shipping-progress-message]');
+  const bar = container.querySelector('[data-free-shipping-progress-bar]');
+  const track = container.querySelector('[role="progressbar"]');
+
+  message.textContent = remaining > 0
+    ? `Faltam ${formatPrice(remaining)} para frete grátis`
+    : 'Você ganhou frete grátis!';
+  bar.style.width = `${progress}%`;
+  track.setAttribute('aria-valuenow', String(Math.round(progress)));
+  container.hidden = false;
 }
 
 function renderCartItem(item) {
@@ -81,6 +108,7 @@ function updateSummary() {
   const total = cartTotal(currentCart);
   document.querySelector('[data-cart-subtotal]').textContent = formatPrice(total);
   document.querySelector('[data-cart-total]').textContent = formatPrice(total);
+  updateFreeShippingProgress(total);
 }
 
 async function updateItemQuantity(itemId, variantId, quantity) {
@@ -223,6 +251,7 @@ function guestCartForRendering() {
 }
 
 async function initCartPage() {
+  freeShippingRule = await getFreeShippingRule();
   if (!isAuthenticated()) {
     const cart = guestCartForRendering();
     setCartCount(guestCartCount());
