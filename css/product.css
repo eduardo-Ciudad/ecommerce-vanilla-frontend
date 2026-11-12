@@ -41,6 +41,21 @@
   min-width: 0;
 }
 
+.product-prefill-gallery {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+}
+
+[data-product-main-image] {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  view-transition-name: product-hero;
+}
+
 .product-main-image {
   position: relative;
   flex: 1;
