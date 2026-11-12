@@ -62,6 +62,29 @@ function initFooterTrustStrip() {
   footer.prepend(trustStrip);
 }
 
+async function initFreeShippingMessages() {
+  const rule = await getFreeShippingRule();
+  if (!rule) return;
+
+  const message = `Frete grátis em compras a partir de ${formatPrice(rule.threshold)}`;
+  const topbarFull = document.querySelector('[data-free-shipping-topbar-full]');
+  const topbarShort = document.querySelector('[data-free-shipping-topbar-short]');
+  if (topbarFull) {
+    topbarFull.textContent = `Frete grátis a partir de ${formatPrice(rule.threshold)} · Troca fácil em 30 dias`;
+  }
+  if (topbarShort) {
+    topbarShort.textContent = `Frete grátis a partir de ${formatPrice(rule.threshold)}`;
+  }
+
+  const footerBrand = document.querySelector('.footer-col-brand');
+  if (footerBrand && !footerBrand.querySelector('.footer-free-shipping')) {
+    const footerMessage = document.createElement('p');
+    footerMessage.className = 'footer-free-shipping';
+    footerMessage.textContent = message;
+    footerBrand.append(footerMessage);
+  }
+}
+
 function buildHeaderMarkup() {
   const user = getCurrentUser();
   const cartCount = getCartCount();
@@ -100,8 +123,8 @@ function buildHeaderMarkup() {
 
   return `
     <div class="topbar">
-      <span class="topbar-full">Envio para todo o Brasil · Troca fácil em 30 dias</span>
-      <span class="topbar-short">Troca fácil em 30 dias</span>
+      <span class="topbar-full" data-free-shipping-topbar-full>Envio para todo o Brasil · Troca fácil em 30 dias</span>
+      <span class="topbar-short" data-free-shipping-topbar-short>Troca fácil em 30 dias</span>
     </div>
     ${showVerificationWarning ? `<div class="topbar topbar--warning">Seu email ainda não foi verificado. <a href="${headerLink('auth.html')}">Reenviar verificação</a></div>` : ''}
     <header class="site-header" data-site-header>
@@ -339,4 +362,5 @@ function initHeader() {
 document.addEventListener('DOMContentLoaded', () => {
   initHeader();
   initFooterTrustStrip();
+  initFreeShippingMessages();
 });
