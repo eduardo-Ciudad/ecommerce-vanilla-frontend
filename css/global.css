@@ -347,6 +347,18 @@ a.btn:hover {
   }
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+
+  ::view-transition-group(product-hero) {
+    animation-duration: var(--spring-dur);
+    animation-timing-function: var(--ease-out);
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation-duration: 180ms; }
+}
+
 /* ===== Badges / status ===== */
 .badge {
   display: inline-flex;
