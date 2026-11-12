@@ -235,6 +235,17 @@ function validateApiResponse(endpoint, method, data) {
     return data;
   }
 
+  if (method === 'GET' && path === '/shipping/free-shipping') {
+    const isValid = data
+      && typeof data === 'object'
+      && Number.isFinite(Number(data.threshold))
+      && Array.isArray(data.methods);
+    if (!isValid) {
+      throw new ApiContractError(endpoint, 'era esperada uma regra de frete grátis válida');
+    }
+    return data;
+  }
+
   if (
     (method === 'GET' && path === '/cart') ||
     (method === 'POST' && path === '/cart/items') ||
@@ -382,6 +393,20 @@ function resolveRootPath() {
 
 async function apiGet(endpoint, options = {}) {
   return apiFetch(endpoint, { ...options, method: 'GET' });
+}
+
+let freeShippingRulePromise = null;
+
+function getFreeShippingRule() {
+  if (!freeShippingRulePromise) {
+    freeShippingRulePromise = apiGet('/shipping/free-shipping')
+      .then((rule) => ({
+        threshold: Number(rule.threshold),
+        methods: rule.methods.map((method) => String(method)),
+      }))
+      .catch(() => null);
+  }
+  return freeShippingRulePromise;
 }
 
 async function apiPost(endpoint, body, options = {}) {
