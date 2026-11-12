@@ -106,8 +106,28 @@ function parseLocalSaleDiscount() {
   return Number.isFinite(value) && value >= 0 ? Math.round(value * 100) / 100 : NaN;
 }
 
+function parseLocalSaleUnitPrice(value) {
+  const input = String(value ?? '').trim();
+  if (!/^\d+(?:[.,]\d{1,2})?$/.test(input)) return NaN;
+  const price = Number(input.replace(',', '.'));
+  return Number.isFinite(price) && price > 0 ? Math.round(price * 100) / 100 : NaN;
+}
+
+function localSaleItemUnitPrice(item) {
+  return parseLocalSaleUnitPrice(item.unitPriceInput);
+}
+
+function localSalePriceChanged(item) {
+  const unitPrice = localSaleItemUnitPrice(item);
+  return Number.isFinite(unitPrice)
+    && Math.round(unitPrice * 100) !== Math.round(Number(item.price) * 100);
+}
+
 function localSaleSubtotal() {
-  return localSaleItems.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+  return localSaleItems.reduce((sum, item) => {
+    const unitPrice = localSaleItemUnitPrice(item);
+    return sum + (Number.isFinite(unitPrice) ? unitPrice * item.quantity : 0);
+  }, 0);
 }
 
 function localSaleVariantLabel(variant) {
@@ -215,7 +235,11 @@ function addLocalSaleVariant(variantId) {
     }
     existing.quantity += 1;
   } else {
-    localSaleItems.push({ ...variant, quantity: 1 });
+    localSaleItems.push({
+      ...variant,
+      quantity: 1,
+      unitPriceInput: Number(variant.price).toFixed(2).replace('.', ','),
+    });
   }
   renderLocalSaleItems();
   return true;
@@ -233,6 +257,33 @@ function removeLocalSaleItem(variantId) {
   renderLocalSaleItems();
 }
 
+function updateLocalSaleUnitPrice(variantId, value) {
+  const item = localSaleItems.find((entry) => entry.id === variantId);
+  if (!item) return;
+  item.unitPriceInput = value;
+
+  const selectorId = CSS.escape(variantId);
+  const input = document.querySelector(`[data-unit-price="${selectorId}"]`);
+  const error = document.querySelector(`[data-unit-price-error="${selectorId}"]`);
+  const indicator = document.querySelector(`[data-price-changed="${selectorId}"]`);
+  const total = document.querySelector(`[data-item-total="${selectorId}"]`);
+  const unitPrice = localSaleItemUnitPrice(item);
+  const invalid = !Number.isFinite(unitPrice);
+
+  input?.setAttribute('aria-invalid', String(invalid));
+  if (error) error.textContent = invalid ? 'Informe um preço maior que zero, com no máximo 2 casas decimais.' : '';
+  if (indicator) indicator.hidden = !localSalePriceChanged(item);
+  if (total) total.textContent = invalid ? '—' : formatPrice(unitPrice * item.quantity);
+  updateLocalSaleSummary();
+}
+
+function restoreLocalSaleUnitPrice(variantId) {
+  const item = localSaleItems.find((entry) => entry.id === variantId);
+  if (!item) return;
+  item.unitPriceInput = Number(item.price).toFixed(2).replace('.', ',');
+  renderLocalSaleItems();
+}
+
 function renderLocalSaleItems() {
   const container = document.querySelector('[data-sale-items]');
   if (!localSaleItems.length) {
@@ -240,18 +291,31 @@ function renderLocalSaleItems() {
     updateLocalSaleSummary();
     return;
   }
-  container.innerHTML = `<div class="local-sale-items-head"><span>Produto</span><span>Quantidade</span><span>Unitário</span><span>Total</span><span></span></div>${localSaleItems.map((item) => {
+  container.innerHTML = `<div class="local-sale-items-head"><span>Produto</span><span>Quantidade</span><span>Preço</span><span>Total</span><span></span></div>${localSaleItems.map((item) => {
     const label = localSaleVariantLabel(item);
+    const unitPrice = localSaleItemUnitPrice(item);
+    const invalidPrice = !Number.isFinite(unitPrice);
+    const changed = localSalePriceChanged(item);
+    const priceErrorId = `sale-unit-price-error-${item.id}`;
     return `<div class="local-sale-item-row">
       <div class="local-sale-item-name"><strong>${escapeHtml(item.productName)}</strong>${label ? `<span>${escapeHtml(label)}</span>` : ''}</div>
       <div class="local-sale-quantity"><button type="button" data-quantity-minus="${escapeAttr(item.id)}" aria-label="Diminuir quantidade" ${item.quantity <= 1 ? 'disabled' : ''}>−</button><span>${escapeHtml(item.quantity)}</span><button type="button" data-quantity-plus="${escapeAttr(item.id)}" aria-label="Aumentar quantidade" ${item.quantity >= Number(item.stock) ? 'disabled' : ''}>+</button></div>
-      <span data-label="Unitário">${formatPrice(item.price)}</span><strong data-label="Total">${formatPrice(Number(item.price) * item.quantity)}</strong>
+      <div class="local-sale-unit-price" data-label="Preço">
+        <span class="local-sale-list-price">Tabela: <span>${formatPrice(item.price)}</span></span>
+        <label for="sale-unit-price-${escapeAttr(item.id)}">Preço (R$)</label>
+        <input class="form-control" id="sale-unit-price-${escapeAttr(item.id)}" type="text" inputmode="decimal" value="${escapeAttr(item.unitPriceInput)}" data-unit-price="${escapeAttr(item.id)}" aria-describedby="${escapeAttr(priceErrorId)}" aria-invalid="${invalidPrice}" />
+        <span class="local-sale-price-changed" data-price-changed="${escapeAttr(item.id)}" ${changed ? '' : 'hidden'}><span>preço alterado</span><button type="button" data-restore-price="${escapeAttr(item.id)}">Restaurar</button></span>
+        <span class="form-error local-sale-price-error" id="${escapeAttr(priceErrorId)}" data-unit-price-error="${escapeAttr(item.id)}">${invalidPrice ? 'Informe um preço maior que zero, com no máximo 2 casas decimais.' : ''}</span>
+      </div>
+      <strong data-label="Total" data-item-total="${escapeAttr(item.id)}">${invalidPrice ? '—' : formatPrice(unitPrice * item.quantity)}</strong>
       <button class="icon-btn icon-btn-danger" type="button" data-remove-item="${escapeAttr(item.id)}" aria-label="Remover ${escapeAttr(item.productName)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m2 0l-1 14H7L6 6"/></svg></button>
     </div>`;
   }).join('')}`;
   container.querySelectorAll('[data-quantity-minus]').forEach((button) => button.addEventListener('click', () => changeLocalSaleQuantity(button.dataset.quantityMinus, -1)));
   container.querySelectorAll('[data-quantity-plus]').forEach((button) => button.addEventListener('click', () => changeLocalSaleQuantity(button.dataset.quantityPlus, 1)));
   container.querySelectorAll('[data-remove-item]').forEach((button) => button.addEventListener('click', () => removeLocalSaleItem(button.dataset.removeItem)));
+  container.querySelectorAll('[data-unit-price]').forEach((input) => input.addEventListener('input', () => updateLocalSaleUnitPrice(input.dataset.unitPrice, input.value)));
+  container.querySelectorAll('[data-restore-price]').forEach((button) => button.addEventListener('click', () => restoreLocalSaleUnitPrice(button.dataset.restorePrice)));
   updateLocalSaleSummary();
 }
 
@@ -260,6 +324,7 @@ function updateLocalSaleSummary() {
   const discount = parseLocalSaleDiscount();
   const invalidNumber = Number.isNaN(discount);
   const invalidTotal = !invalidNumber && subtotal > 0 && discount >= subtotal;
+  const invalidPrices = localSaleItems.some((item) => !Number.isFinite(localSaleItemUnitPrice(item)));
   const error = document.querySelector('[data-discount-error]');
   error.textContent = invalidTotal ? 'O desconto precisa ser menor que o total dos itens.' : (invalidNumber ? 'Informe um desconto válido.' : '');
   document.getElementById('sale-discount').setAttribute('aria-invalid', String(invalidNumber || invalidTotal));
@@ -268,7 +333,7 @@ function updateLocalSaleSummary() {
   document.querySelector('[data-sale-total]').textContent = formatPrice(Math.max(0, subtotal - (Number.isFinite(discount) ? discount : 0)));
   document.querySelector('[data-sale-total-mobile]').textContent = formatPrice(Math.max(0, subtotal - (Number.isFinite(discount) ? discount : 0)));
   document.querySelectorAll('[data-sale-submit], [data-sale-submit-mobile]').forEach((button) => {
-    button.disabled = localSaleSubmitting || !localSaleItems.length || !localSalePaymentMethod || invalidNumber || invalidTotal;
+    button.disabled = localSaleSubmitting || !localSaleItems.length || !localSalePaymentMethod || invalidNumber || invalidTotal || invalidPrices;
   });
 }
 
@@ -287,12 +352,22 @@ function resetLocalSaleForm() {
 
 async function submitLocalSale() {
   if (localSaleSubmitting) return;
+  const invalidPriceInput = document.querySelector('[data-unit-price][aria-invalid="true"]');
+  if (invalidPriceInput) {
+    showToast('Corrija os preços inválidos antes de registrar a venda.', 'error');
+    invalidPriceInput.focus();
+    return;
+  }
   const discount = parseLocalSaleDiscount();
   const customer = validateLocalSaleCustomer();
   if (!customer) return;
   const paymentLabel = LOCAL_SALE_PAYMENT_OPTIONS.find(([value]) => value === localSalePaymentMethod)?.[1] || '';
   const payload = {
-    items: localSaleItems.map((item) => ({ variantId: item.id, quantity: item.quantity })),
+    items: localSaleItems.map((item) => {
+      const payloadItem = { variantId: item.id, quantity: item.quantity };
+      if (localSalePriceChanged(item)) payloadItem.unitPrice = localSaleItemUnitPrice(item);
+      return payloadItem;
+    }),
     paymentMethod: localSalePaymentMethod,
     customerName: customer.customerName,
     customerPhone: customer.customerPhone,
@@ -318,7 +393,10 @@ async function submitLocalSale() {
     showToast('Venda registrada com sucesso', 'success');
   } catch (error) {
     showLocalSaleBackendFieldErrors(error);
-    showToast(error.message || 'Não foi possível registrar a venda', 'error');
+    const backendMessage = error.status === 400 && typeof error.data?.error === 'string'
+      ? error.data.error
+      : error.message;
+    showToast(backendMessage || 'Não foi possível registrar a venda', 'error');
   } finally {
     localSaleSubmitting = false;
     buttons.forEach((button) => { button.textContent = 'Registrar venda'; });

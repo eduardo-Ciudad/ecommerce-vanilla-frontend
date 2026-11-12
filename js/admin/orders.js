@@ -89,6 +89,11 @@ function renderOrderItemsList(items) {
         item.gtin ? `EAN: ${escapeHtml(item.gtin)}` : '',
       ].filter(Boolean);
       const subtotal = Number(item.quantity) * Number(item.unitPrice);
+      const hasDifferentListPrice = item.listUnitPrice != null
+        && Math.round(Number(item.listUnitPrice) * 100) !== Math.round(Number(item.unitPrice) * 100);
+      const unitPrice = hasDifferentListPrice
+        ? `${formatPrice(item.unitPrice)} <span class="admin-order-detail-list-price">(tabela ${formatPrice(item.listUnitPrice)})</span>`
+        : formatPrice(item.unitPrice);
 
       return `
         <div class="admin-order-detail-item">
@@ -98,7 +103,7 @@ function renderOrderItemsList(items) {
             ${codes.length ? `<span class="admin-order-detail-item-codes">${codes.join(' · ')}</span>` : ''}
           </div>
           <div class="admin-order-detail-item-price">
-            <span>${escapeHtml(item.quantity)}x ${formatPrice(item.unitPrice)}</span>
+            <span>${escapeHtml(item.quantity)}x ${unitPrice}</span>
             <strong>${formatPrice(subtotal)}</strong>
           </div>
         </div>
