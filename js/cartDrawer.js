@@ -194,7 +194,15 @@ function closeCartDrawer() {
   };
   safetyTimeout = setTimeout(finish, cartDrawerSpringDurationMs() + 50);
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) finish();
-  else drawer.querySelector('.cart-drawer-panel').addEventListener('transitionend', finish, { once: true });
+  else {
+    const panel = drawer.querySelector('.cart-drawer-panel');
+    const handlePanelTransitionEnd = (event) => {
+      if (event.target !== panel || event.propertyName !== 'transform') return;
+      panel.removeEventListener('transitionend', handlePanelTransitionEnd);
+      finish();
+    };
+    panel.addEventListener('transitionend', handlePanelTransitionEnd);
+  }
 }
 
 function findDrawerItem(itemId) {
