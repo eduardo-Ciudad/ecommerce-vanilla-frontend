@@ -58,6 +58,14 @@ let appliedCoupon = null;
 let cartPseudoOrder = null;
 let selectedShippingCep = null;
 
+function lockButtonWidth(button) {
+  button.style.minWidth = `${button.offsetWidth}px`;
+}
+
+function unlockButtonWidth(button) {
+  button.style.minWidth = '';
+}
+
 function setPayerPhoneError(message = '') {
   document.querySelectorAll('[data-payer-phone]').forEach((input) => {
     const errorEl = input.parentElement.querySelector('[data-payer-phone-error]');
@@ -178,43 +186,50 @@ function addressInlineFormMarkup() {
     <form class="checkout-address-form" data-form="checkout-address">
       <div class="form-group">
         <label for="checkout-address-label">Nome do endereço</label>
-        <input class="form-control" id="checkout-address-label" name="label" placeholder="Casa, Trabalho..." required />
-        <p class="form-error"></p>
+        <input class="form-control" id="checkout-address-label" name="label" placeholder="Casa, Trabalho..." required aria-describedby="checkout-address-label-error" />
+        <p class="form-error" id="checkout-address-label-error" aria-live="polite"></p>
       </div>
-      <div class="form-group">
+      <div class="form-group checkout-cep-group">
         <label for="checkout-address-cep">CEP</label>
-        <input class="form-control" id="checkout-address-cep" name="cep" placeholder="00000-000" maxlength="9" required />
-        <p class="form-error"></p>
+        <div class="checkout-field-shell">
+          <input class="form-control" id="checkout-address-cep" name="cep" placeholder="00000-000" maxlength="9" required aria-describedby="checkout-address-cep-error" />
+          <span class="checkout-field-spinner spinner" aria-hidden="true"></span>
+        </div>
+        <p class="form-error" id="checkout-address-cep-error" aria-live="polite"></p>
       </div>
       <div class="form-group">
         <label for="checkout-address-street">Rua</label>
-        <input class="form-control" id="checkout-address-street" name="street" required />
-        <p class="form-error"></p>
+        <input class="form-control" id="checkout-address-street" name="street" required aria-describedby="checkout-address-street-error" />
+        <p class="form-error" id="checkout-address-street-error" aria-live="polite"></p>
       </div>
+      <div class="checkout-field-row checkout-field-row--address">
       <div class="form-group">
         <label for="checkout-address-number">Número</label>
-        <input class="form-control" id="checkout-address-number" name="number" required />
-        <p class="form-error"></p>
+        <input class="form-control" id="checkout-address-number" name="number" required aria-describedby="checkout-address-number-error" />
+        <p class="form-error" id="checkout-address-number-error" aria-live="polite"></p>
       </div>
       <div class="form-group">
         <label for="checkout-address-complement">Complemento</label>
-        <input class="form-control" id="checkout-address-complement" name="complement" />
-        <p class="form-error"></p>
+        <input class="form-control" id="checkout-address-complement" name="complement" aria-describedby="checkout-address-complement-error" />
+        <p class="form-error" id="checkout-address-complement-error" aria-live="polite"></p>
+      </div>
       </div>
       <div class="form-group">
         <label for="checkout-address-neighborhood">Bairro</label>
-        <input class="form-control" id="checkout-address-neighborhood" name="neighborhood" required />
-        <p class="form-error"></p>
+        <input class="form-control" id="checkout-address-neighborhood" name="neighborhood" required aria-describedby="checkout-address-neighborhood-error" />
+        <p class="form-error" id="checkout-address-neighborhood-error" aria-live="polite"></p>
       </div>
+      <div class="checkout-field-row checkout-field-row--city">
       <div class="form-group">
         <label for="checkout-address-city">Cidade</label>
-        <input class="form-control" id="checkout-address-city" name="city" required />
-        <p class="form-error"></p>
+        <input class="form-control" id="checkout-address-city" name="city" required aria-describedby="checkout-address-city-error" />
+        <p class="form-error" id="checkout-address-city-error" aria-live="polite"></p>
       </div>
       <div class="form-group">
         <label for="checkout-address-state">Estado</label>
-        <input class="form-control" id="checkout-address-state" name="state" placeholder="UF" maxlength="2" required />
-        <p class="form-error"></p>
+        <input class="form-control" id="checkout-address-state" name="state" placeholder="UF" maxlength="2" required aria-describedby="checkout-address-state-error" />
+        <p class="form-error" id="checkout-address-state-error" aria-live="polite"></p>
+      </div>
       </div>
       <button class="btn btn-primary" type="submit">
         <span class="btn-label">Salvar endereço</span>
@@ -235,6 +250,10 @@ async function handleCheckoutCepLookup(form) {
   const digits = form.cep.value.replace(/\D/g, '');
   if (digits.length !== 8) return;
 
+  const group = form.cep.closest('.form-group');
+  group.classList.add('is-loading');
+  form.cep.setAttribute('aria-busy', 'true');
+
   try {
     const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
     const data = await response.json();
@@ -248,6 +267,9 @@ async function handleCheckoutCepLookup(form) {
       code: 'VIACEP_LOOKUP_FAILED',
       provider: 'ViaCEP',
     });
+  } finally {
+    group.classList.remove('is-loading');
+    form.cep.removeAttribute('aria-busy');
   }
 }
 
@@ -325,6 +347,7 @@ function wireAddressInlineForm(form, hasExistingAddresses, onSaved) {
     if (hasError) return;
 
     const button = form.querySelector('button[type="submit"]');
+    lockButtonWidth(button);
     button.disabled = true;
     button.querySelector('.btn-label').innerHTML = '<span class="spinner"></span>';
 
@@ -352,6 +375,7 @@ function wireAddressInlineForm(form, hasExistingAddresses, onSaved) {
     } finally {
       button.disabled = false;
       button.querySelector('.btn-label').textContent = 'Salvar endereço';
+      unlockButtonWidth(button);
     }
   });
 }
@@ -381,6 +405,7 @@ function renderAddressContent(orderRef, addresses) {
     ${addressListMarkup(addresses)}
     <button class="btn btn-ghost btn-sm" type="button" data-toggle-new-address>+ Adicionar novo endereço</button>
     <div data-new-address-form hidden></div>
+    <h3 class="checkout-subsection-title">Frete</h3>
     <div data-shipping-options></div>
   `;
 
@@ -467,6 +492,7 @@ async function applyCoupon() {
   }
 
   button.disabled = true;
+  lockButtonWidth(button);
   button.innerHTML = '<span class="spinner"></span>';
   try {
     appliedCoupon = await apiGet(`/coupons/validate?code=${encodeURIComponent(code)}`);
@@ -483,6 +509,7 @@ async function applyCoupon() {
   } finally {
     button.disabled = false;
     button.textContent = 'Aplicar';
+    unlockButtonWidth(button);
   }
 }
 
@@ -557,7 +584,7 @@ function renderCheckout(order) {
   const paymentDeadline = formatPaymentDeadline(order.paymentDeadline);
   root.innerHTML = `
     <div class="checkout-layout fade-in">
-      <section class="checkout-summary">
+      <section class="checkout-summary checkout-order-summary">
         <h2>Resumo do Pedido</h2>
         <ul class="checkout-summary-items">
           ${order.items.map(checkoutItemRow).join('')}
@@ -578,12 +605,13 @@ function renderCheckout(order) {
         </div>
       </section>
 
-      <section class="checkout-summary">
+      <section class="checkout-summary checkout-delivery">
         <h2>Endereço de entrega</h2>
         <p class="pix-intro">${escapeHtml(order.recipientName)} — ${formatOrderDeliveryAddress(order)}</p>
       </section>
 
       <section class="checkout-payment" data-checkout-payment>
+        <h2>Pagamento</h2>
         ${paymentDeadline ? `<p class="pix-intro">Pague até ${paymentDeadline} para garantir os itens reservados.</p>` : ''}
         <div class="payment-tabs">
           <button class="payment-tab is-active" type="button" data-payment-tab="card"><span class="payment-tab-icon">${ICONS.creditCard}</span> Cartão de Crédito</button>
@@ -602,6 +630,7 @@ function renderCheckout(order) {
         <div class="payment-panel" data-payment-panel="pix">
           <div data-pix-content>
             <p class="pix-intro">Pague instantaneamente escaneando o QR Code ou copiando o código Pix.</p>
+            <div class="checkout-field-row checkout-field-row--payer">
             <div class="form-group pix-payer-document">
               <label for="pix-payer-cpf">CPF do pagador</label>
               <input class="form-control" id="pix-payer-cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00" aria-describedby="pix-payer-cpf-error" data-pix-cpf />
@@ -611,6 +640,7 @@ function renderCheckout(order) {
               <label for="pix-payer-phone">Celular (WhatsApp)</label>
               <input class="form-control" id="pix-payer-phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(17) 99999-9999" required aria-describedby="pix-payer-phone-error" data-payer-phone />
               <p class="form-error" id="pix-payer-phone-error" aria-live="polite" data-payer-phone-error></p>
+            </div>
             </div>
             <button class="btn btn-primary btn-block" type="button" data-pix-btn>Gerar Pix de ${formatPrice(order.total)}</button>
           </div>
@@ -649,14 +679,15 @@ function renderCheckoutFromCart(cart, addresses) {
 
   root.innerHTML = `
     <div class="checkout-layout fade-in">
-      <section class="checkout-summary">
+      <section class="checkout-summary checkout-order-summary">
         <h2>Resumo do Pedido</h2>
         <ul class="checkout-summary-items">
           ${cart.items.map(cartItemRow).join('')}
         </ul>
         <div class="checkout-coupon" data-coupon-block>
+          <label class="checkout-field-label" for="checkout-coupon-code">Cupom</label>
           <div class="checkout-coupon-controls">
-            <input class="form-control" type="text" placeholder="Cupom de desconto" maxlength="50" autocomplete="off" data-coupon-input />
+            <input class="form-control" id="checkout-coupon-code" type="text" placeholder="Digite o código" maxlength="50" autocomplete="off" aria-describedby="checkout-coupon-error" data-coupon-input />
             <button class="btn btn-secondary" type="button" data-coupon-apply>Aplicar</button>
           </div>
         </div>
@@ -664,7 +695,7 @@ function renderCheckoutFromCart(cart, addresses) {
           <span>Desconto (<span data-discount-label></span>) <button class="checkout-coupon-remove" type="button" data-coupon-remove>Remover</button></span>
           <span data-discount-value></span>
         </div>
-        <p class="form-error checkout-coupon-error" data-coupon-error></p>
+        <p class="form-error checkout-coupon-error" id="checkout-coupon-error" aria-live="polite" data-coupon-error></p>
         <div class="checkout-summary-item" data-shipping-row hidden>
           <span>Frete</span>
           <span data-shipping-price></span>
@@ -675,12 +706,12 @@ function renderCheckoutFromCart(cart, addresses) {
         </div>
       </section>
 
-      <section class="checkout-summary" data-checkout-address>
+      <section class="checkout-summary checkout-delivery" data-checkout-address>
         <h2>Endereço de entrega</h2>
         <div data-address-content></div>
       </section>
 
-      <button class="btn btn-primary btn-block" type="button" data-continue-btn disabled>Continuar para pagamento</button>
+      <button class="btn btn-primary btn-block checkout-continue" type="button" data-continue-btn disabled>Continuar para pagamento</button>
     </div>
   `;
 
@@ -703,6 +734,7 @@ async function createOrderAndProceed() {
   }
 
   const button = document.querySelector('[data-continue-btn]');
+  lockButtonWidth(button);
   button.disabled = true;
   button.innerHTML = '<span class="spinner"></span>';
 
@@ -721,11 +753,13 @@ async function createOrderAndProceed() {
       showToast('O cupom não é mais válido. Revise o total e tente novamente.', 'error');
       button.disabled = false;
       button.textContent = 'Continuar para pagamento';
+      unlockButtonWidth(button);
       return;
     }
     showToast(error.message || 'Não foi possível finalizar o pedido', 'error');
     button.disabled = false;
     button.textContent = 'Continuar para pagamento';
+    unlockButtonWidth(button);
   }
 }
 
@@ -936,6 +970,7 @@ async function handlePixPayment(order) {
   const payerPhone = getValidPayerPhone(phoneInput);
   if (!payerPhone) return;
 
+  lockButtonWidth(pixBtn);
   pixBtn.disabled = true;
   pixBtn.innerHTML = '<span class="spinner"></span> Gerando Pix...';
 
@@ -956,6 +991,7 @@ async function handlePixPayment(order) {
       showToast('Não foi possível gerar o Pix', 'error');
       pixBtn.disabled = false;
       pixBtn.textContent = `Gerar Pix de ${formatPrice(order.total)}`;
+      unlockButtonWidth(pixBtn);
     }
   } catch (error) {
     if (isPayerPhoneValidationError(error)) {
@@ -966,6 +1002,7 @@ async function handlePixPayment(order) {
     showToast(error.message || 'Erro ao gerar Pix', 'error');
     pixBtn.disabled = false;
     pixBtn.textContent = `Gerar Pix de ${formatPrice(order.total)}`;
+    unlockButtonWidth(pixBtn);
   }
 }
 
