@@ -239,7 +239,7 @@ function renderProduct(product) {
         </div>
 
         <div class="product-price-block">
-          <span class="product-price" data-product-price>Selecione um tamanho</span>
+          <span class="product-price is-placeholder" data-product-price>Selecione um tamanho</span>
           <span class="product-installment" data-product-installment hidden></span>
           <span class="product-stock" data-product-stock></span>
         </div>
@@ -491,6 +491,7 @@ function wireProductInteractions(product) {
     skuEl.hidden = true;
     skuEl.innerHTML = '';
     priceEl.textContent = 'Selecione um tamanho';
+    priceEl.classList.add('is-placeholder');
     installmentEl.hidden = true;
     installmentEl.textContent = '';
     stockEl.innerHTML = '';
@@ -542,6 +543,7 @@ function wireProductInteractions(product) {
       chip.classList.toggle('is-selected', chip.dataset.variantId === String(variant.id));
     });
     priceEl.textContent = formatPrice(variant.price);
+    priceEl.classList.remove('is-placeholder');
     installmentEl.hidden = false;
     installmentEl.textContent = 'ou em até 6x no cartão';
     stockEl.innerHTML = `${CLOCK_ICON} ${variant.stock} unidades disponíveis`;

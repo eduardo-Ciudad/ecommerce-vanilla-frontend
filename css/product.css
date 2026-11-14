@@ -618,6 +618,23 @@
   gap: var(--space-md);
 }
 
+.product-info h1 {
+  font-size: clamp(1.375rem, 6vw, 1.5rem);
+  line-height: 1.2;
+}
+
+.product-price-block {
+  padding: var(--space-md);
+}
+
+.product-price.is-placeholder {
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 4.5vw, 1.125rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
 @media (max-width: 480px) {
   .product-add-btn {
     padding: 16px 12px;
@@ -654,5 +671,19 @@
   }
   .product-price {
     font-size: 44px;
+  }
+  .product-info h1 {
+    font-size: var(--text-5xl);
+    line-height: 1.15;
+  }
+  .product-price-block {
+    padding: var(--space-lg);
+  }
+  .product-price.is-placeholder {
+    font-family: var(--font-heading);
+    font-size: 44px;
+    font-weight: 700;
+    line-height: normal;
+    letter-spacing: -1px;
   }
 }
