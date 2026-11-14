@@ -104,6 +104,9 @@ function buildHeaderMarkup() {
   const cartCount = getCartCount();
   const wishlistCount = getWishlistProductIds().length;
   const showVerificationWarning = user && !user.emailVerified;
+  const adminMenuItem = user && user.role === 'ADMIN'
+    ? `<a class="header-admin-menu-item" href="${headerLink('admin/index.html')}">Painel admin</a>`
+    : '';
 
   const userMenu = user
     ? `
@@ -113,6 +116,7 @@ function buildHeaderMarkup() {
           <span class="user-menu-name">${escapeHtml(user.name || user.email)}</span>
         </button>
         <div class="user-menu-dropdown">
+          ${adminMenuItem}
           <a href="${headerLink('orders.html')}">Meus Pedidos</a>
           <a href="${headerLink('enderecos.html')}">Meus Endereços</a>
           <button data-action="logout">Sair</button>
@@ -133,7 +137,7 @@ function buildHeaderMarkup() {
     `;
 
   const adminLink = user && user.role === 'ADMIN'
-    ? `<a class="header-icon-btn" href="${headerLink('admin/index.html')}" aria-label="Painel admin">${ICONS.gear}</a>`
+    ? `<a class="header-icon-btn header-admin-link" href="${headerLink('admin/index.html')}" aria-label="Painel admin">${ICONS.gear}</a>`
     : '';
 
   return `
@@ -173,16 +177,6 @@ function buildHeaderMarkup() {
           <input class="form-control" type="search" name="q" placeholder="Buscar produtos..." aria-label="Buscar produtos" />
         </form>
         <div class="header-actions">
-          <button
-            class="header-icon-btn header-mobile-only"
-            type="button"
-            data-mobile-search-trigger
-            aria-label="Abrir busca"
-            aria-expanded="false"
-            hidden
-          >
-            ${materialSymbol('search')}
-          </button>
           ${adminLink}
           <a class="header-icon-btn" href="${headerLink('favoritos.html')}" aria-label="Favoritos">
             ${materialSymbol('favorite', { filled: isHeaderSectionActive('wishlist') })}
@@ -195,18 +189,18 @@ function buildHeaderMarkup() {
           </a>
         </div>
       </div>
-      <div class="header-mobile-search">
-        <form data-search-form-mobile>
-          ${materialSymbol('search')}
-          <input type="search" name="q" placeholder="Buscar produtos..." aria-label="Buscar produtos" class="form-control" />
-        </form>
-      </div>
       <nav
         class="header-mobile-menu"
         id="header-mobile-menu"
         data-mobile-menu
         aria-label="Navegação principal"
       >
+        <div class="header-mobile-search">
+          <form data-search-form-mobile>
+            ${materialSymbol('search')}
+            <input type="search" name="q" placeholder="Buscar produtos..." aria-label="Buscar produtos" class="form-control" />
+          </form>
+        </div>
         <a class="header-mobile-menu-link" href="${headerLink('shop.html')}">Loja</a>
         <div class="header-mobile-categories">
           <span class="header-mobile-menu-title">Categorias</span>
@@ -286,37 +280,6 @@ function wireMobileMenu() {
   });
 }
 
-function wireMobileSearch() {
-  const siteHeader = document.querySelector('[data-site-header]');
-  const trigger = document.querySelector('[data-mobile-search-trigger]');
-  const search = document.querySelector('.header-mobile-search');
-  const input = search?.querySelector('input');
-  if (!siteHeader || !trigger || !search || !input) return;
-
-  const closeSearch = ({ returnFocus = false } = {}) => {
-    siteHeader.classList.remove('is-search-open');
-    trigger.setAttribute('aria-expanded', 'false');
-    trigger.setAttribute('aria-label', 'Abrir busca');
-    if (returnFocus) trigger.focus();
-  };
-
-  trigger.addEventListener('click', (event) => {
-    event.stopPropagation();
-    const isOpen = siteHeader.classList.toggle('is-search-open');
-    trigger.setAttribute('aria-expanded', String(isOpen));
-    trigger.setAttribute('aria-label', isOpen ? 'Fechar busca' : 'Abrir busca');
-    if (isOpen) input.focus();
-  });
-
-  search.addEventListener('click', (event) => event.stopPropagation());
-  document.addEventListener('click', () => closeSearch());
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && siteHeader.classList.contains('is-search-open')) {
-      closeSearch({ returnFocus: true });
-    }
-  });
-}
-
 function wireHeaderSearch(form) {
   if (!form) return;
   form.addEventListener('submit', (event) => {
@@ -349,7 +312,6 @@ function initHeader() {
   loadHeaderCategories();
   wireCategoriesDropdown();
   wireMobileMenu();
-  wireMobileSearch();
 
   wireHeaderSearch(document.querySelector('[data-search-form]'));
   wireHeaderSearch(document.querySelector('[data-search-form-mobile]'));
