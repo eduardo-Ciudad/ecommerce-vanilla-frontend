@@ -216,7 +216,7 @@ async function searchLocalSaleProducts(term, addExactMatch = false) {
   localSaleSearchController = new AbortController();
   renderLocalSaleSearchState('<div class="local-sale-search-skeleton"><div class="skeleton skeleton-row"></div><div class="skeleton skeleton-row"></div></div>');
   try {
-    const response = await apiGet(`/products?page=0&size=20&includeWithoutImage=true&q=${encodeURIComponent(term)}`, { signal: localSaleSearchController.signal });
+    const response = await apiGet(`/products?page=0&size=20&includeWithoutImage=true&includeOutOfStock=true&q=${encodeURIComponent(term)}`, { signal: localSaleSearchController.signal });
     renderLocalSaleSearchResults(response.content || [], term, addExactMatch);
   } catch (error) {
     if (error.code === 'API_ABORTED') return;
