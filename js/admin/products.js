@@ -423,7 +423,7 @@ async function loadProducts(page = currentProductsPage) {
     const query = currentProductsSearch.trim()
       ? `&q=${encodeURIComponent(currentProductsSearch.trim())}`
       : '';
-    const response = await apiGet(`/products?page=${page}&size=${ADMIN_PRODUCTS_PAGE_SIZE}&includeWithoutImage=true${query}`);
+    const response = await apiGet(`/products?page=${page}&size=${ADMIN_PRODUCTS_PAGE_SIZE}&includeWithoutImage=true&includeOutOfStock=true${query}`);
     productsCache = response.content;
     currentProductsPage = response.page;
     totalProductsPages = response.totalPages;
