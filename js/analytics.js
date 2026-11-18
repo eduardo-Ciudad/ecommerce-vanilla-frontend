@@ -1,20 +1,18 @@
 /*
- * Google Analytics 4 (gtag.js) com Google Consent Mode v2.
- * - Por padrão, armazenamento de análise/anúncios fica NEGADO (LGPD).
- * - Se o visitante já escolheu "Aceitar todos" (cookieconsert.js), a análise é liberada no carregamento.
- * - O banner chama window.gabiAnalyticsConsent('all' | 'essential') ao escolher.
- * - Parâmetros sensíveis da URL (?token=) são removidos antes de qualquer envio ao Google.
+ * Google Tag Manager condicionado ao consentimento LGPD.
+ * - O container só é carregado após a escolha "Aceitar todos".
+ * - O banner chama window.gabiAnalyticsConsent('all' | 'essential').
+ * - Eventos são enviados ao dataLayer para configuração no GTM.
  */
 (function () {
   'use strict';
 
-  var GA_MEASUREMENT_ID = 'G-9N9W6K9Q47';
-  var GOOGLE_ADS_ID = 'AW-18538098111';
-  var GOOGLE_ADS_CONVERSION_SEND_TO = 'AW-18538098111/H6OiCNL5i7QdEL_b04dF';
+  var GTM_ID = 'GTM-T2FDCSCK';
   var CONSENT_KEY = 'cookie_consent';
   var CONSENT_DATE_KEY = 'cookie_consent_date';
   var MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000;
   var SENSITIVE_PARAMS = ['token'];
+  var gtmLoaded = false;
 
   window.dataLayer = window.dataLayer || [];
   function gtag() { window.dataLayer.push(arguments); }
@@ -58,36 +56,83 @@
     };
   }
 
-  var defaults = consentState(readStoredConsent());
-  defaults.wait_for_update = 500;
-  gtag('consent', 'default', defaults);
+  function currentUrlHasSensitiveParams() {
+    try {
+      var params = new URL(window.location.href).searchParams;
+      return SENSITIVE_PARAMS.some(function (name) { return params.has(name); });
+    } catch (e) {
+      return true;
+    }
+  }
 
-  gtag('js', new Date());
-  gtag('config', GA_MEASUREMENT_ID, {
-    page_location: redactUrl(window.location.href),
-    page_referrer: redactUrl(document.referrer)
-  });
-  gtag('config', GOOGLE_ADS_ID);
+  function loadGtm() {
+    if (gtmLoaded || currentUrlHasSensitiveParams() || document.getElementById('gabi-gtm-script')) return;
+    gtmLoaded = true;
 
-  window.trackAdsPurchaseConversion = function (order) {
-    if (typeof window.gtag !== 'function' || readStoredConsent() !== 'all') return;
+    window.dataLayer.push({
+      page_location: redactUrl(window.location.href),
+      page_referrer: redactUrl(document.referrer)
+    });
+    window.dataLayer.push({
+      'gtm.start': new Date().getTime(),
+      event: 'gtm.js'
+    });
+
+    var script = document.createElement('script');
+    script.id = 'gabi-gtm-script';
+    script.async = true;
+    script.src = 'https://www.googletagmanager.com/gtm.js?id=' + GTM_ID;
+    document.head.appendChild(script);
+  }
+
+  function purchaseItem(item) {
+    var price = Number(item && item.unitPrice);
+    var quantity = Number(item && item.quantity);
+    if (!item || !item.variantId || !item.productName || item.unitPrice == null || item.quantity == null
+      || !Number.isFinite(price) || !Number.isFinite(quantity) || quantity <= 0) return null;
+    return {
+      item_id: String(item.variantId),
+      item_name: String(item.productName),
+      price: Number(price.toFixed(2)),
+      quantity: quantity
+    };
+  }
+
+  function purchaseItems(order) {
+    if (!order || !Array.isArray(order.items) || !order.items.length) return [];
+
+    var items = order.items.map(purchaseItem);
+    if (items.some(function (item) { return !item; })) return [];
+    return items;
+  }
+
+  window.trackPurchase = function (order) {
+    if (readStoredConsent() !== 'all') return;
 
     var orderId = order && order.id;
     var total = Number(order && order.total);
+    var shipping = Number(order && order.shippingPrice);
+    var items = purchaseItems(order);
     if (!orderId || !Number.isFinite(total)) return;
+    if (!Number.isFinite(shipping)) shipping = 0;
 
-    var storageKey = 'gk_ads_conv_' + orderId;
+    var storageKey = 'gk_purchase_' + orderId;
     try {
       if (localStorage.getItem(storageKey)) return;
     } catch (e) {
       return;
     }
 
-    window.gtag('event', 'conversion', {
-      send_to: GOOGLE_ADS_CONVERSION_SEND_TO,
-      value: Number(total.toFixed(2)),
-      currency: 'BRL',
-      transaction_id: orderId
+    window.dataLayer.push({ ecommerce: null });
+    window.dataLayer.push({
+      event: 'purchase',
+      ecommerce: {
+        transaction_id: String(orderId),
+        value: Number(total.toFixed(2)),
+        currency: 'BRL',
+        shipping: Number(shipping.toFixed(2)),
+        items: items
+      }
     });
 
     try {
@@ -99,6 +144,12 @@
 
   window.gabiAnalyticsConsent = function (choice) {
     gtag('consent', 'update', consentState(choice));
+    if (choice === 'all') loadGtm();
   };
 
+  var defaults = consentState(readStoredConsent());
+  defaults.wait_for_update = 500;
+  gtag('consent', 'default', defaults);
+
+  if (readStoredConsent() === 'all') loadGtm();
 })();

@@ -1152,8 +1152,8 @@ function startPixPolling(orderId) {
 function showPaymentResult(result, order) {
   stopPixPolling();
 
-  if (result.status === 'approved' && typeof window.trackAdsPurchaseConversion === 'function') {
-    window.trackAdsPurchaseConversion(order);
+  if (result.status === 'approved' && typeof window.trackPurchase === 'function') {
+    window.trackPurchase(order);
   }
 
   document.querySelector('[data-checkout-payment]').hidden = true;
