@@ -479,6 +479,29 @@ function escapeAttr(str) {
     .replace(/'/g, '&#39;');
 }
 
+function startButtonCooldown(button, {
+  seconds = 60,
+  countdownLabel = (secondsLeft) => `Reenviar em ${secondsLeft}s`,
+  readyLabel = 'Reenviar',
+} = {}) {
+  let secondsLeft = seconds;
+  button.disabled = true;
+  button.textContent = countdownLabel(secondsLeft);
+
+  const timer = setInterval(() => {
+    secondsLeft -= 1;
+    if (secondsLeft <= 0) {
+      clearInterval(timer);
+      button.disabled = false;
+      button.textContent = readyLabel;
+      return;
+    }
+    button.textContent = countdownLabel(secondsLeft);
+  }, 1000);
+
+  return timer;
+}
+
 function normalizeVariantValue(value) {
   return String(value ?? '')
     .normalize('NFD')

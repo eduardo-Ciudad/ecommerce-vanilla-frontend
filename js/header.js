@@ -145,7 +145,7 @@ function buildHeaderMarkup() {
       <span class="topbar-full" data-free-shipping-topbar-full>Envio para todo o Brasil · Troca fácil em 30 dias</span>
       <span class="topbar-short" data-free-shipping-topbar-short>Troca fácil em 30 dias</span>
     </div>
-    ${showVerificationWarning ? `<div class="topbar topbar--warning">Seu email ainda não foi verificado. <a href="${headerLink('auth.html')}">Reenviar verificação</a></div>` : ''}
+    ${showVerificationWarning ? '<div class="topbar topbar--warning">Seu email ainda não foi verificado. <button type="button" data-resend-verification>Reenviar verificação</button></div>' : ''}
     <header class="site-header" data-site-header>
       <div class="header-main">
         <a class="header-logo" href="${headerLink('index.html')}">
@@ -291,6 +291,38 @@ function wireHeaderSearch(form) {
   });
 }
 
+function getVerificationResendEmail() {
+  const sessionEmail = getCurrentUser()?.email?.trim();
+  if (sessionEmail) return sessionEmail;
+
+  return document.querySelector('[data-form="register"] input[name="email"], [data-form="login"] input[name="email"]')
+    ?.value.trim() || '';
+}
+
+function wireHeaderVerificationResend() {
+  const button = document.querySelector('[data-resend-verification]');
+  if (!button) return;
+
+  button.addEventListener('click', async () => {
+    if (button.disabled) return;
+
+    const email = getVerificationResendEmail();
+    if (!email) {
+      showToast('Informe seu email para reenviar a verificação.', 'error');
+      return;
+    }
+
+    startButtonCooldown(button, { readyLabel: 'Reenviar verificação' });
+    try {
+      const data = await apiPost('/auth/resend-verification', { email });
+      showToast(data.message, 'success');
+    } catch (error) {
+      logAppError('header.verification_resend', error);
+      showToast('Não foi possível reenviar o email de verificação. Tente novamente.', 'error');
+    }
+  });
+}
+
 function initHeader() {
   const root = document.getElementById('header-root');
   if (!root) return;
@@ -315,6 +347,7 @@ function initHeader() {
 
   wireHeaderSearch(document.querySelector('[data-search-form]'));
   wireHeaderSearch(document.querySelector('[data-search-form-mobile]'));
+  wireHeaderVerificationResend();
 
   const userMenu = document.querySelector('[data-user-menu]');
   if (userMenu) {

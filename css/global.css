@@ -525,10 +525,24 @@ a.btn:hover {
     color: #92400E;
 }
 
-.topbar--warning a {
+.topbar--warning a,
+.topbar--warning button {
     color: #92400E;
     font-weight: 600;
     text-decoration: underline;
+}
+
+.topbar--warning button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+.topbar--warning button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
 }
 
 .auth-success {
