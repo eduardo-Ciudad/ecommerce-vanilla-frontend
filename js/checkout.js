@@ -1,3 +1,7 @@
+const CARD_PAYMENT_ENABLED = false;
+const SUPPORT_WHATSAPP_DISPLAY = '(17) 99624-7172';
+const SUPPORT_WHATSAPP_LINK = 'https://wa.me/5517996247172';
+
 const STATUS_DETAIL_MESSAGES = {
   accredited: 'Pagamento aprovado!',
   pending_contingency: 'Pagamento em processamento.',
@@ -614,20 +618,27 @@ function renderCheckout(order) {
         <h2>Pagamento</h2>
         ${paymentDeadline ? `<p class="pix-intro">Pague até ${paymentDeadline} para garantir os itens reservados.</p>` : ''}
         <div class="payment-tabs">
-          <button class="payment-tab is-active" type="button" data-payment-tab="card"><span class="payment-tab-icon">${ICONS.creditCard}</span> Cartão de Crédito</button>
-          <button class="payment-tab" type="button" data-payment-tab="pix"><span class="payment-tab-icon">${ICONS.smartphone}</span> Pix</button>
+          <button class="payment-tab${CARD_PAYMENT_ENABLED ? ' is-active' : ' is-unavailable'}" type="button" data-payment-tab="card"><span class="payment-tab-icon">${ICONS.creditCard}</span> Cartão de Crédito${CARD_PAYMENT_ENABLED ? '' : ' <span class="payment-tab-status">Indisponível</span>'}</button>
+          <button class="payment-tab${CARD_PAYMENT_ENABLED ? '' : ' is-active'}" type="button" data-payment-tab="pix"><span class="payment-tab-icon">${ICONS.smartphone}</span> Pix</button>
         </div>
 
-        <div class="payment-panel is-active" data-payment-panel="card">
-          <div id="mp-card-form"></div>
-          <div class="form-group pix-payer-document">
-            <label for="card-payer-phone">Celular (WhatsApp)</label>
-            <input class="form-control" id="card-payer-phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(17) 99999-9999" required aria-describedby="card-payer-phone-error" data-payer-phone />
-            <p class="form-error" id="card-payer-phone-error" aria-live="polite" data-payer-phone-error></p>
-          </div>
+        <div class="payment-panel${CARD_PAYMENT_ENABLED ? ' is-active' : ''}" data-payment-panel="card">
+          ${CARD_PAYMENT_ENABLED ? `
+            <div id="mp-card-form"></div>
+            <div class="form-group pix-payer-document">
+              <label for="card-payer-phone">Celular (WhatsApp)</label>
+              <input class="form-control" id="card-payer-phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(17) 99999-9999" required aria-describedby="card-payer-phone-error" data-payer-phone />
+              <p class="form-error" id="card-payer-phone-error" aria-live="polite" data-payer-phone-error></p>
+            </div>
+          ` : `
+            <div class="card-unavailable-notice">
+              <p>Pagamento via cartão de crédito indisponível no momento. Para mais dúvidas, fale com a gente pelo WhatsApp: <a class="card-unavailable-link" href="${escapeHtml(SUPPORT_WHATSAPP_LINK)}" target="_blank" rel="noopener noreferrer">${escapeHtml(SUPPORT_WHATSAPP_DISPLAY)}</a>. Você pode concluir sua compra normalmente pelo Pix.</p>
+              <button class="btn btn-secondary" type="button" data-switch-to-pix>Pagar com Pix</button>
+            </div>
+          `}
         </div>
 
-        <div class="payment-panel" data-payment-panel="pix">
+        <div class="payment-panel${CARD_PAYMENT_ENABLED ? '' : ' is-active'}" data-payment-panel="pix">
           <div data-pix-content>
             <p class="pix-intro">Pague instantaneamente escaneando o QR Code ou copiando o código Pix.</p>
             <div class="checkout-field-row checkout-field-row--payer">
@@ -652,10 +663,13 @@ function renderCheckout(order) {
   `;
 
   wirePaymentTabs();
+  document.querySelector('[data-switch-to-pix]')?.addEventListener('click', () => {
+    document.querySelector('[data-payment-tab="pix"]').click();
+  });
   wirePixCpfInput();
   wirePayerPhoneInputs();
   document.querySelector('[data-pix-btn]').addEventListener('click', () => handlePixPayment(order));
-  initCardForm(order);
+  if (CARD_PAYMENT_ENABLED) initCardForm(order);
 }
 
 function cartItemsTotal(cart) {
