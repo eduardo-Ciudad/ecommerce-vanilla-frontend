@@ -507,7 +507,8 @@ function normalizeVariantValue(value) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .trim()
-    .toLocaleLowerCase('pt-BR');
+    .toLocaleLowerCase('pt-BR')
+    .replace(/\s+/g, ' ');
 }
 
 const VARIANT_COLOR_SWATCHES = {
@@ -550,13 +551,44 @@ const VARIANT_COLOR_SWATCHES = {
   vinho: '#722F37',
 };
 
-function variantColorSwatchMarkup(color) {
+function productImagesForColor(product, color) {
+  const base = Array.isArray(product?.images)
+    ? product.images.filter((image) => image?.url)
+    : [];
+  const normalizedColor = normalizeVariantValue(color);
+  if (!normalizedColor) return base;
+
+  const hasSpecificImages = base.some((image) => (
+    String(image.color || '').trim()
+    && normalizeVariantValue(image.color) === normalizedColor
+  ));
+  if (!hasSpecificImages) return base;
+
+  return base.filter((image) => (
+    !String(image.color || '').trim()
+    || normalizeVariantValue(image.color) === normalizedColor
+  ));
+}
+
+function variantColorSwatchMarkup(color, product, { decorative = false } = {}) {
   const normalized = normalizeVariantValue(color);
   const fallbackName = normalized.split(/\s+/)[0];
   const background = VARIANT_COLOR_SWATCHES[normalized]
-    || VARIANT_COLOR_SWATCHES[fallbackName]
-    || '#C9C1B3';
-  return `<span class="color-swatch" style="background:${background}" aria-hidden="true"></span>`;
+    || VARIANT_COLOR_SWATCHES[fallbackName];
+  const colorName = String(color ?? '').trim();
+  const colorImage = !background
+    ? productImagesForColor(product, color).find((image) => (
+      String(image.color || '').trim()
+      && normalizeVariantValue(image.color) === normalized
+    ))
+    : null;
+  const visual = colorImage
+    ? `<img src="${escapeAttr(colorImage.thumbnailUrl || colorImage.url)}" alt="" loading="lazy" decoding="async" />`
+    : '';
+  const accessibilityAttributes = decorative
+    ? 'aria-hidden="true"'
+    : `role="img" aria-label="${escapeAttr(colorName)}"`;
+  return `<span class="color-swatch" style="background:${background || '#C9C1B3'}" title="${escapeAttr(colorName)}" ${accessibilityAttributes}>${visual}</span>`;
 }
 
 function productCardColors(product) {
@@ -582,7 +614,7 @@ function productCardColorsMarkup(product) {
 
   const visibleColors = colors.slice(0, 3);
   const swatches = visibleColors.map((color) => (
-    `<span class="product-card-color" title="${escapeAttr(color)}">${variantColorSwatchMarkup(color)}</span>`
+    `<span class="product-card-color">${variantColorSwatchMarkup(color, product)}</span>`
   ));
 
   if (colors.length > 3) {

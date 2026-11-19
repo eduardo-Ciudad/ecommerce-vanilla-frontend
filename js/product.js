@@ -143,31 +143,12 @@ function mountProductMainImage(gallery, mainImage, product, images) {
   updateProductMainImage(mainImage, imageUrl, product.name);
 }
 
-function imagesForColor(product, color) {
-  const base = Array.isArray(product.images)
-    ? product.images.filter((image) => image?.url)
-    : [];
-  const normalizedColor = normalizeVariantValue(color);
-  if (!normalizedColor) return base;
-
-  const hasSpecificImages = base.some((image) => (
-    String(image.color || '').trim()
-    && normalizeVariantValue(image.color) === normalizedColor
-  ));
-  if (!hasSpecificImages) return base;
-
-  return base.filter((image) => (
-    !String(image.color || '').trim()
-    || normalizeVariantValue(image.color) === normalizedColor
-  ));
-}
-
 function renderGalleryForColor(product, color) {
   const gallery = document.querySelector('.product-gallery');
   if (!gallery) return;
   const mainImage = gallery.querySelector('[data-product-main-image]');
 
-  const images = imagesForColor(product, color);
+  const images = productImagesForColor(product, color);
   const currentUrls = Array.from(gallery.querySelectorAll('[data-product-thumbnail]'))
     .map((thumbnail) => thumbnail.dataset.fullImage);
   const nextUrls = images.map((image) => image.url);
@@ -606,7 +587,7 @@ function wireProductInteractions(product) {
       return `
         <button type="button" class="variant-chip color-chip" data-color-index="${index}"
           aria-pressed="false" ${hasStock ? '' : 'disabled'}>
-          ${variantColorSwatchMarkup(color)}
+          ${variantColorSwatchMarkup(color, product, { decorative: true })}
           <span>${escapeHtml(color)}</span>
         </button>
       `;
