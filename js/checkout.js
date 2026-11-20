@@ -988,11 +988,7 @@ async function initCardForm(order) {
                 payerDocNumber: cardFormData.payer?.identification?.number ?? null,
                 payerName,
                 payerPhone,
-                deviceId:
-                  typeof window.MP_DEVICE_SESSION_ID === 'string' &&
-                  window.MP_DEVICE_SESSION_ID
-                    ? window.MP_DEVICE_SESSION_ID
-                    : null,
+                deviceId: getDeviceId(),
               });
               showPaymentResult(result, order);
             } catch (error) {
@@ -1017,6 +1013,13 @@ async function initCardForm(order) {
   } catch (error) {
     showFatalCardFormError(error);
   }
+}
+
+function getDeviceId() {
+  return typeof window.MP_DEVICE_SESSION_ID === 'string' &&
+    window.MP_DEVICE_SESSION_ID
+    ? window.MP_DEVICE_SESSION_ID
+    : null;
 }
 
 async function handlePixPayment(order) {
@@ -1049,6 +1052,7 @@ async function handlePixPayment(order) {
       payerDocNumber: cpfDigits,
       payerName,
       payerPhone,
+      deviceId: getDeviceId(),
     });
 
     if (result.status === 'approved') {
