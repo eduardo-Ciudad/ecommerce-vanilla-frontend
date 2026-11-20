@@ -189,8 +189,8 @@ function initAuthPage() {
     const confirmPassword = registerForm.confirmPassword.value;
     let hasError = false;
 
-    if (!name) {
-      setFieldError(registerForm.name, 'Informe seu nome');
+    if (name.split(/\s+/).filter(Boolean).length < 2) {
+      setFieldError(registerForm.name, 'Informe nome e sobrenome');
       hasError = true;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
