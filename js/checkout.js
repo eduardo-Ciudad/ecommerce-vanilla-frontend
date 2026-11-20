@@ -104,6 +104,39 @@ function isPayerPhoneValidationError(error) {
   return /payerPhone|payer phone|celular|telefone/i.test(error?.message || '');
 }
 
+function setPayerNameError(message = '') {
+  document.querySelectorAll('[data-payer-name]').forEach((input) => {
+    const errorEl = input.parentElement.querySelector('[data-payer-name-error]');
+    if (errorEl) errorEl.textContent = message;
+    input.setAttribute('aria-invalid', message ? 'true' : 'false');
+  });
+}
+
+function wirePayerNameInputs() {
+  const inputs = [...document.querySelectorAll('[data-payer-name]')];
+  inputs.forEach((input) => {
+    input.addEventListener('input', () => {
+      inputs.forEach((otherInput) => { otherInput.value = input.value; });
+      setPayerNameError();
+    });
+  });
+}
+
+function getPayerName(input, required = false) {
+  const payerName = input.value.trim();
+  setPayerNameError();
+  if (required && payerName.split(/\s+/).filter(Boolean).length < 2) {
+    setPayerNameError('Informe nome e sobrenome do titular do pagamento.');
+    input.focus();
+    return null;
+  }
+  return payerName;
+}
+
+function isPayerNameValidationError(error) {
+  return /payerName|payer name|nome e sobrenome|nome.*titular/i.test(error?.message || '');
+}
+
 function setPixCpfError(message = '') {
   const input = document.querySelector('[data-pix-cpf]');
   const errorEl = document.querySelector('[data-pix-cpf-error]');
@@ -586,6 +619,7 @@ function formatOrderDeliveryAddress(order) {
 function renderCheckout(order) {
   const root = document.querySelector('[data-checkout-root]');
   const paymentDeadline = formatPaymentDeadline(order.paymentDeadline);
+  const payerName = getCurrentUser()?.name?.trim() || '';
   root.innerHTML = `
     <div class="checkout-layout fade-in">
       <section class="checkout-summary checkout-order-summary">
@@ -626,6 +660,11 @@ function renderCheckout(order) {
           ${CARD_PAYMENT_ENABLED ? `
             <div id="mp-card-form"></div>
             <div class="form-group pix-payer-document">
+              <label for="card-payer-name">Nome completo do pagador</label>
+              <input class="form-control" id="card-payer-name" type="text" autocomplete="name" maxlength="120" value="${escapeHtml(payerName)}" required aria-describedby="card-payer-name-error" data-payer-name />
+              <p class="form-error" id="card-payer-name-error" aria-live="polite" data-payer-name-error></p>
+            </div>
+            <div class="form-group pix-payer-document">
               <label for="card-payer-phone">Celular (WhatsApp)</label>
               <input class="form-control" id="card-payer-phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(17) 99999-9999" required aria-describedby="card-payer-phone-error" data-payer-phone />
               <p class="form-error" id="card-payer-phone-error" aria-live="polite" data-payer-phone-error></p>
@@ -641,6 +680,11 @@ function renderCheckout(order) {
         <div class="payment-panel${CARD_PAYMENT_ENABLED ? '' : ' is-active'}" data-payment-panel="pix">
           <div data-pix-content>
             <p class="pix-intro">Pague instantaneamente escaneando o QR Code ou copiando o código Pix.</p>
+            <div class="form-group pix-payer-document">
+              <label for="pix-payer-name">Nome completo do pagador</label>
+              <input class="form-control" id="pix-payer-name" type="text" autocomplete="name" maxlength="120" value="${escapeHtml(payerName)}" aria-describedby="pix-payer-name-error" data-payer-name />
+              <p class="form-error" id="pix-payer-name-error" aria-live="polite" data-payer-name-error></p>
+            </div>
             <div class="checkout-field-row checkout-field-row--payer">
             <div class="form-group pix-payer-document">
               <label for="pix-payer-cpf">CPF do pagador</label>
@@ -668,6 +712,7 @@ function renderCheckout(order) {
   });
   wirePixCpfInput();
   wirePayerPhoneInputs();
+  wirePayerNameInputs();
   document.querySelector('[data-pix-btn]').addEventListener('click', () => handlePixPayment(order));
   if (CARD_PAYMENT_ENABLED) initCardForm(order);
 }
@@ -925,6 +970,9 @@ async function initCardForm(order) {
           onReady: () => {},
           onSubmit: async (cardFormData) => {
             const phoneInput = document.getElementById('card-payer-phone');
+            const nameInput = document.getElementById('card-payer-name');
+            const payerName = getPayerName(nameInput, true);
+            if (payerName === null) return;
             const payerPhone = getValidPayerPhone(phoneInput);
             if (!payerPhone) return;
 
@@ -938,6 +986,7 @@ async function initCardForm(order) {
                 issuerId: cardFormData.issuer_id ?? null,
                 payerDocType: cardFormData.payer?.identification?.type ?? null,
                 payerDocNumber: cardFormData.payer?.identification?.number ?? null,
+                payerName,
                 payerPhone,
                 deviceId:
                   typeof window.MP_DEVICE_SESSION_ID === 'string' &&
@@ -949,6 +998,8 @@ async function initCardForm(order) {
             } catch (error) {
               if (isPayerPhoneValidationError(error)) {
                 setPayerPhoneError(error.message || 'Informe um celular com DDD');
+              } else if (isPayerNameValidationError(error)) {
+                setPayerNameError(error.message || 'Informe nome e sobrenome do titular do pagamento.');
               }
               showToast(error.message || 'Erro ao processar pagamento', 'error');
             }
@@ -972,7 +1023,9 @@ async function handlePixPayment(order) {
   const pixBtn = document.querySelector('[data-pix-btn]');
   const cpfInput = document.querySelector('[data-pix-cpf]');
   const phoneInput = document.getElementById('pix-payer-phone');
+  const nameInput = document.getElementById('pix-payer-name');
   const cpfDigits = cpfInput.value.replace(/\D/g, '');
+  const payerName = getPayerName(nameInput);
 
   setPixCpfError();
   if (!isValidCpf(cpfDigits)) {
@@ -994,6 +1047,7 @@ async function handlePixPayment(order) {
       paymentMethod: 'pix',
       payerDocType: 'CPF',
       payerDocNumber: cpfDigits,
+      payerName,
       payerPhone,
     });
 
@@ -1010,6 +1064,8 @@ async function handlePixPayment(order) {
   } catch (error) {
     if (isPayerPhoneValidationError(error)) {
       setPayerPhoneError(error.message || 'Informe um celular com DDD');
+    } else if (isPayerNameValidationError(error)) {
+      setPayerNameError(error.message || 'Informe nome e sobrenome do titular do pagamento.');
     } else if (error.status === 400) {
       setPixCpfError(error.message || 'Informe um CPF válido');
     }
