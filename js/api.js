@@ -1,6 +1,6 @@
 const API_BASE = ['localhost', '127.0.0.1'].includes(window.location.hostname)
   ? 'http://localhost:8080'
-  : 'https://gabikids.duckdns.org';
+  : 'https://api.gabikidstore.com';
 const DEFAULT_API_TIMEOUT_MS = 15000;
 const DEFAULT_UPLOAD_TIMEOUT_MS = 60000;
 const HANDLING_DAYS = 2; // dias úteis para embalar e postar nos Correios
