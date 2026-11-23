@@ -313,6 +313,22 @@
   text-decoration: underline;
 }
 
+.modal--three-ds {
+  max-width: 548px;
+  box-shadow: var(--shadow-md);
+}
+
+.three-ds-modal-body { overflow: hidden; }
+
+.three-ds-iframe {
+  display: block;
+  width: 100%;
+  height: min(600px, calc(90vh - 112px));
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+}
+
 .pix-intro {
   margin-bottom: var(--space-md);
   color: var(--color-text-secondary);
@@ -385,6 +401,17 @@
 
 @media (max-width: 419px) {
   .checkout-page { --form-group-padding: 20px; }
+
+  .three-ds-overlay { padding: var(--space-sm); }
+
+  .modal--three-ds { max-width: 100%; }
+
+  .three-ds-modal-body { padding: var(--space-sm); }
+
+  .three-ds-iframe {
+    height: calc(100dvh - 104px);
+    max-height: 600px;
+  }
 
   .checkout-field-row:not(.checkout-field-row--city) {
     grid-template-columns: minmax(0, 1fr);

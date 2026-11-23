@@ -1,4 +1,4 @@
-const CARD_PAYMENT_ENABLED = false;
+const CARD_PAYMENT_ENABLED = true;
 const SUPPORT_WHATSAPP_DISPLAY = '(17) 99624-7172';
 const SUPPORT_WHATSAPP_LINK = 'https://wa.me/5517996247172';
 
@@ -18,6 +18,7 @@ const STATUS_DETAIL_MESSAGES = {
   cc_rejected_insufficient_amount: 'Saldo insuficiente.',
   cc_rejected_max_attempts: 'Limite de tentativas excedido.',
   cc_rejected_other_reason: 'Pagamento recusado.',
+  cc_rejected_3ds_challenge: 'A confirmação com o seu banco não foi concluída. Tente novamente ou use o Pix.',
 };
 
 const PAYMENT_RESULT_CONTENT = {
@@ -54,6 +55,9 @@ const PIX_POLL_MAX_CONSECUTIVE_FAILURES = 5;
 let pixPollTimeout = null;
 let pixPollAbortController = null;
 let pixPollSession = 0;
+let cardPollTimeout = null;
+let cardPollAbortController = null;
+let cardPollSession = 0;
 let selectedAddressId = null;
 let selectedShippingMethod = null;
 let selectedShippingPrice = 0;
@@ -990,6 +994,16 @@ async function initCardForm(order) {
                 payerPhone,
                 deviceId: getDeviceId(),
               });
+
+              if (
+                result.status === 'pending'
+                && result.statusDetail === 'pending_challenge'
+                && result.threeDsUrl
+              ) {
+                openThreeDsChallenge(result, order);
+                return;
+              }
+
               showPaymentResult(result, order);
             } catch (error) {
               if (isPayerPhoneValidationError(error)) {
@@ -1020,6 +1034,177 @@ function getDeviceId() {
     window.MP_DEVICE_SESSION_ID
     ? window.MP_DEVICE_SESSION_ID
     : null;
+}
+
+function stopCardPaymentPolling() {
+  cardPollSession += 1;
+
+  if (cardPollTimeout) {
+    clearTimeout(cardPollTimeout);
+    cardPollTimeout = null;
+  }
+
+  if (cardPollAbortController) {
+    cardPollAbortController.abort();
+    cardPollAbortController = null;
+  }
+}
+
+function startCardPaymentPolling(order) {
+  stopCardPaymentPolling();
+
+  const session = cardPollSession;
+  const deadline = Date.now() + PIX_POLL_MAX_DURATION_MS;
+  let consecutiveFailures = 0;
+
+  const finishAsPending = () => {
+    if (session !== cardPollSession) return;
+    stopCardPaymentPolling();
+    showPaymentResult({ status: 'pending' }, order);
+  };
+
+  const poll = async () => {
+    if (session !== cardPollSession) return;
+
+    if (Date.now() >= deadline) {
+      finishAsPending();
+      return;
+    }
+
+    cardPollAbortController = new AbortController();
+
+    try {
+      const updated = await apiGet(`/orders/${encodeURIComponent(order.id)}`, {
+        signal: cardPollAbortController.signal,
+      });
+
+      if (session !== cardPollSession) return;
+
+      consecutiveFailures = 0;
+
+      if (updated?.paymentStatus === 'approved') {
+        stopCardPaymentPolling();
+        showPaymentResult({ status: 'approved' }, updated);
+        return;
+      }
+
+      if (['rejected', 'cancelled'].includes(updated?.paymentStatus)) {
+        stopCardPaymentPolling();
+        showPaymentResult({ status: 'rejected' }, updated);
+        return;
+      }
+    } catch (error) {
+      if (session !== cardPollSession || error.code === 'API_ABORTED') return;
+
+      consecutiveFailures += 1;
+      logAppError('checkout.card.polling', error, {
+        code: 'CARD_POLL_NETWORK_ERROR',
+        consecutiveFailures,
+      });
+
+      if (consecutiveFailures >= PIX_POLL_MAX_CONSECUTIVE_FAILURES) {
+        finishAsPending();
+        return;
+      }
+    } finally {
+      if (session === cardPollSession) {
+        cardPollAbortController = null;
+      }
+    }
+
+    if (Date.now() >= deadline) {
+      finishAsPending();
+      return;
+    }
+
+    cardPollTimeout = setTimeout(poll, PIX_POLL_DELAY_MS);
+  };
+
+  cardPollTimeout = setTimeout(poll, PIX_POLL_DELAY_MS);
+}
+
+function openThreeDsChallenge(result, order) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay three-ds-overlay';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal modal--three-ds';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'three-ds-title');
+
+  const header = document.createElement('div');
+  header.className = 'modal-header';
+
+  const title = document.createElement('h3');
+  title.id = 'three-ds-title';
+  title.textContent = 'Confirmação do seu banco';
+
+  const closeButton = document.createElement('button');
+  closeButton.className = 'modal-close';
+  closeButton.type = 'button';
+  closeButton.setAttribute('aria-label', 'Fechar');
+  closeButton.textContent = '×';
+
+  const body = document.createElement('div');
+  body.className = 'modal-body three-ds-modal-body';
+
+  const iframe = document.createElement('iframe');
+  iframe.className = 'three-ds-iframe';
+  iframe.name = `three-ds-challenge-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  iframe.title = 'Confirmação de pagamento do banco';
+
+  header.append(title, closeButton);
+  body.appendChild(iframe);
+  modal.append(header, body);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  let completed = false;
+
+  const cleanup = () => {
+    window.removeEventListener('message', handleMessage);
+    document.removeEventListener('keydown', handleKeydown);
+    overlay.remove();
+  };
+
+  const closePendingChallenge = () => {
+    if (completed) return;
+    cleanup();
+    showPaymentResult({ status: 'pending' }, order);
+  };
+
+  function handleMessage(event) {
+    if (event.source !== iframe.contentWindow || event.data?.status !== 'COMPLETE') return;
+
+    completed = true;
+    cleanup();
+    startCardPaymentPolling(order);
+  }
+
+  function handleKeydown(event) {
+    if (event.key === 'Escape') closePendingChallenge();
+  }
+
+  closeButton.addEventListener('click', closePendingChallenge);
+  window.addEventListener('message', handleMessage);
+  document.addEventListener('keydown', handleKeydown);
+  closeButton.focus();
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = result.threeDsUrl;
+  form.target = iframe.name;
+
+  const creqInput = document.createElement('input');
+  creqInput.type = 'hidden';
+  creqInput.name = 'creq';
+  creqInput.value = result.threeDsCreq || '';
+  form.appendChild(creqInput);
+
+  document.body.appendChild(form);
+  form.submit();
+  form.remove();
 }
 
 async function handlePixPayment(order) {
@@ -1308,4 +1493,5 @@ async function initCheckoutPage() {
 }
 
 window.addEventListener('pagehide', stopPixPolling);
+window.addEventListener('pagehide', stopCardPaymentPolling);
 document.addEventListener('DOMContentLoaded', initCheckoutPage);
