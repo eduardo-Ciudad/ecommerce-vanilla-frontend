@@ -1,5 +1,5 @@
-const CARD_PAYMENT_ENABLED = false;
-const CARD_PROVIDER = 'infinitepay';
+const CARD_PAYMENT_ENABLED = typeof CARD_PAYMENT_ENABLED_CONFIG === 'boolean' ? CARD_PAYMENT_ENABLED_CONFIG : false;
+const CARD_PROVIDER = (typeof CARD_PROVIDER_CONFIG === 'string' && ['infinitepay', 'mercadopago'].includes(CARD_PROVIDER_CONFIG)) ? CARD_PROVIDER_CONFIG : 'infinitepay';
 
 const STATUS_DETAIL_MESSAGES = {
   accredited: 'Pagamento aprovado!',

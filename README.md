@@ -62,8 +62,10 @@ Projeto desenvolvido por mim pela [CiudadLab](https://ciudadlab.com.br).
 
 O deploy é na Vercel, com `sh build.sh` como comando de build. O script:
 
-* gera o `config.js` a partir da variável `MP_PUBLIC_KEY`;
+* gera o `config.js` a partir das variáveis `MP_PUBLIC_KEY`, `CARD_PAYMENT_ENABLED` e `CARD_PROVIDER`;
 * recusa o build se a chave estiver vazia, for um valor de exemplo ou for uma chave `TEST-` num deploy de produção;
+* usa `false` para `CARD_PAYMENT_ENABLED` quando a variável estiver ausente ou inválida;
+* usa `infinitepay` para `CARD_PROVIDER` quando a variável estiver ausente e recusa o build quando ela tiver um valor diferente de `infinitepay` ou `mercadopago`;
 * gera o `sitemap.xml`.
 
 O deploy automático a cada push na `main` está desligado no `vercel.json`.
