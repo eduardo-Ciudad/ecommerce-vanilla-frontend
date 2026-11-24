@@ -1,6 +1,5 @@
-const CARD_PAYMENT_ENABLED = true;
-const SUPPORT_WHATSAPP_DISPLAY = '(17) 99624-7172';
-const SUPPORT_WHATSAPP_LINK = 'https://wa.me/5517996247172';
+const CARD_PAYMENT_ENABLED = false;
+const CARD_PROVIDER = 'infinitepay';
 
 const STATUS_DETAIL_MESSAGES = {
   accredited: 'Pagamento aprovado!',
@@ -157,6 +156,25 @@ function wirePixCpfInput() {
   input.addEventListener('input', () => {
     input.value = formatCpf(input.value);
     setPixCpfError();
+  });
+}
+
+function setCardCpfError(message = '') {
+  const input = document.getElementById('card-payer-cpf');
+  const errorEl = document.querySelector('[data-card-cpf-error]');
+  if (!input || !errorEl) return;
+
+  errorEl.textContent = message;
+  input.setAttribute('aria-invalid', message ? 'true' : 'false');
+}
+
+function wireCardCpfInput() {
+  const input = document.getElementById('card-payer-cpf');
+  if (!input) return;
+
+  input.addEventListener('input', () => {
+    input.value = formatCpf(input.value);
+    setCardCpfError();
   });
 }
 
@@ -620,6 +638,41 @@ function formatOrderDeliveryAddress(order) {
   return `${escapeHtml(order.recipientStreet)}, ${escapeHtml(order.recipientNumber)}${complement} — ${escapeHtml(order.recipientNeighborhood)}, ${escapeHtml(order.recipientCity)}/${escapeHtml(order.recipientState)} — CEP ${escapeHtml(order.recipientCep)}`;
 }
 
+function cardPaymentFields(payerName) {
+  if (CARD_PROVIDER === 'infinitepay') {
+    return `
+      <p class="pix-intro">Você será direcionado para o ambiente seguro da InfinitePay para pagar com cartão de crédito em até 12x.</p>
+      <div class="checkout-field-row checkout-field-row--payer">
+        <div class="form-group pix-payer-document">
+          <label for="card-payer-cpf">CPF do pagador</label>
+          <input class="form-control" id="card-payer-cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00" aria-describedby="card-payer-cpf-error" />
+          <p class="form-error" id="card-payer-cpf-error" aria-live="polite" data-card-cpf-error></p>
+        </div>
+        <div class="form-group pix-payer-document">
+          <label for="card-payer-phone">Celular (WhatsApp)</label>
+          <input class="form-control" id="card-payer-phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(17) 99999-9999" required aria-describedby="card-payer-phone-error" data-payer-phone />
+          <p class="form-error" id="card-payer-phone-error" aria-live="polite" data-payer-phone-error></p>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" type="button" data-infinitepay-btn>Pagar com cartão</button>
+    `;
+  }
+
+  return `
+    <div id="mp-card-form"></div>
+    <div class="form-group pix-payer-document">
+      <label for="card-payer-name">Nome completo do pagador</label>
+      <input class="form-control" id="card-payer-name" type="text" autocomplete="name" maxlength="120" value="${escapeHtml(payerName)}" required aria-describedby="card-payer-name-error" data-payer-name />
+      <p class="form-error" id="card-payer-name-error" aria-live="polite" data-payer-name-error></p>
+    </div>
+    <div class="form-group pix-payer-document">
+      <label for="card-payer-phone">Celular (WhatsApp)</label>
+      <input class="form-control" id="card-payer-phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(17) 99999-9999" required aria-describedby="card-payer-phone-error" data-payer-phone />
+      <p class="form-error" id="card-payer-phone-error" aria-live="polite" data-payer-phone-error></p>
+    </div>
+  `;
+}
+
 function renderCheckout(order) {
   const root = document.querySelector('[data-checkout-root]');
   const paymentDeadline = formatPaymentDeadline(order.paymentDeadline);
@@ -662,17 +715,7 @@ function renderCheckout(order) {
 
         <div class="payment-panel${CARD_PAYMENT_ENABLED ? ' is-active' : ''}" data-payment-panel="card">
           ${CARD_PAYMENT_ENABLED ? `
-            <div id="mp-card-form"></div>
-            <div class="form-group pix-payer-document">
-              <label for="card-payer-name">Nome completo do pagador</label>
-              <input class="form-control" id="card-payer-name" type="text" autocomplete="name" maxlength="120" value="${escapeHtml(payerName)}" required aria-describedby="card-payer-name-error" data-payer-name />
-              <p class="form-error" id="card-payer-name-error" aria-live="polite" data-payer-name-error></p>
-            </div>
-            <div class="form-group pix-payer-document">
-              <label for="card-payer-phone">Celular (WhatsApp)</label>
-              <input class="form-control" id="card-payer-phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(17) 99999-9999" required aria-describedby="card-payer-phone-error" data-payer-phone />
-              <p class="form-error" id="card-payer-phone-error" aria-live="polite" data-payer-phone-error></p>
-            </div>
+            ${cardPaymentFields(payerName)}
           ` : `
             <div class="card-unavailable-notice">
               <p>Pagamento via cartão de crédito indisponível no momento. Para mais dúvidas, fale com a gente pelo WhatsApp: <a class="card-unavailable-link" href="${escapeHtml(SUPPORT_WHATSAPP_LINK)}" target="_blank" rel="noopener noreferrer">${escapeHtml(SUPPORT_WHATSAPP_DISPLAY)}</a>. Você pode concluir sua compra normalmente pelo Pix.</p>
@@ -715,10 +758,12 @@ function renderCheckout(order) {
     document.querySelector('[data-payment-tab="pix"]').click();
   });
   wirePixCpfInput();
+  wireCardCpfInput();
   wirePayerPhoneInputs();
   wirePayerNameInputs();
   document.querySelector('[data-pix-btn]').addEventListener('click', () => handlePixPayment(order));
-  if (CARD_PAYMENT_ENABLED) initCardForm(order);
+  document.querySelector('[data-infinitepay-btn]')?.addEventListener('click', () => handleInfinitePayCheckout(order));
+  if (CARD_PAYMENT_ENABLED && CARD_PROVIDER === 'mercadopago') initCardForm(order);
 }
 
 function cartItemsTotal(cart) {
@@ -836,6 +881,68 @@ function wirePaymentTabs() {
       });
     });
   });
+}
+
+function isTrustedInfinitePayUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:'
+      && (url.hostname === 'infinitepay.io' || url.hostname.endsWith('.infinitepay.io'));
+  } catch {
+    return false;
+  }
+}
+
+async function handleInfinitePayCheckout(order) {
+  const button = document.querySelector('[data-infinitepay-btn]');
+  const cpfInput = document.getElementById('card-payer-cpf');
+  const phoneInput = document.getElementById('card-payer-phone');
+  const cpfDigits = cpfInput.value.replace(/\D/g, '');
+
+  setCardCpfError();
+  if (!isValidCpf(cpfDigits)) {
+    setCardCpfError('Informe um CPF válido');
+    cpfInput.focus();
+    return;
+  }
+
+  const payerPhone = getValidPayerPhone(phoneInput);
+  if (!payerPhone) return;
+
+  lockButtonWidth(button);
+  button.disabled = true;
+  button.innerHTML = '<span class="spinner"></span> Preparando pagamento...';
+
+  try {
+    const result = await apiPost('/payments/infinitepay/checkout', {
+      orderId: order.id,
+      payerDocType: 'CPF',
+      payerDocNumber: cpfDigits,
+      payerPhone,
+    });
+
+    if (!isTrustedInfinitePayUrl(result?.checkoutUrl)) {
+      throw new Error('INVALID_INFINITEPAY_CHECKOUT_URL');
+    }
+
+    window.location.assign(result.checkoutUrl);
+  } catch (error) {
+    if (error.status === 400) {
+      if (error.data?.payerDocNumber) setCardCpfError(error.data.payerDocNumber);
+      if (error.data?.payerPhone) setPayerPhoneError(error.data.payerPhone);
+      if (!error.data?.payerDocNumber && !error.data?.payerPhone) {
+        showToast(error.message || 'Revise os dados informados', 'error');
+      }
+    } else if (error.status === 422) {
+      showToast(error.data?.error || error.message || 'Não foi possível iniciar o pagamento', 'error');
+    } else {
+      showToast('Não foi possível iniciar o pagamento. Tente novamente.', 'error');
+    }
+
+    button.disabled = false;
+    button.textContent = 'Pagar com cartão';
+    unlockButtonWidth(button);
+  }
 }
 
 class MercadoPagoInitializationError extends Error {
