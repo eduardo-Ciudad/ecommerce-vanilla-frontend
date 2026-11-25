@@ -62,6 +62,44 @@ function adminProductSkus(product) {
   return `<span title="${escapeAttr(skus.join(', '))}">${escapeHtml(skus[0])} e mais ${skus.length - 1}</span>`;
 }
 
+async function resyncProduct(productId, button) {
+  if (button.disabled) return;
+
+  button.disabled = true;
+  button.classList.add('is-loading');
+  button.setAttribute('aria-busy', 'true');
+
+  try {
+    const result = await apiPost(`/bling/sync/product/${encodeURIComponent(productId)}`, {}, { timeoutMs: 90000 });
+    const variantsSynced = Number(result.variantsSynced) || 0;
+    const variantsZeroed = Number(result.variantsZeroed) || 0;
+    const variantsFailed = Number(result.variantsFailed) || 0;
+    let summary = `Produto atualizado: ${variantsSynced} ${variantsSynced === 1 ? 'variação sincronizada' : 'variações sincronizadas'}`;
+
+    if (variantsZeroed > 0) {
+      summary += `, ${variantsZeroed} ${variantsZeroed === 1 ? 'variação zerada' : 'variações zeradas'} (não ${variantsZeroed === 1 ? 'existe' : 'existem'} mais no Bling)`;
+    }
+    if (variantsFailed > 0) {
+      summary += `, ${variantsFailed} com falha`;
+    }
+
+    showToast(summary, variantsFailed > 0 ? 'warning' : 'success');
+    await loadProducts(currentProductsPage);
+  } catch (error) {
+    if (error.status === 409) {
+      showToast('Já existe uma sincronização com o Bling em andamento. Tente de novo quando ela terminar.', 'error');
+    } else {
+      showToast(error.message || 'Não foi possível ressincronizar o produto', 'error');
+    }
+  } finally {
+    if (button.isConnected) {
+      button.disabled = false;
+      button.classList.remove('is-loading');
+      button.removeAttribute('aria-busy');
+    }
+  }
+}
+
 function renderProductsTable() {
   const tbody = document.querySelector('[data-products-tbody]');
 
@@ -98,6 +136,10 @@ function renderProductsTable() {
           <td><span class="badge ${product.active ? 'badge-active' : 'badge-inactive'}">${product.active ? 'Ativo' : 'Inativo'}</span></td>
           <td>
             <div class="admin-table-actions">
+              ${product.blingProductId != null ? `
+              <button class="icon-btn" type="button" data-resync-product="${product.id}" title="Ressincronizar com o Bling" aria-label="Ressincronizar com o Bling">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11a8.1 8.1 0 00-15.5-2M4 4v5h5"/><path d="M4 13a8.1 8.1 0 0015.5 2M20 20v-5h-5"/></svg>
+              </button>` : ''}
               <button class="icon-btn" type="button" data-edit-product="${product.id}" title="Editar produto">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
@@ -114,6 +156,9 @@ function renderProductsTable() {
     })
     .join('');
 
+  tbody.querySelectorAll('[data-resync-product]').forEach((btn) => {
+    btn.addEventListener('click', () => resyncProduct(btn.dataset.resyncProduct, btn));
+  });
   tbody.querySelectorAll('[data-edit-product]').forEach((btn) => {
     btn.addEventListener('click', () => openProductModal(productsCache.find((p) => p.id === btn.dataset.editProduct)));
   });
