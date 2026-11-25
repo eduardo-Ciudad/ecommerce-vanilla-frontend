@@ -617,6 +617,15 @@ function wireProductInteractions(product) {
     selectVariant(requestedVariant);
   }
 
+  const analyticsVariant = selectedVariant || variants.find((variant) => Number(variant.stock) > 0);
+  if (analyticsVariant && typeof window.trackViewItem === 'function') {
+    try {
+      window.trackViewItem(product, analyticsVariant);
+    } catch (error) {
+      console.debug('Falha ao registrar view_item.', error);
+    }
+  }
+
   document.querySelector('[data-qty-decrease]').addEventListener('click', () => {
     const value = Math.max(1, Number(qtyInput.value) - 1);
     qtyInput.value = value;

@@ -24,8 +24,9 @@ async function getItems() {
 }
 
 async function addItem(product, variant, quantity = 1) {
+  let items;
   if (!isAuthenticated()) {
-    return normalizeCartItems(addToGuestCart({
+    items = normalizeCartItems(addToGuestCart({
       variantId: variant.id,
       productId: product.id,
       productName: product.name,
@@ -36,10 +37,19 @@ async function addItem(product, variant, quantity = 1) {
       quantity,
       stock: variant.stock,
     }));
+  } else {
+    const cart = await apiPost('/cart/items', { variantId: variant.id, quantity });
+    items = normalizeCartItems(cart.items);
   }
 
-  const cart = await apiPost('/cart/items', { variantId: variant.id, quantity });
-  return normalizeCartItems(cart.items);
+  if (typeof window.trackAddToCart === 'function') {
+    try {
+      window.trackAddToCart(product, variant, quantity);
+    } catch (error) {
+      console.debug('Falha ao registrar add_to_cart.', error);
+    }
+  }
+  return items;
 }
 
 async function updateQuantity(item, quantity) {

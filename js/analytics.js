@@ -85,26 +85,99 @@
     document.head.appendChild(script);
   }
 
-  function purchaseItem(item) {
-    var price = Number(item && item.unitPrice);
+  function pushEcommerceEvent(eventName, ecommerce) {
+    if (readStoredConsent() !== 'all') return;
+    window.dataLayer.push({ ecommerce: null });
+    window.dataLayer.push({ event: eventName, ecommerce: ecommerce });
+  }
+
+  function buildAnalyticsItem(item) {
+    var price = Number(item && item.price);
     var quantity = Number(item && item.quantity);
-    if (!item || !item.variantId || !item.productName || item.unitPrice == null || item.quantity == null
+    if (!item || !item.variantId || !item.productName || item.price == null
       || !Number.isFinite(price) || !Number.isFinite(quantity) || quantity <= 0) return null;
-    return {
+
+    var analyticsItem = {
       item_id: String(item.variantId),
       item_name: String(item.productName),
       price: Number(price.toFixed(2)),
       quantity: quantity
     };
+    var categoryName = String(item.categoryName || '').trim();
+    var color = String(item.color || '').trim();
+    var size = String(item.size || '').trim();
+    var variantParts = [color, size].filter(Boolean);
+    if (categoryName) analyticsItem.item_category = categoryName;
+    if (variantParts.length) analyticsItem.item_variant = variantParts.join(' / ');
+    return analyticsItem;
   }
 
   function purchaseItems(order) {
     if (!order || !Array.isArray(order.items) || !order.items.length) return [];
 
-    var items = order.items.map(purchaseItem);
-    if (items.some(function (item) { return !item; })) return [];
-    return items;
+    return order.items.map(function (item) {
+      return buildAnalyticsItem({
+        variantId: item && item.variantId,
+        productName: item && item.productName,
+        categoryName: item && item.categoryName,
+        color: item && item.color,
+        size: item && item.size,
+        price: item && item.unitPrice,
+        quantity: item && item.quantity
+      });
+    }).filter(Boolean);
   }
+
+  window.trackViewItem = function (product, variant) {
+    var item = buildAnalyticsItem({
+      variantId: variant && variant.id,
+      productName: product && product.name,
+      categoryName: product && product.categoryName,
+      color: variant && variant.color,
+      size: variant && variant.size,
+      price: variant && variant.price,
+      quantity: 1
+    });
+    if (!item) return;
+    pushEcommerceEvent('view_item', {
+      currency: 'BRL',
+      value: item.price,
+      items: [item]
+    });
+  };
+
+  window.trackAddToCart = function (product, variant, quantity) {
+    var item = buildAnalyticsItem({
+      variantId: variant && variant.id,
+      productName: product && product.name,
+      categoryName: product && product.categoryName,
+      color: variant && variant.color,
+      size: variant && variant.size,
+      price: variant && variant.price,
+      quantity: quantity
+    });
+    if (!item) return;
+    pushEcommerceEvent('add_to_cart', {
+      currency: 'BRL',
+      value: Number((item.price * item.quantity).toFixed(2)),
+      items: [item]
+    });
+  };
+
+  window.trackBeginCheckout = function (cartItems) {
+    var items = (Array.isArray(cartItems) ? cartItems : []).map(function (item) {
+      return buildAnalyticsItem(item || {});
+    }).filter(Boolean);
+    if (!items.length) return;
+    var value = items.reduce(function (total, item) {
+      return total + (item.price * item.quantity);
+    }, 0);
+    pushEcommerceEvent('begin_checkout', {
+      currency: 'BRL',
+      value: Number(value.toFixed(2)),
+      items: items
+    });
+  };
 
   window.trackPurchase = function (order) {
     if (readStoredConsent() !== 'all') return;
@@ -123,16 +196,12 @@
       return;
     }
 
-    window.dataLayer.push({ ecommerce: null });
-    window.dataLayer.push({
-      event: 'purchase',
-      ecommerce: {
-        transaction_id: String(orderId),
-        value: Number(total.toFixed(2)),
-        currency: 'BRL',
-        shipping: Number(shipping.toFixed(2)),
-        items: items
-      }
+    pushEcommerceEvent('purchase', {
+      transaction_id: String(orderId),
+      value: Number(total.toFixed(2)),
+      currency: 'BRL',
+      shipping: Number(shipping.toFixed(2)),
+      items: items
     });
 
     try {

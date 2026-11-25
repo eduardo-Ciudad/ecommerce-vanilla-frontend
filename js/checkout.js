@@ -1505,7 +1505,11 @@ function showPaymentResult(result, order) {
   stopPixPolling();
 
   if (result.status === 'approved' && typeof window.trackPurchase === 'function') {
-    window.trackPurchase(order);
+    try {
+      window.trackPurchase(order);
+    } catch (error) {
+      console.debug('Falha ao registrar purchase.', error);
+    }
   }
 
   document.querySelector('[data-checkout-payment]').hidden = true;
@@ -1594,6 +1598,13 @@ async function initCheckoutPage() {
 
     const addresses = await apiGet('/addresses');
     renderCheckoutFromCart(cart, addresses);
+    if (typeof window.trackBeginCheckout === 'function') {
+      try {
+        window.trackBeginCheckout(cart.items);
+      } catch (error) {
+        console.debug('Falha ao registrar begin_checkout.', error);
+      }
+    }
   } catch (error) {
     renderCheckoutError(error.message || 'Erro ao carregar checkout');
   }
