@@ -1000,6 +1000,25 @@
   height: 14px;
 }
 
+.icon-btn.is-loading {
+  cursor: progress;
+}
+
+.icon-btn.is-loading svg {
+  animation: icon-btn-loading-spin 0.9s linear infinite;
+}
+
+@keyframes icon-btn-loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-btn.is-loading svg {
+    animation: none;
+    opacity: 0.55;
+  }
+}
+
 /* ===== Grid de categorias ===== */
 .category-grid {
   display: grid;
